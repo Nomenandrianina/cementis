@@ -301,18 +301,18 @@
 
                         <!-- Transporteur Filter -->
                         @if (Auth::user()->role_text != "transporteur")
-                        <div class="d-flex align-items-center gap-2">
-                            <i class="fas fa-truck text-secondary" style="padding: 0px 7px 0px 0px;"></i>
-                            <span class="text-secondary fw-semibold" style="padding: 0px 7px 0px 0px;"> Transporteur</span>
-                            <select class="form-select custom-select w-auto shadow-sm" name="transporteur" id="transporteur">
-                                <option value="" selected>Sélectionner un transporteur</option>
-                                @foreach($transporteurs as $transporteur)
-                                    <option value="{{ $transporteur->id }}">
-                                        {{ $transporteur->nom }}
-                                    </option>    
-                                @endforeach
-                            </select>
-                        </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="fas fa-truck text-secondary" style="padding: 0px 7px 0px 0px;"></i>
+                                <span class="text-secondary fw-semibold" style="padding: 0px 7px 0px 0px;"> Transporteur</span>
+                                <select class="form-select custom-select w-auto shadow-sm" name="transporteur" id="transporteur">
+                                    <option value="" selected>Sélectionner un transporteur</option>
+                                    @foreach($transporteurs as $transporteur)
+                                        <option value="{{ $transporteur->id }}">
+                                            {{ $transporteur->nom }}
+                                        </option>    
+                                    @endforeach
+                                </select>
+                            </div>
                         @endif
                     </div>
                 </div>

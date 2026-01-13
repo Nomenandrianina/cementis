@@ -215,3 +215,7 @@ Route::resource('incidentVehiculeCoordonnees', App\Http\Controllers\IncidentVehi
 
 
 Route::resource('scoreDrivers', App\Http\Controllers\ScoreDriverController::class);
+
+Route::get('/infractions/upload/file', 'App\Http\Controllers\InfractionController@showImportForm')->name('infractions.upload.file');
+
+Route::post('/infractions/import', 'App\Http\Controllers\InfractionController@import')->name('infractions.import');

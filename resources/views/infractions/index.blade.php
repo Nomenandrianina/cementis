@@ -8,10 +8,10 @@
                    <h1>@lang('models/infractions.plural')</h1>
                 </div>
                 <div class="col-sm-6">
-                    {{-- <a class="btn btn-primary float-right"
-                       href="{{ route('infractions.create') }}">
-                         @lang('crud.add_new')
-                    </a> --}}
+                    <a class="btn btn-primary float-right"
+                       href="{{ route('infractions.upload.file') }}">
+                         Téléverser un fichier
+                    </a>
                 </div>
             </div>
         </div>

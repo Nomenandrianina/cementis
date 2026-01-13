@@ -4,11 +4,14 @@ namespace App\Http\Controllers;
 
 use App\DataTables\InfractionDataTable;
 use App\Http\Requests;
+use Illuminate\Http\Request;
 use App\Http\Requests\CreateInfractionRequest;
 use App\Http\Requests\UpdateInfractionRequest;
 use App\Repositories\InfractionRepository;
-use Flash;
+use App\Imports\InfractionImport;
+use Maatwebsite\Excel\Facades\Excel;
 use App\Http\Controllers\AppBaseController;
+use Flash;
 use Response;
 
 class InfractionController extends AppBaseController
@@ -31,6 +34,34 @@ class InfractionController extends AppBaseController
     public function index(InfractionDataTable $infractionDataTable)
     {
         return $infractionDataTable->render('infractions.index');
+    }
+
+    /**
+     * Show import form
+     */
+    public function showImportForm()
+    {
+        return view('infractions.import');
+    }
+
+
+    /**
+     * Import a data infraction via excel
+     * 
+     * @param Request $request
+     * 
+     * @return Response
+     */
+    public function import(Request $request){
+        $request->validate([
+            'excel_file' => 'required|mimes:xlsx,xls'
+        ]);
+        
+        Excel::import(new InfractionImport, $request->file('excel_file'));
+
+        return redirect()
+            ->route('infractions.index')
+            ->with('success', 'Importation réussie');
     }
 
     /**
