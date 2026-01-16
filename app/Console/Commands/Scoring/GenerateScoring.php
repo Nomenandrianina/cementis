@@ -63,7 +63,7 @@ class GenerateScoring extends Command
                     $rfid_calendar = $result->rfid_calendar;
                     $camion = $result->camion;
                     $imei = $result->imei;
-                    $transporteur_id = get_transporteur_by_imei($result->imei, $result->camion);
+                    $transporteur_id = get_transporteur_by_imei($selectedPlanning, $result->imei, $result->camion);
                     $total_point = $result->total_point;
 
                         $createScoring[] = [

@@ -61,7 +61,8 @@ class GenerateScoreDrive extends Command
             if ($results) {
                 foreach ($results as $result) {
                     $badge = $result->badge;
-                    $transporteur = $this->scoreDriverService->get_transporteur($result->badge);
+                    $transporteur = $this->scoreDriverService->get_vehicule_transporteur($selectedPlanning, $result->badge);
+                    
                     $score = $result->score;
 
                         $createScoring[] = [

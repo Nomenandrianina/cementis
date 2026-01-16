@@ -6,6 +6,8 @@ use Illuminate\Support\Facades\Log;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use App\Models\Importcalendar;
+use App\Models\ImportExcel;
+use App\Models\Vehicule;
 use Carbon\Carbon;
 use App\Models\Chauffeur;
 use App\Models\Scoring;
@@ -107,7 +109,7 @@ class ScoreDriverService
         }
     }
 
-    public function get_transporteur($badge)
+    public function get_driver_transporteur($badge)
     {
         try {
             if (!empty($badge)) {
@@ -131,6 +133,63 @@ class ScoreDriverService
             return '';
         }
     }
+
+    // public function get_vehicule_transporteur($id_planning ,$badge)
+    // {
+    //     try {
+    //         if (!empty($badge)) {
+    //             $planning = ImportExcel::where('import_calendar_id', $id_planning)->where('badge_chauffeur', $badge)->first();
+
+    //             $vehicle = Vehicule::where('nom', 'like' ,  "%{$planning?->camion}%")->where('id_planning', $id_planning)->first();
+                
+    //             if ($vehicle) {
+    //                 return $vehicle->id_transporteur ?? '';
+    //             }
+    //         }
+
+    //         // Si aucun chauffeur trouvé ou badge vide
+    //         return '';
+    //     } catch (\Exception $e) {
+    //         // Tu peux enregistrer l'erreur dans les logs
+    //         \Log::error('Erreur dans get_transporteur : ' . $e->getMessage(), [
+    //             'badge' => $badge,
+    //             'planning' => $id_planning,
+    //             'trace' => $e->getTraceAsString(),
+    //         ]);
+
+    //         // Retourne une valeur par défaut ou null selon ton besoin
+    //         return '';
+    //     }
+    // }
+    public function get_vehicule_transporteur(int $idPlanning, ?string $badge): ?int
+    {
+        if (empty($badge)) {
+            \Log::error('Erreur dans get_transporteur : ' . $e->getMessage(), [
+                'badge' => $badge,
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return null;
+        }
+
+        $planning = ImportExcel::where('import_calendar_id', $idPlanning)
+            ->where('badge_chauffeur', $badge)
+            ->first();
+
+        if (! $planning || empty($planning->camion)) {
+            \Log::error('Erreur dans get_transporteur : ' . $e->getMessage(), [
+                'planning' => $id_planning,
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return null;
+        }
+
+        $vehicle = Vehicule::where('id_planning', $idPlanning)
+            ->where('nom', 'like', '%' . $planning->camion . '%')
+            ->first();
+
+        return $vehicle?->id_transporteur;
+    }
+
 
     public function detail_score_drive_per_truck($id_planning, $badge){
         try {

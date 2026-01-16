@@ -105,14 +105,14 @@ if (!function_exists('get_driver_by_rfid')){
 
 
 if (!function_exists('get_transporteur_by_imei')){
-    function get_transporteur_by_imei($imei, $camion){
+    function get_transporteur_by_imei($id_planning, $imei, $camion){
         if(!empty($imei)){
-            $truck = Vehicule::where('imei', $imei)->first();
+            $truck = Vehicule::where('imei', $imei)->where('id_planning', $id_planning)->first();
             if($truck){
                 return $truck->id_transporteur ?? null;
             }
         }else{
-            $truck = Vehicule::where('nom', $camion)->first();
+            $truck = Vehicule::where('nom', $camion)->where('id_planning', $id_planning)->first();
             if($truck){
                 return $truck->id_transporteur ?? null;
             }
