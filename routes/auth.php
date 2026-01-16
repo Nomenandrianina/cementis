@@ -219,3 +219,7 @@ Route::resource('scoreDrivers', App\Http\Controllers\ScoreDriverController::clas
 Route::get('/infractions/upload/file', 'App\Http\Controllers\InfractionController@showImportForm')->name('infractions.upload.file');
 
 Route::post('/infractions/import', 'App\Http\Controllers\InfractionController@import')->name('infractions.import');
+
+Route::get('/events/upload/file', 'App\Http\Controllers\EventController@showImportForm')->name('events.upload.file');
+
+Route::post('/events/import', 'App\Http\Controllers\EventController@import')->name('events.import');

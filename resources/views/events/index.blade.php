@@ -9,6 +9,10 @@
                    <h1>@lang('models/events.plural')</h1>
                 </div>
                 <div class="col-sm-6">
+                    <a class="btn btn-primary float-right"
+                       href="{{ route('events.upload.file') }}">
+                         Téléverser un fichier
+                    </a>
                 </div>
             </div>
         </div>

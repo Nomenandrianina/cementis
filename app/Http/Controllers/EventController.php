@@ -22,6 +22,7 @@ use App\Models\Importcalendar;
 use Dompdf\Dompdf;
 use App\Models\Chauffeur;
 use GuzzleHttp\Client;
+use App\Imports\SurvitesseImportClass;
 use Maatwebsite\Excel\Facades\Excel;
 use Response;
 
@@ -34,6 +35,34 @@ class EventController extends AppBaseController
     {
         $this->eventRepository = $eventRepo;
     }   
+
+    /**
+     * Show import form
+     */
+    public function showImportForm()
+    {
+        return view('events.import');
+    }
+
+
+    /**
+     * Import a data infraction via excel
+     * 
+     * @param Request $request
+     * 
+     * @return Response
+     */
+    public function import(Request $request){
+        $request->validate([
+            'excel_file' => 'required|mimes:xlsx,xls'
+        ]);
+        
+        Excel::import(new SurvitesseImportClass, $request->file('excel_file'));
+
+        return redirect()
+            ->route('events.index')
+            ->with('success', 'Importation réussie');
+    }
 
     public function viewScoring(){
         $drivers = Chauffeur::all()->pluck('nom')->toArray();
