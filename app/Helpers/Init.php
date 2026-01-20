@@ -120,6 +120,8 @@ if (!function_exists('get_transporteur_by_imei')){
     }
 }
 
+
+
 if (!function_exists('get_transporteur')){
     function get_transporteur($imei, $camion){
         if(!empty($imei)){
