@@ -18,7 +18,7 @@ class ScoreDriverService
     /**
      * Générer le score par dirver pour un planning
      */
-    public function generate_score_driver($id_planning){
+    /*public function generate_score_driver($id_planning){
         try {
             $results = "";
             $calendar = Importcalendar::where('id', $id_planning)->first();
@@ -107,7 +107,228 @@ class ScoreDriverService
             Log::error("Erreur lors de la génération du score driver $id_planning: " . $e->getMessage());
             return 0;
         }
+    }*/
+    
+    /*public function generate_score_driver($id_planning)
+    {
+        try {
+            if (!$id_planning) {
+                return [];
+            }
+    
+            $calendar = Importcalendar::find($id_planning);
+            if (!$calendar) {
+                return [];
+            }
+    
+            $startMonth = Carbon::parse($calendar->date_debut)->startOfMonth();
+            $endMonth   = Carbon::parse($calendar->date_debut)->endOfMonth();
+    
+    
+            $drivers = DB::table('import_excel')
+                ->select(
+                    'badge_chauffeur',
+                    'imei',
+                    'camion',
+                    'rfid_chauffeur',
+                    'date_debut',
+                    'date_fin'
+                )
+                ->where('import_calendar_id', $id_planning)
+                ->distinct()
+                ->get();
+    
+            if ($drivers->isEmpty()) {
+                return [];
+            }
+    
+            $scores = [];
+    
+       
+            foreach ($drivers as $driver) {
+    
+                $pointsNormal = DB::table('infraction')
+                    ->where('imei', $driver->imei)
+                    ->where('event', '!=', 'Temps de repos hebdomadaire')
+                    ->whereRaw(
+                        "CONCAT(date_debut, ' ', heure_debut) >= ?",
+                        [$driver->date_debut]
+                    )
+                    ->whereRaw(
+                        "CONCAT(date_fin, ' ', heure_fin) <= ?",
+                        [$driver->date_fin]
+                    )
+                    ->sum('point');
+    
+                if (!isset($scores[$driver->badge_chauffeur])) {
+                    $scores[$driver->badge_chauffeur] = 0;
+                }
+    
+                $scores[$driver->badge_chauffeur] += $pointsNormal;
+            }
+    
+            
+            $repos = DB::table('infraction')
+                ->select('imei', DB::raw('SUM(point) as total_point'))
+                ->where('event', 'Temps de repos hebdomadaire')
+                ->whereBetween('date_debut', [$startMonth, $endMonth])
+                ->whereBetween('date_fin', [$startMonth, $endMonth])
+                ->groupBy('imei')
+                ->get()
+                ->keyBy('imei');
+    
+    
+            foreach ($drivers as $driver) {
+                if (isset($repos[$driver->imei])) {
+                    $scores[$driver->badge_chauffeur] += $repos[$driver->imei]->total_point;
+                }
+            }
+    
+           
+            $results = collect($scores)
+                ->map(function ($score, $badge) {
+                    return [
+                        'badge' => $badge,
+                        'score' => $score,
+                    ];
+                })
+                ->sortByDesc('score')
+                ->values();
+    
+            return $results;
+    
+        } catch (\Throwable $e) {
+            Log::error(
+                "Erreur génération score driver {$id_planning}: " . $e->getMessage()
+            );
+            return [];
+        }
+    }*/
+
+    public function generate_score_driver($id_planning)
+    {
+        try {
+    
+            if (empty($id_planning)) {
+                return [];
+            }
+    
+            $calendar = Importcalendar::find($id_planning);
+            $month = Carbon::parse($calendar->date_debut)->format('m');
+    
+            /*
+            |--------------------------------------------------------------------------
+            | Sous-requête 1 : infractions ≠ Temps de repos hebdomadaire
+            |--------------------------------------------------------------------------
+            */
+            $subQuery1 = DB::table(DB::raw("
+                (
+                    SELECT DISTINCT
+                        badge_chauffeur,
+                        imei,
+                        camion,
+                        rfid_chauffeur,
+                        date_debut,
+                        date_fin
+                    FROM import_excel
+                    WHERE import_calendar_id = $id_planning
+                ) as c
+            "))
+            ->leftJoin('infraction as i', function ($join) {
+                $join->on('i.imei', '=', 'c.imei')
+                    ->where('i.event', '!=', 'Temps de repos hebdomadaire')
+                    ->whereRaw("CONCAT(i.date_debut, ' ', i.heure_debut) >= c.date_debut")
+                    ->whereRaw("CONCAT(i.date_fin, ' ', i.heure_fin) <= c.date_fin");
+            })
+            ->groupBy('c.badge_chauffeur', 'c.imei')
+            ->selectRaw("
+                c.badge_chauffeur AS badge_calendar,
+                c.imei,
+                c.camion,
+                c.rfid_chauffeur AS rfid_calendar,
+                i.rfid AS rfid_conducteur,
+                COALESCE(SUM(i.point), 0) AS point
+            ");
+    
+            /*
+            |--------------------------------------------------------------------------
+            | Sous-requête 2 : Temps de repos hebdomadaire
+            |--------------------------------------------------------------------------
+            */
+            $subQuery2 = DB::table(DB::raw("
+                (
+                    SELECT DISTINCT
+                        badge_chauffeur,
+                        imei,
+                        camion,
+                        rfid_chauffeur
+                    FROM import_excel
+                    WHERE import_calendar_id = $id_planning
+                ) as c
+            "))
+            ->leftJoin(DB::raw("
+                (
+                    SELECT DISTINCT id, imei, rfid, point
+                    FROM infraction
+                    WHERE event = 'Temps de repos hebdomadaire'
+                    AND MONTH(date_debut) = $month
+                    AND MONTH(date_fin) = $month
+                ) as i
+            "), 'i.imei', '=', 'c.imei')
+            ->groupBy('c.badge_chauffeur', 'c.imei')
+            ->selectRaw("
+                c.badge_chauffeur AS badge_calendar,
+                c.imei,
+                c.camion,
+                c.rfid_chauffeur AS rfid_calendar,
+                i.rfid AS rfid_conducteur,
+                COALESCE(SUM(i.point), 0) AS point
+            ");
+    
+            /*
+            |--------------------------------------------------------------------------
+            | UNION ALL → total_point par chauffeur + imei
+            |--------------------------------------------------------------------------
+            */
+            $finalQuery = DB::query()
+                ->fromSub(
+                    $subQuery1->unionAll($subQuery2),
+                    'final'
+                )
+                ->selectRaw("
+                    final.badge_calendar,
+                    final.imei,
+                    final.camion,
+                    final.rfid_calendar,
+                    final.rfid_conducteur,
+                    SUM(final.point) AS total_point
+                ")
+                ->groupBy('final.badge_calendar', 'final.imei');
+    
+            /*
+            |--------------------------------------------------------------------------
+            | Requête finale : score par chauffeur
+            |--------------------------------------------------------------------------
+            */
+            $results = DB::query()
+                ->fromSub($finalQuery, 'sous_requete')
+                ->selectRaw("
+                    badge_calendar AS badge,
+                    SUM(total_point) AS score
+                ")
+                ->groupBy('badge')
+                ->orderByDesc('score')
+                ->get();
+    
+            return $results;
+    
+        } catch (\Exception $e) {
+            Log::error("Erreur lors de la génération du score driver $id_planning : " . $e->getMessage());
+            return [];
+        }
     }
+
+
 
     public function get_driver_transporteur($badge)
     {

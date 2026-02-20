@@ -57,11 +57,24 @@ class EventController extends AppBaseController
             'excel_file' => 'required|mimes:xlsx,xls'
         ]);
         
-        Excel::import(new SurvitesseImportClass, $request->file('excel_file'));
-
-        return redirect()
-            ->route('events.index')
-            ->with('success', 'Importation réussie');
+        try {
+            Excel::queueImport(
+                new SurvitesseImportClass,
+                $request->file('excel_file')
+            );
+    
+            return redirect()
+                ->route('events.index')
+                ->with('success', 'Importation réussie');
+    
+        } catch (Exception $e) {
+            // Optionnel : log de l’erreur
+            \Log::error('Erreur import Excel : ' . $e->getMessage());
+    
+            return redirect()
+                ->back()
+                ->with('error', 'Erreur lors de l’importation du fichier.');
+        }
     }
 
     public function viewScoring(){

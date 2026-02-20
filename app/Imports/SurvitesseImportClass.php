@@ -12,15 +12,22 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Collection;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
 use Maatwebsite\Excel\Concerns\WithValidation;
+use Maatwebsite\Excel\Concerns\SkipsOnFailure;
+use Maatwebsite\Excel\Concerns\SkipsFailures;
+use Illuminate\Contracts\Queue\ShouldQueue as LaravelShouldQueue;
 
-class SurvitesseImportClass implements ToModel, WithHeadingRow, WithBatchInserts, WithChunkReading, WithValidation
+class SurvitesseImportClass implements ToModel, WithHeadingRow, WithBatchInserts, WithChunkReading, WithValidation, SkipsOnFailure, LaravelShouldQueue
 {
+    use SkipsFailures;
+    
     public function rules(): array
     {
         return [
             'imei'       => 'required',
             'type'      => 'required',
             'vehicule'      => 'required',
+            'latitude'      => 'required',
+            'longitude'      => 'required',
             'date' => 'required|date',
         ];
     }
@@ -38,8 +45,10 @@ class SurvitesseImportClass implements ToModel, WithHeadingRow, WithBatchInserts
             'type'            => $row['type'],
             'vitesse'         => $row['vitesse'],
             'duree'    => $row['duree'],
+            'latitude'    => $row['latitude'],
+            'longitude'    => $row['longitude'],
             'date'       => is_numeric($row['date'])
-                                    ? Date::excelToDateTimeObject($row['date'])->format('Y-m-d H-i-s')
+                                    ? Date::excelToDateTimeObject($row['date'])->format('Y-m-d H:i:s')
                                     : $row['date'],
         ]);
     }
@@ -49,7 +58,7 @@ class SurvitesseImportClass implements ToModel, WithHeadingRow, WithBatchInserts
      */
     public function batchSize(): int
     {
-        return 1000;
+        return 1500;
     }
 
     /**
@@ -57,6 +66,6 @@ class SurvitesseImportClass implements ToModel, WithHeadingRow, WithBatchInserts
      */
     public function chunkSize(): int
     {
-        return 1000;
+        return 1500;
     }
 }

@@ -37,6 +37,10 @@ class OverSpeedService{
     
             // Grouper les événements par imei, chauffeur et véhicule
             $groupedRecords = $records->groupBy(function($record) {
+                if(empty($record->chauffeur)){
+                    return $record->imei . '_' . $record->vehicule;
+                }
+                 
                 return $record->imei . '_' . $record->chauffeur . '_' . $record->vehicule;
             });
     

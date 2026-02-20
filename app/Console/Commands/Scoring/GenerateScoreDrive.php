@@ -57,7 +57,6 @@ class GenerateScoreDrive extends Command
             $data = [];
             $createScoring = [];
             $results = $this->scoreDriverService->generate_score_driver($selectedPlanning);
-            
             if ($results) {
                 foreach ($results as $result) {
                     $badge = $result->badge;

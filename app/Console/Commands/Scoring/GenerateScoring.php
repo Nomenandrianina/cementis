@@ -57,6 +57,15 @@ class GenerateScoring extends Command
             if ($results) {
                 $comment = '';
                 foreach ($results as $result) {
+                    /*$badge_calendar = $result['badge_calendar'];
+                    $badge_rfid = get_driver_by_rfid($result['rfid_conducteur']);
+                    $rfid_infraction = $result['rfid_conducteur'];
+                    $rfid_calendar = $result['rfid_calendar'];
+                    $camion = $result['camion'];
+                    $imei = $result['imei'];
+                    $transporteur_id = get_transporteur_by_imei($selectedPlanning, $result['imei'], $result['camion']);
+                    $total_point = $result['total_point'];*/
+                    
                     $badge_calendar = $result->badge_calendar;
                     $badge_rfid = get_driver_by_rfid($result->rfid_conducteur);
                     $rfid_infraction = $result->rfid_conducteur;
