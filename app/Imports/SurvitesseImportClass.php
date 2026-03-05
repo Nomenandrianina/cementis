@@ -58,7 +58,7 @@ class SurvitesseImportClass implements ToModel, WithHeadingRow, WithBatchInserts
      */
     public function batchSize(): int
     {
-        return 1500;
+        return 1000;
     }
 
     /**
@@ -66,6 +66,6 @@ class SurvitesseImportClass implements ToModel, WithHeadingRow, WithBatchInserts
      */
     public function chunkSize(): int
     {
-        return 1500;
+        return 1000;
     }
 }

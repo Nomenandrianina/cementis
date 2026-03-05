@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Event;
 use App\Models\Penalite;
 
-class OverSpeedService{
+class OverSpeedServiceNEW{
 
 
     public function CheckOverSpeed($startDate, $endDate) {
@@ -29,7 +29,7 @@ class OverSpeedService{
             // Récupérer les événements pour un type donné
             $records = DB::table('event')
                 ->distinct()
-                ->select('imei', 'chauffeur', 'vehicule', 'type', 'odometer', 'vitesse', 'latitude', 'longitude', 'date')
+                ->select('imei', 'chauffeur', 'vehicule', 'type', 'duree' ,'odometer', 'vitesse', 'latitude', 'longitude', 'date')
                 ->where('type', $eventType)  // Filtre par type d'événement
                 ->whereBetween('date', [$startDate, $endDate])
                 ->orderBy('date', 'ASC')
@@ -50,24 +50,38 @@ class OverSpeedService{
                 $prevRecord = null;
         
                 foreach ($group as $record) {
-                    if ($prevRecord !== null) {
-                        $prevDateTime = Carbon::parse($prevRecord->date);
-                        $currentDateTime = Carbon::parse($record->date);
-                        $timeDiff = $prevDateTime->diffInMinutes($currentDateTime);
+                    // if ($prevRecord !== null) {
+                    //     $prevDateTime = Carbon::parse($prevRecord->date);
+                    //     $currentDateTime = Carbon::parse($record->date);
+                    //     $timeDiff = $prevDateTime->diffInMinutes($currentDateTime);
         
-                        // Vérifier si l'événement actuel est dans un intervalle de moins de 5 minutes
+                    //     // Vérifier si l'événement actuel est dans un intervalle de moins de 5 minutes
+                    //     if ($timeDiff <= 5) {
+                    //         $currentInterval[] = $record;
+                    //     } else {
+                    //         if (count($currentInterval) > 1) {
+                    //             $this->saveInfraction($currentInterval); // Sauvegarder l'infraction
+                    //         }
+                    //         // Commencer un nouvel intervalle
+                    //         $currentInterval = [$record];
+                    //     }
+                    // } else {
+                    //     $currentInterval[] = $record;
+                    // }
+                    // $prevRecord = $record;
+                     if ($prevRecord) {
+
+                        $timeDiff = Carbon::parse($prevRecord->date)
+                            ->diffInMinutes(Carbon::parse($record->date));
+
                         if ($timeDiff <= 5) {
-                            $currentInterval[] = $record;
-                        } else {
-                            if (count($currentInterval) > 1) {
-                                $this->saveInfraction($currentInterval); // Sauvegarder l'infraction
-                            }
-                            // Commencer un nouvel intervalle
-                            $currentInterval = [$record];
+
+                            // chaque event devient une infraction
+                            $this->saveInfraction([$record]);
+
                         }
-                    } else {
-                        $currentInterval[] = $record;
                     }
+
                     $prevRecord = $record;
                 }
         
@@ -80,20 +94,23 @@ class OverSpeedService{
         
         return "Infractions détectées et sauvegardées.";
     }    
-    
+
+
     /**
      * Antonio
      * Vérification si il y a OVERSPEED.
      * Avec calcul de point est égale à chaque alert
      */
     private function saveInfraction($interval) {
+        // dd($interval[0]);
         $penaliteService = new PenaliteService(); 
         // Calculer la durée totale de l'infraction
         $firstEvent = $interval[0];
         $lastEvent = end($interval);
         
         $startDateTime = Carbon::parse($firstEvent->date);
-        $endDateTime = Carbon::parse($lastEvent->date);
+        $endDateTime = $startDateTime->copy()->addSeconds($firstEvent->duree);
+        // $endDateTime = Carbon::parse($lastEvent->date);
         $dureeSeconds = $startDateTime->diffInSeconds($endDateTime);
         $dureeMinutes = ceil($dureeSeconds / 60);
     

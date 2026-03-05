@@ -17,10 +17,10 @@ class EventService
         // 'Accélération brusque', 
         // 'Freinage brusque', 
         'Excès de vitesse en agglomération', 
-        'Excès de vitesse hors agglomération', 
-        'Survitesse excessive',
-        'Survitesse sur la piste de Tritriva',
-        'Survitesse sur la piste d\'Ibity',
+        // 'Excès de vitesse hors agglomération', 
+        // 'Survitesse excessive',
+        // 'Survitesse sur la piste de Tritriva',
+        // 'Survitesse sur la piste d\'Ibity',
     ];
 
     /**
@@ -65,7 +65,7 @@ class EventService
                                 'vitesse' => $item[9],
                                 'latitude' => $item[5],
                                 'longitude' => $item[6],
-                                'duree' => $allowedTypes[$item[1]],
+                                'duree' => $item[8] ?? $allowedTypes[$item[1]],
                                 'description' => trim($item[1]),
                             ]);
                         }
@@ -87,6 +87,7 @@ class EventService
         
     }
 
+   
     public function saveEventForPeriode($imei, $start_date, $end_date)
     {
         try {
@@ -98,23 +99,26 @@ class EventService
             if (!empty($apiData)) {
                 foreach ($apiData as $event) {
                     if (in_array(trim($event[1]), self::ALLOWED_EVENT) && isset($event[10]['rfid'])) {
-                        // Ajouter les données dans le tableau `$filteredData` sans les insérer
-                        $date = (new \DateTime($event[4]))->modify('+3 hours');
-                        $filteredData[] = [
-                            'imei' => trim($event[2]),
-                            'chauffeur' => $event[10]['rfid'],
-                            'vehicule' => $event[3],
-                            'type' => trim($event[1]),
-                            'date' => $date,
-                            'odometer' => $event[10]['odo'] ?? 0,
-                            'vitesse' => $event[9] ?? 0,
-                            'latitude' => $event[5] ?? 0,
-                            'longitude' => $event[6] ?? 0,
-                            'duree' => 1,
-                            'description' => trim($event[1]) ?? '',
-                            'created_at' => now(),
-                            'updated_at' => now(),
-                        ];
+                        // Filtre supplémentaire pour s'assurer que les données sont valides
+                        // if ($event[10]['rfid'] != "0000000000" && trim($event[10]['rfid']) != trim("u00f0u00f0u00f0u00f0u00f0u00f0u00f0u00f0u00f0u00f0")) {
+                            // Ajouter les données dans le tableau `$filteredData` sans les insérer
+                            $date = (new \DateTime($event[4]))->modify('+3 hours');
+                            $filteredData[] = [
+                                'imei' => trim($event[2]),
+                                'chauffeur' => $event[10]['rfid'],
+                                'vehicule' => $event[3],
+                                'type' => trim($event[1]),
+                                'date' => $date,
+                                'odometer' => $event[10]['odo'] ?? 0,
+                                'vitesse' => $event[9] ?? 0,
+                                'latitude' => $event[5] ?? 0,
+                                'longitude' => $event[6] ?? 0,
+                                'duree' => $event[8] ?? 1,
+                                'description' => trim($event[1]) ?? '',
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ];
+                        // }
                     }
                 }
             }
@@ -125,7 +129,6 @@ class EventService
             return []; // Retourne un tableau vide en cas d'erreur
         }
     }
-
 
     public function proccessEventForPeriod($console, $start_date, $end_date, $id_planning)
     {
