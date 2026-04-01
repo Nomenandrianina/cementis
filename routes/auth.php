@@ -1,5 +1,12 @@
 <?php
 
+use App\Http\Controllers\CheckpointController;
+use App\Http\Controllers\CircuitController;
+use App\Http\Controllers\RotationObjectiveController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\RotationController;
+use App\Http\Controllers\RvehiculeController;
+use App\Http\Controllers\ZoneController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\WebhookController;
 
@@ -223,3 +230,70 @@ Route::post('/infractions/import', 'App\Http\Controllers\InfractionController@im
 Route::get('/events/upload/file', 'App\Http\Controllers\EventController@showImportForm')->name('events.upload.file');
 
 Route::post('/events/import', 'App\Http\Controllers\EventController@import')->name('events.import');
+
+ 
+// ── Véhicules ──────────────────────────────────────────────────────────────
+Route::prefix('vehicles')->name('vehicles.')->group(function () {
+    Route::get('/',         [RvehiculeController::class, 'index'])->name('index');
+    Route::post('/sync',    [RvehiculeController::class, 'sync'])->name('sync');
+    Route::patch('/{vehicle}/toggle', [RvehiculeController::class, 'toggle'])->name('toggle');
+});
+ 
+// ── Zones ──────────────────────────────────────────────────────────────────
+Route::prefix('zones')->name('zones.')->group(function () {
+    Route::get('/',               [ZoneController::class, 'index'])->name('index');
+    Route::post('/sync',          [ZoneController::class, 'sync'])->name('sync');
+    Route::post('/',              [ZoneController::class, 'store'])->name('store');
+    Route::put('/{zone}',         [ZoneController::class, 'update'])->name('update');
+    Route::delete('/{zone}',      [ZoneController::class, 'destroy'])->name('destroy');
+});
+ 
+// ── Checkpoints ────────────────────────────────────────────────────────────
+Route::prefix('checkpoints')->name('checkpoints.')->group(function () {
+    Route::get('/',                       [CheckpointController::class, 'index'])->name('index');
+    Route::post('/sync',                  [CheckpointController::class, 'sync'])->name('sync');
+    Route::post('/',                      [CheckpointController::class, 'store'])->name('store');
+    Route::put('/{checkpoint}',           [CheckpointController::class, 'update'])->name('update');
+    Route::delete('/{checkpoint}',        [CheckpointController::class, 'destroy'])->name('destroy');
+});
+ 
+// ── Circuits ───────────────────────────────────────────────────────────────
+Route::prefix('circuits')->name('circuits.')->group(function () {
+    Route::get('/',          [CircuitController::class, 'index'])->name('index');
+    Route::get('/create',    [CircuitController::class, 'create'])->name('create');
+    Route::post('/',         [CircuitController::class, 'store'])->name('store');
+    Route::get('/{circuit}/edit', [CircuitController::class, 'edit'])->name('edit');
+    Route::put('/{circuit}', [CircuitController::class, 'update'])->name('update');
+    Route::delete('/{circuit}', [CircuitController::class, 'destroy'])->name('destroy');
+ 
+    // Étapes du circuit
+    Route::post('/{circuit}/legs',                         [CircuitController::class, 'storeLeg'])->name('legs.store');
+    Route::put('/{circuit}/legs/{leg}',                    [CircuitController::class, 'updateLeg'])->name('legs.update');
+    Route::delete('/{circuit}/legs/{leg}',                 [CircuitController::class, 'destroyLeg'])->name('legs.destroy');
+    Route::post('/{circuit}/legs/reorder',                 [CircuitController::class, 'reorderLegs'])->name('legs.reorder');
+ 
+    // Véhicules affectés
+    Route::post('/{circuit}/vehicles',                     [CircuitController::class, 'assignVehicle'])->name('vehicles.assign');
+    Route::delete('/{circuit}/vehicles/{vehicle}',         [CircuitController::class, 'removeVehicle'])->name('vehicles.remove');
+ 
+    // Objectifs
+    Route::get('/{circuit}/objectives',                    [RotationObjectiveController::class, 'index'])->name('objectives.index');
+    Route::post('/{circuit}/objectives',                   [RotationObjectiveController::class, 'store'])->name('objectives.store');
+    Route::put('/{circuit}/objectives/{objective}',        [RotationObjectiveController::class, 'update'])->name('objectives.update');
+    Route::delete('/{circuit}/objectives/{objective}',     [RotationObjectiveController::class, 'destroy'])->name('objectives.destroy');
+});
+ 
+// ── Rotations ──────────────────────────────────────────────────────────────
+Route::prefix('rotations')->name('rotations.')->group(function () {
+    Route::get('/',                   [RotationController::class, 'index'])->name('index');
+    Route::get('/{rotation}',         [RotationController::class, 'show'])->name('show');
+    Route::post('/calculate',         [RotationController::class, 'calculate'])->name('calculate');
+    Route::delete('/{rotation}',      [RotationController::class, 'destroy'])->name('destroy');
+});
+ 
+// ── Rapports ───────────────────────────────────────────────────────────────
+Route::prefix('reports')->name('reports.')->group(function () {
+    Route::get('/',          [ReportController::class, 'index'])->name('index');
+    Route::get('/monthly',   [ReportController::class, 'monthly'])->name('monthly');
+    Route::get('/export-csv',[ReportController::class, 'exportCsv'])->name('export_csv');
+});

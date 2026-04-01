@@ -166,12 +166,14 @@
 
         <!-- Content Wrapper. Contains page content -->
         <div class="content-wrapper">
-    
-
             <section class="content">
+
                 <div id="loader"  class="lds-roller"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
                 <div id="overlay"></div>
-
+                <div class="topbar">
+                    <div class="topbar-title">@yield('page-title')</div>
+                    <div class="topbar-actions">@yield('topbar-actions')</div>
+                </div>
                 @yield('content')
             </section>
         </div>
@@ -691,6 +693,8 @@
    
     
  </style>
+
+
 
     @stack('third_party_scripts')
 

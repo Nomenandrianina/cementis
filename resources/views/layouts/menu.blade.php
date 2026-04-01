@@ -93,19 +93,19 @@
     @endif
 @endcan
 
-{{-- @can('new.scoring') --}}
-    <li class="nav-item">
-        <a href="{{ route('driver.score') }}" class="nav-link {{ Request::is('admin/new/scoring*') ? 'active' : '' }}"
-            onclick="submitForm()">
-            <i class="nav-icon fas fa-bullseye"></i>
-            <p>@lang('models/events.fields.scoring')</p>
-        </a>
-    </li>
-{{-- @endcan --}}
+
+<li class="nav-item">
+    <a href="{{ route('driver.score') }}" class="nav-link {{ Request::is('admin/new/scoring*') ? 'active' : '' }}"
+        onclick="submitForm()">
+        <i class="nav-icon fas fa-bullseye"></i>
+        <p>@lang('models/events.fields.scoring')</p>
+    </a>
+</li>
 
 
 
-@canany(['importcalendars.index', 'importExcels.index'])
+
+{{-- @canany(['importcalendars.index', 'importExcels.index'])
     @php
         $isImportCalendarsActive = Request::is('admin/importcalendars*');
         $isImportExcelsActive = Request::is('admin/importExcels*');
@@ -141,27 +141,9 @@
             @endcan
         </ul>
     </li>
-@endcanany
+@endcanany --}}
 
-@can('infractions.index')
-    <li class="nav-item">
-        <a href="{{ route('infractions.index') }}" class="nav-link {{ Request::is('admin/infractions*') ? 'active' : '' }}"
-            onclick="submitForm()">
-            <i class="nav-icon fas fa-virus"></i>
-            <p>@lang('models/infractions.plural')</p>
-        </a>
-    </li>
-@endcan
 
-@can('events.index')
-    <li class="nav-item">
-        <a href="{{ route('events.index') }}" class="nav-link {{ Request::is('admin/events*') ? 'active' : '' }}"
-            onclick="submitForm()">
-            <i class="nav-icon fas fa-calendar"></i>
-            <p>@lang('models/events.plural')</p>
-        </a>
-    </li>
-@endcan
 
 
 
@@ -191,15 +173,7 @@
                     </a>
                 </li>
             @endcan
-            {{-- @can('penalites.index')    
-                <li class="nav-item">
-                    <a href="{{ route('penalites.index') }}" class="nav-link {{ Request::is('admin/penalites*') ? 'active' : '' }}"
-                        onclick="submitForm()">
-                        <i class="nav-icon fas fa-exclamation-triangle"></i>
-                        <p>@lang('models/penalites.plural')</p>
-                    </a>
-                </li>
-            @endcan --}}
+           
             @can('transporteurs.index')    
                 <li class="nav-item">
                     <a href="{{ route('transporteurs.index') }}"
@@ -218,34 +192,33 @@
                     </a>
                 </li>
             @endcan
-            {{-- @can('chauffeurUpdateTypes.index')    
+            @can('movements.index')  
                 <li class="nav-item">
-                    <a href="{{ route('chauffeurUpdateTypes.index') }}"
-                    class="nav-link {{ Request::is('admin/chauffeurUpdateTypes*') ? 'active' : '' }}">
-                    <i class="nav-icon fas fa-truck"></i>
-                        <p>@lang('models/chauffeurUpdateTypes.plural')</p>
-                    </a>
-                </li>
-            @endcan --}}
-
-            {{-- @can('incidentVehicules.index')   
-                <li class="nav-item">
-                    <a href="{{ route('incidentVehicules.index') }}"
-                    class="nav-link {{ Request::is('incidentVehicules*') ? 'active' : '' }}">
-                    <i class="nav-icon fas fa-car-crash"></i>
-                        <p>@lang('models/incidentVehicules.plural')</p>
+                    <a href="{{ route('movements.index') }}" class="nav-link {{ Request::is('admin/movements*') ? 'active' : '' }}">
+                        <i class="nav-icon fa fa-route"></i>
+                        <p>@lang('models/movements.plural')</p>
                     </a>
                 </li>
             @endcan
-            @can('incidentVehiculeCoordonnees.index')   
+            @can('infractions.index')
                 <li class="nav-item">
-                    <a href="{{ route('incidentVehiculeCoordonnees.index') }}"
-                    class="nav-link {{ Request::is('incidentVehiculeCoordonnees*') ? 'active' : '' }}">
-                    <i class="nav-icon fas fa-map-marker"></i>   
-                    <p>@lang('models/incidentVehiculeCoordonnees.plural')</p>
+                    <a href="{{ route('infractions.index') }}" class="nav-link {{ Request::is('admin/infractions*') ? 'active' : '' }}"
+                        onclick="submitForm()">
+                        <i class="nav-icon fas fa-virus"></i>
+                        <p>@lang('models/infractions.plural')</p>
                     </a>
                 </li>
-            @endcan --}}
+            @endcan
+
+            @can('events.index')
+                <li class="nav-item">
+                    <a href="{{ route('events.index') }}" class="nav-link {{ Request::is('admin/events*') ? 'active' : '' }}"
+                        onclick="submitForm()">
+                        <i class="nav-icon fas fa-calendar"></i>
+                        <p>@lang('models/events.plural')</p>
+                    </a>
+                </li>
+            @endcan
 
         </ul>
     </li>
@@ -260,23 +233,6 @@
     </li>
 @endcan
 
-{{-- @can('installateurs.index')    
-    <li class="nav-item">
-        <a href="{{ route('installateurs.index') }}" class="nav-link {{ Request::is('admin/installateurs*') ? 'active' : '' }}">
-            <i class="nav-icon fas fa-user"></i>
-            <p>@lang('models/installateurs.plural')</p>
-        </a>
-    </li>
-@endcan --}}
-
-{{-- @can('installations.index')
-    <li class="nav-item">
-        <a href="{{ route('installations.index') }}" class="nav-link {{ Request::is('admin/installations*') ? 'active' : '' }}">
-            <i class="nav-icon fa-brands fa-instalod"></i>
-            <p>@lang('models/installations.plural')</p>
-        </a>
-    </li>
-@endcan --}}
 
 @can('importNameInstallations.index')   
     <li class="nav-item">
@@ -288,69 +244,8 @@
     </li>
 @endcan
 
-@can('movements.index')  
-    <li class="nav-item">
-        <a href="{{ route('movements.index') }}" class="nav-link {{ Request::is('admin/movements*') ? 'active' : '' }}">
-            <i class="nav-icon fa fa-route"></i>
-            <p>@lang('models/movements.plural')</p>
-        </a>
-    </li>
-@endcan
-
-{{-- @canany(['fileUploads.index', 'importModels.index'])
-    @php
-        $isImportModelActive = Request::is($urlAdmin . '*importModels*');
-        $isFileUploadActive = Request::is($urlAdmin . '*fileUploads*');
-    @endphp
-    <li class="nav-item {{ $isImportModelActive || $isFileUploadActive ? 'menu-open' : '' }} ">
-        <a href="#" class="nav-link">
-            <i class="nav-icon fas fa-upload"></i>
-            <p>
-                @lang('menu.import')
-                <i class="fas fa-angle-left right"></i>
-            </p>
-        </a>
-        <ul class="nav nav-treeview">
-            @can('fileUploads.index')   
-                <li class="nav-item">
-                    <a href="{{ route('fileUploads.index') }}" class="nav-link {{ $isFileUploadActive ? 'active' : '' }}">
-                        <i class="nav-icon fas fa-file-alt ml-4"></i>
-                        <p>@lang('models/fileUploads.singular')</p>
-                    </a>
-                </li>
-            @endcan
-
-            @can('importModels.index')    
-                <li class="nav-item">
-                    <a href="{{ route('importModels.index') }}" class="nav-link {{ $isImportModelActive ? 'active' : '' }}">
-                        <i class="nav-icon fas fa-arrows-alt-h ml-4"></i>
-                        <p>@lang('models/importModels.plural')</p>
-                    </a>
-                </li>
-            @endcan
-        </ul>
-    </li>
-@endcanany --}}
 
 
-{{-- @can('exportation.view')    
-    <li class="nav-item">
-        <a href="{{ route('exportation.view') }}" class="nav-link {{ Request::is('admin/exportation*') ? 'active' : '' }}">
-            <i class="nav-icon fa fa-file-export"></i>
-            <p>Exportation generale</p>
-        </a>
-    </li>
-@endcan --}}
-
-{{-- @can('periodSettings.index')    
-    <li class="nav-item">
-        <a href="{{ route('periodSettings.index') }}"
-        class="nav-link {{ Request::is('periodSettings*') ? 'active' : '' }}">
-        <i class="nav-icon fa fa-business-time"></i>
-            <p>@lang('models/periodSettings.plural')</p>
-        </a>
-    </li>
-@endcan --}}
 
 
 @can('chauffeurUpdateStorie.validation_list')    
@@ -362,6 +257,82 @@
         </a>
     </li>
 @endcan
+
+
+<li class="nav-item">
+    <a href="{{ route('rotations.index') }}" class="nav-link {{ request()->routeIs('rotations.*') ? 'active' : '' }}">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+        </svg>
+        Rotations
+    </a>
+</li>
+
+<li class="nav-item">
+   <a href="{{ route('reports.index') }}" class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+        </svg>
+        Rapports
+    </a>
+</li>
+
+<li class="nav-item has-treeview {{ $isChauffeurActive || $isPenalitesActive || $isTransporteurActive || $isVehiculeActive || $isChauffeurUpdateActive ? 'menu-open' : '' }}">
+    <a href="#" class="nav-link">
+        <i class="nav-icon fas fa-database"></i>
+        <p>
+            Paramétrage
+            <i class="right fas fa-angle-left"></i>
+        </p>
+    </a>
+    <ul class="nav nav-treeview" style="padding-left:8px">
+        @can('chauffeurs.index')
+            <li class="nav-item">
+                <a href="{{ route('circuits.index') }}" class="nav-link {{ request()->routeIs('circuits.*') ? 'active' : '' }}">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+                    </svg>
+                    Circuits
+                </a>
+            </li>
+
+        @endcan
+        
+        @can('transporteurs.index')    
+            <li class="nav-item">
+                <a href="{{ route('checkpoints.index') }}" class="nav-link {{ request()->routeIs('checkpoints.*') ? 'active' : '' }}">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                    Checkpoints
+                </a>
+            </li>
+        @endcan
+        @can('vehicules.index')   
+            <li class="nav-item">
+                <a href="{{ route('zones.index') }}" class="nav-link {{ request()->routeIs('zones.*') ? 'active' : '' }}">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064"/>
+                    </svg>
+                    Zones
+                </a>
+            </li>
+        @endcan
+
+        <li class="nav-item">
+            <a href="{{ route('vehicles.index') }}" class="nav-link {{ request()->routeIs('vehicles.*') ? 'active' : '' }}">
+                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10l2 2 2-2h6z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 8h4l3 4v3h-2m-5-7v7"/>
+                </svg>
+                Camions
+            </a>
+        </li>
+
+    </ul>
+</li>
 
 
 {{-- @can('chauffeurUpdateStorie.validation_list')    

@@ -4,66 +4,33 @@ namespace App\Models;
 
 use Eloquent as Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 
-/**
- * Class Rotation
- * @package App\Models
- * @version December 12, 2023, 1:26 pm +07
- *
- * @property integer $id
- * @property string $matricule
- * @property string $mouvement
- * @property string $date_heur
- * @property string $coordonne_gps
- */
+// ============================================================
+// Rotation
+// ============================================================
 class Rotation extends Model
 {
-    use SoftDeletes;
-
-
-    public $table = 'rotation';
-    
-
-    protected $dates = ['deleted_at'];
-
-
-
-    public $fillable = [
-        'id',
-        'imei',
-        'type',
-        'description',
-        'vehicule',
-        'date_heure',
-        'latitude',
-        'longitude',
+     protected $fillable = [
+        'rvehicule_id', 'circuit_id', 'started_at', 'completed_at',
+        'duration_minutes', 'status', 'counted_month', 'is_valid',
+        'invalidation_reason', 'raw_events',
     ];
-
-    /**
-     * The attributes that should be casted to native types.
-     *
-     * @var array
-     */
+ 
     protected $casts = [
-        'id' => 'integer',
-        'imei' => 'string',
-        'type' => 'string',
-        'description' => 'string',
-        'vehicule' => 'string',
-        'date_heure' => 'datetime',
-        'latitude' => 'string',
-        'longitude' => 'string',
+        'started_at'   => 'datetime',
+        'completed_at' => 'datetime',
+        'is_valid'     => 'boolean',
+        'raw_events'   => 'array',
     ];
-
-    /**
-     * Validation rules
-     *
-     * @var array
-     */
-    public static $rules = [
-        
-    ];
-
-    
+ 
+    public function rvehicule(): BelongsTo { return $this->belongsTo(Rvehicule::class); }
+    public function circuit(): BelongsTo { return $this->belongsTo(Circuit::class); }
+ 
+    public function rotationLegs(): HasMany
+    {
+        return $this->hasMany(RotationLeg::class)->orderBy('occurred_at');
+    }
 }

@@ -84,6 +84,59 @@ class OverSpeedService{
     /**
      * Antonio
      * Vérification si il y a OVERSPEED.
+     * Avec calcul de point est calculer selon pluie 
+     */
+    // private function saveInfraction($interval) {
+    //     $penaliteService = new PenaliteService(); 
+    //     // Calculer la durée totale de l'infraction
+    //     $firstEvent = $interval[0];
+    //     $lastEvent = end($interval);
+        
+    //     $startDateTime = Carbon::parse($firstEvent->date);
+    //     $endDateTime = Carbon::parse($lastEvent->date);
+    //     $dureeSeconds = $startDateTime->diffInSeconds($endDateTime);
+    //     $dureeMinutes = ceil($dureeSeconds / 60);
+    
+    //     // Calcul des points selon la règle de trois : 60s = 1 point
+    //     $penalite = $penaliteService->getPointPenaliteByEventType($firstEvent->type);
+    //     $eventType = trim($firstEvent->type);
+    //     $penalite_event = Penalite::where('event',$eventType)->first();
+
+
+    //     $totalPoints = ($dureeSeconds * $penalite ) / $penalite_event->param;
+
+    
+    //     // Si le total des points est égal à 0, ne pas sauvegarder l'infraction
+    //     if ($totalPoints <= 0) {
+    //         return;
+    //     }
+    
+    //     // Sauvegarder dans la table "infractions"
+    //     DB::table('infraction')->insert([
+    //         'imei' => $firstEvent->imei,
+    //         'rfid' => $firstEvent->chauffeur, // Ajouter si rfid = chauffeur
+    //         'vehicule' => $firstEvent->vehicule,
+    //         'calendar_id' => null, // Remplacer si nécessaire
+    //         'event' => $firstEvent->type, // Insérer le type d'événement ici
+    //         'distance' => 0, // Peut-être calculer si applicable
+    //         'distance_calendar' => null, // Remplacer si nécessaire
+    //         'odometer' => $lastEvent->odometer,
+    //         'duree_infraction' => $dureeSeconds,
+    //         'duree_initial' => $penalite_event->param,
+    //         'date_debut' => $startDateTime->toDateString(),
+    //         'date_fin' => $endDateTime->toDateString(),
+    //         'heure_debut' => $startDateTime->toTimeString(),
+    //         'heure_fin' => $endDateTime->toTimeString(),
+    //         'gps_debut' => $firstEvent->latitude . ',' . $firstEvent->longitude,
+    //         'gps_fin' => $lastEvent->latitude . ',' . $lastEvent->longitude,
+    //         'point' => $totalPoints,
+    //         'insuffisance' => 0, // Peut être modifié si applicable
+    //     ]);
+    // }
+
+    /**
+     * Antonio
+     * Vérification si il y a OVERSPEED.
      * Avec calcul de point est égale à chaque alert
      */
     private function saveInfraction($interval) {

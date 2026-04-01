@@ -2,338 +2,97 @@
 
 namespace App\Http\Controllers;
 
-use App\DataTables\RotationDataTable;
-use Illuminate\Pagination\LengthAwarePaginator;
-use App\Http\Requests\CreateRotationRequest;
-use App\Http\Requests\UpdateRotationRequest;
-use Carbon\Carbon;
-use App\Repositories\RotationRepository;
-use Flash;
-use Requests;
-use App\Http\Controllers\AppBaseController;
+use App\Models\Circuit;
 use App\Models\Rotation;
-use GuzzleHttp\Client;
-use Carbon\CarbonInterval;
-use Response;
+use App\Models\RotationObjective;
+use App\Models\Rvehicule;
+use App\Services\GpsApiService;
+use App\Services\ReportService;
+use App\Services\RotationCalculatorService;
+use Illuminate\Http\Request;
+use Carbon\Carbon;
 
-class RotationController extends AppBaseController
+class RotationController extends Controller
 {
-    /** @var RotationRepository $rotationRepository*/
-    private $rotationRepository;
-
-    public function __construct(RotationRepository $rotationRepo)
-    {
-        $this->rotationRepository = $rotationRepo;
-    }
-
-    /**
-     * Display a listing of the Rotation.
-     *
-     * @param RotationDataTable $rotationDataTable
-     *
-     * @return Response
-     */
-    public function index(RotationDataTable $rotationDataTable){
-        $client = new Client();
-        $vehicules = $this->getVehiculeRotation();
-
-        // Spécifiez l'URL de l'API que vous souhaitez interroger
-        $apiUrl = 'www.m-tectracking.mg/api/api.php?api=user&key=0AFEAB2328492FB8118E37ECCAF5E79F&cmd=OBJECT_GET_LAST_EVENTS_7D';
+     public function __construct(
+        private readonly RotationCalculatorService $calculator,
+        private readonly GpsApiService $gpsApi
+    ) {}
  
-        // Faites la requête GET à l'API
-        $response = $client->get($apiUrl);
-
-         // Obtenez le contenu de la réponse
-        $data = json_decode($response->getBody()->getContents(), true);
-        // Vérifiez si des données ont été récupérées
-        if (!empty($data)) {
-            foreach ($data as $item) {
-                // Vérifiez si une entrée identique existe déjà dans la table Rotation
-                $existingRotation = Rotation::where('imei', $item[2])
-                ->where('date_heure', $item[4])
-                ->first();
-                // Si aucune entrée identique n'existe, insérez les données dans la table Rotation
-                if (!$existingRotation) {
-                    Rotation::create([
-                        'imei' => $item[2],
-                        'type' => $item[0],
-                        'description' => $item[1],
-                        'vehicule' => $item[3],
-                        'date_heure' => $item[4],
-                        'latitude' => $item[5],
-                        'longitude' => $item[6],
-                    ]);
-                }
-            }
-        }
-        
-        return $rotationDataTable->render('rotations.index', compact('vehicules'));
-    }
-
-    public function getDataFromApi(){
-
-        $url = 'www.m-tectracking.mg/api/api.php?api=user&ver=1.0&key=0AFEAB2328492FB8118E37ECCAF5E79F&cmd=OBJECT_GET_LAST_EVENTS_7D';
-
-        $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 300);
-        $response = curl_exec($ch);
-        curl_close($ch);
-        $data = json_decode($response, true);
-
-        $currentPage = LengthAwarePaginator::resolveCurrentPage();
-        $perPage = 10;       
-
-        $currentPageSearchResults = array_slice($data, ($currentPage - 1) * $perPage, $perPage);
-
-        $data = new LengthAwarePaginator($currentPageSearchResults, count($data), $perPage);
-        $data->withPath(route('get.data.api')); 
-
-        return view('data.index', ['data' => $data]);
-    }
-
-    public function getVehiculeRotation(){
-        $vehicles = Rotation::distinct()->pluck('vehicule', 'vehicule')->toArray();
-
-        return $vehicles;
-    }
-
-    public function getRotationDurations($vehicle){
-         // Sélectionnez toutes les rotations pour le véhicule donné
-        $rotations = Rotation::where('vehicule', "=" ,$vehicle)->get();
-
-        $rotationDurationsDetail = [];
-        $totalDuration = 0;
-
-        // Parcourez chaque rotation pour calculer la durée entre zone_in et zone_out
-        foreach ($rotations as $rotation) {
-            if ($rotation->type === 'zone_in') {
-                // Récupérez la date de zone_in
-                $zoneInTime = Carbon::parse($rotation->date_heure);
-            } elseif ($rotation->type === 'zone_out') {
-                // Récupérez la date de zone_out
-                $zoneOutTime = Carbon::parse($rotation->date_heure);
-
-                // Calculez la durée entre zone_in et zone_out
-                $duration = $zoneOutTime->diffInHours($zoneInTime);
-                $totalDuration += $duration;
-                
-
-                // Ajoutez la durée à un tableau pour chaque rotation
-                $rotationDurationsDetail[] = [
-                    'zone_in' => $zoneInTime->format('Y-m-d H:i:s'),
-                    'zone_out' => $zoneOutTime->format('Y-m-d H:i:s'),
-                    'duration_hours' => $duration,
-                ];
-
-                // Réinitialisez les temps pour la prochaine rotation
-                $zoneInTime = null;
-                $zoneOutTime = null;
-            }
-        }
-        
-
-        // Retournez le tableau contenant les durées pour chaque rotation
-        $data = [
-            'vehicule' => $vehicle,
-            'détail' => $rotationDurationsDetail,
-            'totalHours' => $totalDuration
-        ];
-        return response()->json($data);
-    }
-
-    public function getTotalRotationDuration($vehicle){
-        // Sélectionnez toutes les rotations pour le véhicule donné
-        $rotations = Rotation::where('vehicule', '=' ,$vehicle)->get();
-        // Initialisez la durée totale à zéro
-        $totalDuration = Carbon::now()->diffInSeconds(Carbon::now()); // Initialisez à 0 secondes
-
-        // Parcourez chaque rotation pour calculer la durée totale
-        foreach ($rotations as $rotation) {
-            // Vérifiez si c'est une rotation de zone_in
-            if ($rotation->type === 'zone_in') {
-                // Récupérez la date et l'heure de zone_in
-                $zoneInDateTime = Carbon::parse($rotation->date_heure);
-                
-                // Trouvez la rotation de zone_out correspondante
-                $zoneOutRotation = $rotations->where('type', 'zone_out')
-                    ->where('date_heure', '>', $zoneInDateTime)
-                    ->first();
-
-                // Si une rotation de zone_out est trouvée, calculez la durée de rotation
-                if ($zoneOutRotation) {
-                    $zoneOutDateTime = Carbon::parse($zoneOutRotation->date_heure);
-                    $rotationDuration = $zoneOutDateTime->diffInSeconds($zoneInDateTime);
-
-                    // Ajoutez la durée de rotation à la durée totale
-                    $totalDuration += $rotationDuration;
-                }
-            }
-        }
-        // Convertissez la durée totale en heures, minutes et secondes
-        $hours = floor($totalDuration / 3600);
-        $totalDuration %= 3600;
-        $minutes = floor($totalDuration / 60);
-        $seconds = $totalDuration % 60;
-        
-
-        // Retournez la durée totale sous forme de tableau ou de chaîne formatée
-        return ['hours' => $hours, 'minutes' => $minutes, 'seconds' => $seconds];
-    }
-
-    public function getTotalDuoRotationDuration($vehicle){
-        // Sélectionnez toutes les rotations pour le véhicule donné
-        $rotations = Rotation::where('vehicule', $vehicle)->get();
-
-        // Initialisez la durée totale à zéro
-        $totalDurationSeconds = 0;
-
-        // Parcourez chaque rotation pour calculer la durée totale
-        $lastZoneInTime = null;
-        foreach ($rotations as $rotation) {
-            // Si c'est une rotation de zone_in, enregistrez l'heure
-            if ($rotation->type === 'zone_in') {
-                $lastZoneInTime = Carbon::parse($rotation->date_heure);
-            } elseif ($rotation->type === 'zone_out' && $lastZoneInTime) {
-                // Si c'est une rotation de zone_out et qu'on a déjà un enregistrement de zone_in
-                $zoneOutTime = Carbon::parse($rotation->date_heure);
-                // Calculez la durée de la rotation et ajoutez-la à la durée totale
-                $rotationDuration = $lastZoneInTime->diffInSeconds($zoneOutTime);
-                $totalDurationSeconds += $rotationDuration;
-                // Réinitialisez lastZoneInTime pour la prochaine paire de rotations
-                $lastZoneInTime = null;
-            }
-        }
-
-        // Convertissez la durée totale en heures, minutes et secondes
-        $totalDuration = Carbon::createFromTimestamp($totalDurationSeconds)->format('H:i:s');
-
-        dd($totalDuration);
-        // Retournez la durée totale
-        return $totalDuration;
-    }
-
-    /**
-     * Show the form for creating a new Rotation.
-     *
-     * @return Response
-     */
-    public function create()
+    public function index(Request $request)
     {
-        return view('rotations.create');
-    }
-
-    /**
-     * Store a newly created Rotation in storage.
-     *
-     * @param CreateRotationRequest $request
-     *
-     * @return Response
-     */
-    public function store(CreateRotationRequest $request)
-    {
-        $input = $request->all();
-
-        $rotation = $this->rotationRepository->create($input);
-
-        Flash::success(__('messages.saved', ['model' => __('models/rotations.singular')]));
-
-        return redirect(route('rotations.index'));
-    }
-
-    /**
-     * Display the specified Rotation.
-     *
-     * @param int $id
-     *
-     * @return Response
-     */
-    public function show($id)
-    {
-        $rotation = $this->rotationRepository->find($id);
-
-        if (empty($rotation)) {
-            Flash::error(__('messages.not_found', ['model' => __('models/rotations.singular')]));
-
-            return redirect(route('rotations.index'));
+        $circuits = Circuit::where('active', true)->orderBy('name')->get();
+        $vehicles = Rvehicule::orderBy('name')->get();
+ 
+        $query = Rotation::with(['vehicle', 'circuit'])->latest('started_at');
+ 
+        if ($request->circuit_id) {
+            $query->where('circuit_id', $request->circuit_id);
         }
-
-        return view('rotations.show')->with('rotation', $rotation);
+        if ($request->vehicle_id) {
+            $query->where('vehicle_id', $request->vehicle_id);
+        }
+        if ($request->month) {
+            $query->where('counted_month', $request->month);
+        }
+        if ($request->status) {
+            $query->where('status', $request->status);
+        }
+ 
+        $rotations = $query->paginate(25)->withQueryString();
+ 
+        return view('rotations.index', compact('rotations', 'circuits', 'vehicles'));
     }
-
-
-    /**
-     * Show the form for editing the specified Rotation.
-     *
-     * @param int $id
-     *
-     * @return Response
-     */
-    public function edit($id)
+ 
+    public function show(Rotation $rotation)
     {
-        $rotation = $this->rotationRepository->find($id);
-
-        if (empty($rotation)) {
-            Flash::error(__('messages.not_found', ['model' => __('models/rotations.singular')]));
-
-            return redirect(route('rotations.index'));
-        }
-
-        return view('rotations.edit')->with('rotation', $rotation);
+        $rotation->load(['vehicle', 'circuit.legs', 'rotationLegs.circuitLeg']);
+        $objective = $rotation->circuit->currentObjective();
+        return view('rotations.show', compact('rotation', 'objective'));
     }
-
+ 
     /**
-     * Update the specified Rotation in storage.
-     *
-     * @param int $id
-     * @param UpdateRotationRequest $request
-     *
-     * @return Response
+     * Lance le calcul des rotations pour un circuit/véhicule/mois donné.
      */
-    public function update($id, UpdateRotationRequest $request)
+    public function calculate(Request $request)
     {
-        $rotation = $this->rotationRepository->find($id);
-        $data = $request->all();
-
-        if (isset($data['date_heur'])) {
-            $data['date_heur'] = Carbon::parse($data['date_heur'])->format('Y-m-d H:i:s');
+        $data = $request->validate([
+            'circuit_id' => 'required|exists:circuits,id',
+            'vehicle_id' => 'nullable|exists:vehicles,id',
+            'year'       => 'required|integer|min:2020|max:2099',
+            'month'      => 'required|integer|min:1|max:12',
+        ]);
+ 
+        $circuit  = Circuit::findOrFail($data['circuit_id']);
+        $vehicles = $data['vehicle_id']
+            ? [Rvehicule::findOrFail($data['vehicle_id'])]
+            : $circuit->vehicles->all();
+ 
+        if (empty($vehicles)) {
+            return back()->with('error', 'Aucun véhicule affecté à ce circuit.');
         }
-
-        if (empty($rotation)) {
-            Flash::error(__('messages.not_found', ['model' => __('models/rotations.singular')]));
-
-            return redirect(route('rotations.index'));
+ 
+        $totalCount = 0;
+        $errors     = [];
+ 
+        foreach ($vehicles as $vehicle) {
+            $result      = $this->calculator->calculateForMonth($vehicle, $circuit, $data['year'], $data['month']);
+            $totalCount += $result['count'];
+            $errors      = array_merge($errors, $result['errors']);
         }
-       
-
-        $rotation = $this->rotationRepository->update($data, $id);
-
-        Flash::success(__('messages.updated', ['model' => __('models/rotations.singular')]));
-
-        return redirect(route('rotations.index'));
+ 
+        $msg = "{$totalCount} rotation(s) calculée(s) pour " . count($vehicles) . " véhicule(s).";
+        if (!empty($errors)) {
+            $msg .= ' Avertissements : ' . implode(' | ', $errors);
+        }
+ 
+        return back()->with('success', $msg);
     }
-
-    /**
-     * Remove the specified Rotation from storage.
-     *
-     * @param int $id
-     *
-     * @return Response
-     */
-    public function destroy($id)
+ 
+    public function destroy(Rotation $rotation)
     {
-        $rotation = $this->rotationRepository->find($id);
-
-        if (empty($rotation)) {
-            Flash::error(__('messages.not_found', ['model' => __('models/rotations.singular')]));
-
-            return redirect(route('rotations.index'));
-        }
-
-        $this->rotationRepository->delete($id);
-
-        Flash::success(__('messages.deleted', ['model' => __('models/rotations.singular')]));
-
-        return redirect(route('rotations.index'));
+        $rotation->rotationLegs()->delete();
+        $rotation->delete();
+        return back()->with('success', 'Rotation supprimée.');
     }
 }
