@@ -513,6 +513,31 @@
 
 
 <style>
+    .topbar {
+            background: #fff;
+            border-radius: 8px;
+            padding: 0 28px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+
+        .topbar-title {
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 0.01em;
+            flex: 1;
+        }
+
+        .topbar-actions { display: flex; gap: 8px; align-items: center; }
+
+
         .dataTables_wrapper {
             margin: 20px;
         },

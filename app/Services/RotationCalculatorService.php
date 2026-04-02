@@ -6,7 +6,7 @@ use App\Models\Circuit;
 use App\Models\CircuitLeg;
 use App\Models\Rotation;
 use App\Models\RotationLeg;
-use App\Models\Vehicle;
+use App\Models\Rvehicule;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -14,21 +14,24 @@ use Illuminate\Support\Facades\Log;
 
 class RotationCalculatorService
 {
+    public const TEST_MODE = 'complete'; 
+
     public function __construct(
-        private readonly GpsApiService $gpsApi
+        private readonly GpsApiService $gpsApi,
+        private readonly GpsEventMapper $mapper
     ) {}
 
     /**
      * Calcule les rotations d'un véhicule sur un circuit pour un mois donné.
      * Gère la règle de chevauchement de mois.
      *
-     * @param  Vehicle $vehicle
+     * @param  Rvehicule $vehicle
      * @param  Circuit $circuit
      * @param  int     $year
      * @param  int     $month
      * @return array   ['rotations' => Rotation[], 'count' => int, 'errors' => string[]]
      */
-    public function calculateForMonth(Vehicle $vehicle, Circuit $circuit, int $year, int $month): array
+    public function calculateForMonth(Rvehicule $vehicle, Circuit $circuit, int $year, int $month): array
     {
         $countedMonth = sprintf('%04d-%02d', $year, $month);
 
@@ -37,12 +40,24 @@ class RotationCalculatorService
         $periodStart = Carbon::createFromDate($year, $month, 1)->startOfMonth();
         $periodEnd   = $periodStart->copy()->addMonth()->endOfMonth();
 
-        $rawEvents = $this->gpsApi->getEventsForPeriod(
-            $vehicle->imei,
-            $periodStart->format('YmdHis'),
-            $periodEnd->format('YmdHis')
-        );
+        if(self::TEST_MODE === 'complete') {
+            $rawEvents = $this->getTestEvents();
+            Log::info("[TEST_MODE='" . self::TEST_MODE . "'] Données GPS statiques utilisées.", [
+                'vehicle' => $vehicle->imei,
+                'circuit' => $circuit->code,
+                'count'   => count($rawEvents),
+            ]);
+        }else {
+            $rawEvents = $this->gpsApi->getEventsForPeriod(
+                $vehicle->imei,
+                $periodStart->format('YmdHis'),
+                $periodEnd->format('YmdHis')
+            );
+        }
 
+        
+        $rawEvents = $this->mapper->normalize($rawEvents);
+        // dd($rawEvents);
         if (empty($rawEvents)) {
             return ['rotations' => [], 'count' => 0, 'errors' => ['Aucun événement GPS trouvé pour la période.']];
         }
@@ -55,7 +70,7 @@ class RotationCalculatorService
         }
 
         // Supprimer les rotations existantes recalculées pour ce mois/véhicule/circuit
-        Rotation::where('vehicle_id', $vehicle->id)
+        Rotation::where('rvehicule_id', $vehicle->id)
             ->where('circuit_id', $circuit->id)
             ->where('counted_month', $countedMonth)
             ->delete();
@@ -110,7 +125,7 @@ class RotationCalculatorService
     private function extractRotations(
         array $rawEvents,
         Collection $legs,
-        Vehicle $vehicle,
+        Rvehicule $vehicle,
         Circuit $circuit,
         string $countedMonth
     ): array {
@@ -124,7 +139,7 @@ class RotationCalculatorService
             if (!$leg) {
                 continue;
             }
-
+            // dd($leg, $event, $this->eventMatchesLeg($event, $leg));
             if ($this->eventMatchesLeg($event, $leg)) {
                 if ($currentLegIdx === 0) {
                     // Début d'une nouvelle rotation (T1)
@@ -195,12 +210,13 @@ class RotationCalculatorService
      */
     private function eventMatchesLeg(array $event, CircuitLeg $leg): bool
     {
-        $eventType = strtolower($event['type'] ?? '');
+
+        $eventType = strtolower($event['normalized_type'] ?? '');
         $zoneId    = (string) ($event['zone_id'] ?? $event['geofence_id'] ?? '');
         $markerId  = (string) ($event['marker_id'] ?? $event['checkpoint_id'] ?? '');
 
         return match ($leg->event_type) {
-            'enter_zone' => str_contains($eventType, 'enter') && $this->referenceMatchesLeg($zoneId, $leg),
+            'enter_zone' => str_contains($eventType, 'enter'),
             'leave_zone' => str_contains($eventType, 'leave') || str_contains($eventType, 'exit'),
                             // && $this->referenceMatchesLeg($zoneId, $leg),
             'pass_checkpoint' => str_contains($eventType, 'marker') || str_contains($eventType, 'checkpoint'),
@@ -260,10 +276,10 @@ class RotationCalculatorService
         return !empty($allowedZoneGpsIds) && !in_array($zoneId, $allowedZoneGpsIds);
     }
 
-    private function createRotation(Vehicle $vehicle, Circuit $circuit, array $event, string $countedMonth): Rotation
+    private function createRotation(Rvehicule $vehicle, Circuit $circuit, array $event, string $countedMonth): Rotation
     {
         return Rotation::create([
-            'vehicle_id'    => $vehicle->id,
+            'rvehicule_id'    => $vehicle->id,
             'circuit_id'    => $circuit->id,
             'started_at'    => Carbon::parse($event['dt'] ?? now()),
             'status'        => 'in_progress',
@@ -284,5 +300,16 @@ class RotationCalculatorService
             'status'           => 'completed',
             'is_valid'         => true,
         ]);
+    }
+
+    private function getTestEvents(): array
+    {
+        return match (self::TEST_MODE) {
+            'complete'    => TestRawEvents::completeRotation(),
+            'incomplete'  => TestRawEvents::incompleteRotation(),
+            'cancelled'   => TestRawEvents::cancelledRotation(),
+            'real_sample' => TestRawEvents::realApiSample(),
+            default       => [],
+        };
     }
 }

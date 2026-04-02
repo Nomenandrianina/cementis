@@ -10,9 +10,14 @@
         ↓ Export CSV
     </a>
 @endsection
-
+<script>
+function toggleDetail(id) {
+    const row = document.getElementById(id);
+    row.style.display = row.style.display === 'none' ? 'table-row' : 'none';
+}
+</script>
 @section('content')
-
+<link rel="stylesheet" href="{{ asset('css/rotation.css') }}">
 {{-- Résumé global --}}
 <div class="stats-grid" style="margin-bottom:24px;">
     <div class="stat-card">
@@ -182,10 +187,5 @@
 @endsection
 
 @push('scripts')
-<script>
-function toggleDetail(id) {
-    const row = document.getElementById(id);
-    row.style.display = row.style.display === 'none' ? 'table-row' : 'none';
-}
-</script>
+
 @endpush

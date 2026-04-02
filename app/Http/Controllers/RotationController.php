@@ -24,13 +24,13 @@ class RotationController extends Controller
         $circuits = Circuit::where('active', true)->orderBy('name')->get();
         $vehicles = Rvehicule::orderBy('name')->get();
  
-        $query = Rotation::with(['vehicle', 'circuit'])->latest('started_at');
+        $query = Rotation::with(['rvehicule', 'circuit'])->latest('started_at');
  
         if ($request->circuit_id) {
             $query->where('circuit_id', $request->circuit_id);
         }
         if ($request->vehicle_id) {
-            $query->where('vehicle_id', $request->vehicle_id);
+            $query->where('rvehicule_id', $request->vehicle_id);
         }
         if ($request->month) {
             $query->where('counted_month', $request->month);
@@ -46,7 +46,7 @@ class RotationController extends Controller
  
     public function show(Rotation $rotation)
     {
-        $rotation->load(['vehicle', 'circuit.legs', 'rotationLegs.circuitLeg']);
+        $rotation->load(['rvehicule', 'circuit.legs', 'rotationLegs.circuitLeg']);
         $objective = $rotation->circuit->currentObjective();
         return view('rotations.show', compact('rotation', 'objective'));
     }
@@ -58,7 +58,7 @@ class RotationController extends Controller
     {
         $data = $request->validate([
             'circuit_id' => 'required|exists:circuits,id',
-            'vehicle_id' => 'nullable|exists:vehicles,id',
+            'vehicle_id' => 'nullable|exists:r_vehicules,id',
             'year'       => 'required|integer|min:2020|max:2099',
             'month'      => 'required|integer|min:1|max:12',
         ]);

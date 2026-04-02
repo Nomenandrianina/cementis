@@ -5,7 +5,7 @@ namespace App\Services;
 use App\Models\Circuit;
 use App\Models\Rotation;
 use App\Models\RotationObjective;
-use App\Models\Vehicle;
+use App\Models\Rvehicule;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
@@ -27,9 +27,10 @@ class ReportService
             ->latest('effective_from')
             ->first();
 
-        $vehicles = $circuit->vehicles;
-
-        $vehicleReports = $vehicles->map(function (Vehicle $vehicle) use ($circuit, $countedMonth, $objective) {
+        // $vehicles = $circuit->vehicles;
+        $vehicles = Rvehicule::all();
+            
+        $vehicleReports = $vehicles->map(function (Rvehicule $vehicle) use ($circuit, $countedMonth, $objective) {
             return $this->vehicleMonthlyReport($vehicle, $circuit, $countedMonth, $objective);
         });
 
@@ -53,13 +54,13 @@ class ReportService
      * Rapport mensuel pour un véhicule sur un circuit.
      */
     public function vehicleMonthlyReport(
-        Vehicle $vehicle,
+        Rvehicule $vehicle,
         Circuit $circuit,
         string $countedMonth,
         ?RotationObjective $objective
     ): array {
         $rotations = Rotation::with('rotationLegs.circuitLeg')
-            ->where('vehicle_id', $vehicle->id)
+            ->where('rvehicule_id', $vehicle->id)
             ->where('circuit_id', $circuit->id)
             ->where('counted_month', $countedMonth)
             ->where('status', 'completed')
@@ -79,7 +80,7 @@ class ReportService
             'avg_duration'      => $avgDuration ? round($avgDuration) : null,
             'total_duration'    => $rotations->sum('duration_minutes'),
             'rotations'         => $rotationDetails,
-            'cancelled_count'   => Rotation::where('vehicle_id', $vehicle->id)
+            'cancelled_count'   => Rotation::where('rvehicule_id', $vehicle->id)
                                     ->where('circuit_id', $circuit->id)
                                     ->where('counted_month', $countedMonth)
                                     ->where('status', 'cancelled')

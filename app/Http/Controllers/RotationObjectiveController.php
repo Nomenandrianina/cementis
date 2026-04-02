@@ -19,7 +19,7 @@ class RotationObjectiveController extends Controller
     public function index(Circuit $circuit)
     {
         $objectives = $circuit->objectives()->orderByDesc('effective_from')->get();
-        return view('rotations.objectives', compact('circuit', 'objectives'));
+        return view('objectives.objectives', compact('circuit', 'objectives'));
     }
  
     public function store(Request $request, Circuit $circuit)

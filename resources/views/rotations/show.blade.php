@@ -8,7 +8,7 @@
 @endsection
 
 @section('content')
-
+<link rel="stylesheet" href="{{ asset('css/rotation.css') }}">
 <div class="grid-2" style="gap:24px;">
 
     {{-- Informations générales --}}
@@ -27,11 +27,11 @@
                     <tbody>
                         <tr>
                             <td style="color:var(--muted);padding:6px 0;width:40%;">Camion</td>
-                            <td style="font-weight:600;">{{ $rotation->vehicle->name }}</td>
+                            <td style="font-weight:600;">{{ $rotation->rvehicule->name }}</td>
                         </tr>
                         <tr>
                             <td style="color:var(--muted);padding:6px 0;">Immatriculation</td>
-                            <td class="mono">{{ $rotation->vehicle->plate_number ?? '—' }}</td>
+                            <td class="mono">{{ $rotation->rvehicule->plate_number ?? '—' }}</td>
                         </tr>
                         <tr>
                             <td style="color:var(--muted);padding:6px 0;">Circuit</td>

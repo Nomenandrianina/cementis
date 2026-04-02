@@ -457,8 +457,8 @@
                     <th>Camion</th>
                     <th>Circuit</th>
                     <th>Mois compté</th>
-                    <th>Début (T1)</th>
-                    <th>Fin (T5)</th>
+                    <th>Début </th>
+                    <th>Fin</th>
                     <th>Durée</th>
                     <th>Statut</th>
                     <th>Validité</th>
@@ -470,9 +470,9 @@
                     <tr>
                         <td class="mono" style="color:var(--muted)">{{ $rotation->id }}</td>
                         <td>
-                            <div style="font-weight:600;">{{ $rotation->vehicle->name }}</div>
-                            @if($rotation->vehicle->plate_number)
-                                <div style="font-size:11px;color:var(--muted);" class="mono">{{ $rotation->vehicle->plate_number }}</div>
+                            <div style="font-weight:600;">{{ $rotation->rvehicule->name }}</div>
+                            @if($rotation->rvehicule->plate_number)
+                                <div style="font-size:11px;color:var(--muted);" class="mono">{{ $rotation->rvehicule->plate_number }}</div>
                             @endif
                         </td>
                         <td>{{ $rotation->circuit->name }}</td>

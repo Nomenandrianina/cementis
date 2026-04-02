@@ -23,7 +23,7 @@ class RvehiculeController extends Controller
 
         foreach ($objects as $imei => $data) {
             Rvehicule::updateOrCreate(
-                ['imei' => $imei],
+                ['imei' => $data['imei'] ?? $imei],
                 [
                     'name'           => $data['name'] ?? $imei,
                     'plate_number'   => $data['plate_number'] ?? null,
