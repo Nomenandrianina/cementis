@@ -142,6 +142,7 @@ class RotationCalculatorService
             // dd($leg, $event, $this->eventMatchesLeg($event, $leg));
             if ($this->eventMatchesLeg($event, $leg)) {
                 if ($currentLegIdx === 0) {
+                    // dd($currentRotation, $event);
                     // Début d'une nouvelle rotation (T1)
                     $currentRotation = $this->createRotation($vehicle, $circuit, $event, $countedMonth);
                     $legEvents = [];
@@ -212,8 +213,7 @@ class RotationCalculatorService
     {
 
         $eventType = strtolower($event['normalized_type'] ?? '');
-        $zoneId    = (string) ($event['zone_id'] ?? $event['geofence_id'] ?? '');
-        $markerId  = (string) ($event['marker_id'] ?? $event['checkpoint_id'] ?? '');
+
 
         return match ($leg->event_type) {
             'enter_zone' => str_contains($eventType, 'enter'),
@@ -254,7 +254,7 @@ class RotationCalculatorService
     {
         // On considère qu'un événement d'entrée dans une zone NON prévue dans le circuit
         // peut invalider la rotation — logique simplifiée, extensible
-        $eventType = strtolower($event['type'] ?? '');
+        $eventType = strtolower($event['normalized_type'] ?? '');
         if (!str_contains($eventType, 'enter')) {
             return false;
         }
@@ -281,7 +281,7 @@ class RotationCalculatorService
         return Rotation::create([
             'rvehicule_id'    => $vehicle->id,
             'circuit_id'    => $circuit->id,
-            'started_at'    => Carbon::parse($event['dt'] ?? now()),
+            'started_at'    => Carbon::parse($event['dt']),
             'status'        => 'in_progress',
             'counted_month' => $countedMonth,
             'is_valid'      => false,

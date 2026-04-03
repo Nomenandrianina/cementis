@@ -110,12 +110,24 @@ class CircuitController extends Controller
 
     public function reorderLegs(Request $request, Circuit $circuit)
     {
-        $request->validate(['order' => 'required|array', 'order.*' => 'integer']);
+        $request->validate([
+            'order'   => 'required|array',
+            'order.*' => 'integer|exists:circuit_legs,id',
+        ]);
 
-        foreach ($request->order as $idx => $legId) {
-            CircuitLeg::where('id', $legId)->where('circuit_id', $circuit->id)->update(['order' => $idx + 1]);
+        $legs = [];
+        foreach ($request->order as $position => $legId) {
+            CircuitLeg::where('id', $legId)
+                    ->where('circuit_id', $circuit->id)
+                    ->update(['order' => $position + 1]);
+
+            $legs[] = ['id' => (int) $legId, 'order' => $position + 1];
         }
-        return response()->json(['success' => true]);
+
+        return response()->json([
+            'success' => true,
+            'legs'    => $legs,   // retourné pour mise à jour des badges côté JS
+        ]);
     }
 
     // ── Véhicules affectés ─────────────────────────────────────────────────────

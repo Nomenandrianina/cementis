@@ -359,4 +359,52 @@
             .main-wrapper { margin-left: 0; }
             .grid-2, .grid-3 { grid-template-columns: 1fr; }
         }
-    
+
+        /* Conteneur principal fixe sur tout l'écran */
+        .leg-edit-modal-container {
+            position: fixed !important;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 99999; /* Très élevé pour passer devant tout */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Le fond flou */
+        .leg-edit-modal-container .modal-backdrop {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(4px); /* Flou du contenu arrière */
+            -webkit-backdrop-filter: blur(4px);
+        }
+
+        /* La carte au centre */
+        .leg-edit-modal-container .modal-content {
+            background: #fff;
+            width: 420px;
+            max-width: 90%;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            z-index: 100000;
+            
+            /* AJOUTE CES LIGNES POUR FORCER LE CENTRAGE */
+            position: fixed; 
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%); /* Déplace le modal de la moitié de sa propre taille vers le haut et la gauche */
+            animation: modalAppear 0.2s ease-out;
+        }
+
+        /* On ajuste l'animation pour qu'elle ne casse pas le centrage */
+        @keyframes modalAppear {
+            from { transform: translate(-50%, -50%) scale(0.95); opacity: 0; }
+            to { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }

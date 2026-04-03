@@ -39,41 +39,16 @@
                     $durationInputs = [];
                     $processedLegs  = [];
 
-                    $staticZoneLabels = ['garage', 'parking', 'depot', 'atelier', 'client'];
-
                     foreach ($legs as $idx => $leg) {
                         if (isset($processedLegs[$leg->id])) continue;
 
+                        // 1. Ignorer les checkpoints simples
                         if ($leg->event_type === 'pass_checkpoint') {
-                            // Pas de durée pour un checkpoint
                             $processedLegs[$leg->id] = true;
                             continue;
                         }
 
-                        $lowerLabel = strtolower($leg->label);
-                        $isStaticZone = false;
-                        
-                        // Vérifier si le label correspond à une zone de type garage/parking
-                        foreach ($staticZoneLabels as $staticLabel) {
-                            if (str_contains($lowerLabel, $staticLabel)) {
-                                $isStaticZone = true;
-                                break;
-                            }
-                        }
-
-                        
-                        if ($isStaticZone) {
-                            $durationInputs[] = [
-                                'label'    => "Temps d'arrêt : {$leg->label}",
-                                'sublabel' => "{$leg->label}",
-                                'leg_ids'  => [$leg->id],
-                                'type'     => 'static_zone',
-                                'key'      => "static_{$leg->id}",
-                            ];
-                            $processedLegs[$leg->id] = true;
-                            continue;
-                        }
-
+                        // 2. Tenter de trouver une paire (Entrée + Sortie) PEU IMPORTE le nom de la zone
                         if ($leg->event_type === 'enter_zone') {
                             $matchingLeave = $legs->first(fn($l) =>
                                 $l->event_type === 'leave_zone' &&
@@ -82,12 +57,14 @@
                                 !isset($processedLegs[$l->id])
                             );
 
-                            $zoneName = \App\Models\Zone::find($leg->reference_id)?->name ?? $leg->label;
-
                             if ($matchingLeave) {
-                                // Paire détectée → une seule saisie "Durée dans [zone]"
+                                $zoneName = \App\Models\Zone::find($leg->reference_id)?->name ?? $leg->label;
+                                
+                                // Nettoyage du nom pour l'affichage
+                                $cleanName = str_replace(['Entrée zone (', ')', 'Entrée '], '', $zoneName);
+
                                 $durationInputs[] = [
-                                    'label'    => "Durée dans la zone : {$zoneName}",
+                                    'label'    => "Durée dans la zone : {$cleanName}",
                                     'sublabel' => "{$leg->label}  →  {$matchingLeave->label}",
                                     'leg_ids'  => [$leg->id, $matchingLeave->id],
                                     'type'     => 'zone_pair',
@@ -95,29 +72,10 @@
                                 ];
                                 $processedLegs[$leg->id]          = true;
                                 $processedLegs[$matchingLeave->id] = true;
+                            }else {
+                                $processedLegs[$leg->id] = true;
                             }
-                            // } else {
-                            //     // Entrée sans sortie correspondante → durée individuelle
-                            //     $durationInputs[] = [
-                            //         'label'    => $leg->label,
-                            //         'sublabel' => null,
-                            //         'leg_ids'  => [$leg->id],
-                            //         'type'     => 'zone_single',
-                            //         'key'      => "leg_{$leg->id}",
-                            //     ];
-                            //     $processedLegs[$leg->id] = true;
-                            // }
-                        }
-
-                        if ($leg->event_type === 'leave_zone' && !isset($processedLegs[$leg->id])) {
-                            // Sortie sans entrée correspondante (ex: sortie initiale)
-                            $durationInputs[] = [
-                                'label'    => $leg->label,
-                                'sublabel' => null,
-                                'leg_ids'  => [$leg->id],
-                                'type'     => 'zone_single',
-                                'key'      => "leg_{$leg->id}",
-                            ];
+                        } else {
                             $processedLegs[$leg->id] = true;
                         }
                     }
@@ -196,7 +154,7 @@
                     </div>
                 @endif
 
-                <div class="grid-2" style="gap:12px;">
+                <div class="grid-2" style="gap:12px;display: none">
                     <div class="form-group" style="margin:0;">
                         <label>Date d'effet</label>
                         <input type="date" name="effective_from" value="{{ date('Y-m-01') }}" required>
@@ -290,11 +248,9 @@
                     {{-- Header (Date + Badge + Delete) --}}
                     <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
                         <span class="mono" style="font-size:11px;color:var(--accent);">
-                            {{ $obj->effective_from->format('d/m/Y') }}
-                            @if($obj->effective_until) → {{ $obj->effective_until->format('d/m/Y') }} @else → ∞ @endif
                         </span>
                         @php $isActive = $obj->effective_from <= now() && (!$obj->effective_until || $obj->effective_until >= now()); @endphp
-                        @if($isActive) <span class="badge badge-success">En vigueur</span> @endif
+                        {{-- @if($isActive) <span class="badge badge-success">En vigueur</span> @endif --}}
                         <div style="flex:1;"></div>
                         <form action="{{ route('circuits.objectives.destroy', [$circuit, $obj]) }}" method="POST" onsubmit="return confirm('Supprimer cet objectif ?')">
                             @csrf @method('DELETE')
@@ -328,14 +284,14 @@
                                 $legs = $circuit->legs()->orderBy('order')->get();
                             @endphp
 
-                            @foreach($legs as $leg)
+                            {{-- @foreach($legs as $leg)
                                 @if(isset($processedLegs[$leg->id])) @continue @endif
 
                                 @php
                                     $val = $obj->leg_objectives[$leg->id] ?? null;
                                 @endphp
 
-                                {{-- CAS 1 : Paire Entrée/Sortie --}}
+                               
                                 @if($leg->event_type === 'enter_zone')
                                     @php
                                         $matchingLeave = $legs->first(fn($l) => 
@@ -355,7 +311,7 @@
                                         @php $processedLegs[$matchingLeave->id] = true; @endphp
                                     @endif
 
-                                {{-- CAS 2 : Zone statique (Garage, Parking, Dépôt) --}}
+                                
                                 @elseif(Str::contains(strtolower($leg->event_type), ['garage', 'parking', 'depot']) && $val)
                                     <div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0;">
                                         <span style="color:var(--text-dim);">Arrêt : <strong>{{ $leg->label }}</strong></span>
@@ -364,6 +320,51 @@
                                 @endif
 
                                 @php $processedLegs[$leg->id] = true; @endphp
+                            @endforeach --}}
+                            @foreach($legs as $leg)
+                                @if(isset($processedLegs[$leg->id])) @continue @endif
+
+                                @php
+                                    $val = $obj->leg_objectives[$leg->id] ?? null;
+                                    // On cherche TOUJOURS si c'est une entrée qui a une sortie correspondante
+                                    $matchingLeave = null;
+                                    if($leg->event_type === 'enter_zone') {
+                                        $matchingLeave = $legs->first(fn($l) => 
+                                            $l->event_type === 'leave_zone' && 
+                                            $l->reference_id == $leg->reference_id && 
+                                            $l->order > $leg->order &&
+                                            !isset($processedLegs[$l->id])
+                                        );
+                                    }
+                                @endphp
+
+                                {{-- SI C'EST UNE PAIRE (Zone classique, Garage ou Parking avec entrée/sortie) --}}
+                                @if($matchingLeave)
+                                    @php
+                                        $zoneName = \App\Models\Zone::find($leg->reference_id)?->name ?? $leg->label;
+                                        // On nettoie le nom si besoin (enlever "Entrée zone" du label)
+                                        $zoneName = str_replace(['Entrée zone (', ')', 'Entrée '], '', $zoneName);
+                                    @endphp
+                                    
+                                    <div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0;">
+                                        <span style="color:var(--text-dim);">Durée dans la zone : <strong>{{ $zoneName }}</strong></span>
+                                        <span class="mono">{{ intdiv($val, 60) }}h{{ str_pad($val % 60, 2, '0', STR_PAD_LEFT) }}m</span>
+                                    </div>
+                                    
+                                    @php 
+                                        $processedLegs[$matchingLeave->id] = true; 
+                                        $processedLegs[$leg->id] = true;
+                                    @endphp
+
+                                {{-- SI C'EST UN ÉVÉNEMENT ISOLÉ (Garage/Parking sans paire ou autre type) --}}
+                                @elseif($val)
+                                    <div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0;">
+                                        <span style="color:var(--text-dim);">Arrêt : <strong>{{ $leg->label }}</strong></span>
+                                        <span class="mono">{{ intdiv($val, 60) }}h{{ str_pad($val % 60, 2, '0', STR_PAD_LEFT) }}m</span>
+                                    </div>
+                                    @php $processedLegs[$leg->id] = true; @endphp
+                                @endif
+
                             @endforeach
                         </div>
                     @endif

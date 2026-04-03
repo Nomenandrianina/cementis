@@ -6,7 +6,29 @@
 @section('topbar-actions')
     <a href="{{ route('rotations.index') }}" class="btn btn-ghost btn-sm">← Retour</a>
 @endsection
+{{-- @push('scripts') --}}
+    <script>
+    let currentView = 'horizontal';
 
+    function toggleView() {
+        const h      = document.getElementById('view-horizontal');
+        const l      = document.getElementById('view-list');
+        const btn    = document.getElementById('view-toggle');
+
+        if (currentView === 'horizontal') {
+            h.style.display   = 'none';
+            l.style.display   = 'block';
+            btn.textContent   = '⟷ Timeline';
+            currentView       = 'list';
+        } else {
+            h.style.display   = 'block';
+            l.style.display   = 'none';
+            btn.textContent   = '☰ Liste';
+            currentView       = 'horizontal';
+        }
+    }
+    </script>
+    {{-- @endpush --}}
 @section('content')
 <link rel="stylesheet" href="{{ asset('css/rotation.css') }}">
 <div class="grid-2" style="gap:24px;">
@@ -133,7 +155,7 @@
     </div>
 
     {{-- Timeline des étapes --}}
-    <div class="card">
+    {{-- <div class="card">
         <div class="card-header">
             <span class="card-title">Étapes de la rotation</span>
             <span class="badge badge-muted">{{ $rotation->rotationLegs->count() }} / {{ $rotation->circuit->legs->count() }}</span>
@@ -177,7 +199,294 @@
                 @endforeach
             </div>
         </div>
+    </div> --}}
+    <div class="card">
+        <div class="card-header">
+            <span class="card-title">Étapes de la rotation</span>
+            <div style="display:flex;align-items:center;gap:10px;margin-left:auto;">
+                <span class="badge badge-muted">{{ $rotation->rotationLegs->count() }} / {{ $rotation->circuit->legs->count() }} étapes</span>
+                {{-- Toggle vue --}}
+                <button onclick="toggleView()" id="view-toggle"
+                        style="background:var(--cream);border:1px solid var(--cream-dd);border-radius:5px;
+                            padding:4px 10px;font-size:10px;font-weight:600;letter-spacing:0.08em;
+                            text-transform:uppercase;cursor:pointer;color:var(--muted);font-family:var(--sans);">
+                    ☰ Liste
+                </button>
+            </div>
+        </div>
+
+        @php
+            $legObjectives = $objective?->leg_objectives ?? [];
+            $allLegs       = $rotation->circuit->legs;
+            $completedLegs = $rotation->rotationLegs->keyBy('circuit_leg_id');
+
+            // Stats globales
+            $doneCount      = $rotation->rotationLegs->count();
+            $totalCount     = $allLegs->count();
+            $progressPct    = $totalCount > 0 ? round($doneCount / $totalCount * 100) : 0;
+        @endphp
+
+        {{-- Barre de progression globale --}}
+        <div style="padding:0 20px;border-bottom:1px solid var(--cream-d);">
+            <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-bottom:4px;padding-top:10px;">
+                <span>Progression</span>
+                <span class="mono">{{ $progressPct }}%</span>
+            </div>
+            <div style="height:4px;background:var(--cream-d);border-radius:2px;margin-bottom:10px;">
+                <div style="height:100%;width:{{ $progressPct }}%;
+                            background:{{ $progressPct === 100 ? 'var(--success)' : 'var(--bordeaux)' }};
+                            border-radius:2px;transition:width 0.4s ease;"></div>
+            </div>
+        </div>
+
+        {{-- ── VUE HORIZONTALE (défaut) ──────────────────────────────────────── --}}
+        <div id="view-horizontal">
+            {{-- Scroll horizontal avec les étapes --}}
+            <div style="overflow-x:auto;padding:24px 20px 20px;
+                        scrollbar-width:thin;scrollbar-color:var(--cream-dd) transparent;">
+                <div style="display:flex;align-items:flex-start;gap:0;min-width:max-content;position:relative;">
+
+                    @foreach($allLegs as $idx => $leg)
+                        @php
+                            $rl        = $completedLegs->get($leg->id);
+                            $isDone    = $rl !== null;
+                            $targetMin = $legObjectives[$leg->id] ?? null;
+                            $actualMin = $rl?->duration_since_previous_minutes;
+                            $isLast    = $loop->last;
+
+                            // Couleur selon état et dépassement
+                            $dotColor = match(true) {
+                                !$isDone             => 'var(--cream-dd)',
+                                $targetMin && $actualMin && ($actualMin > $targetMin) => 'var(--danger)',
+                                $isDone              => 'var(--success)',
+                                default              => 'var(--bordeaux)',
+                            };
+                            $cardBg = match(true) {
+                                !$isDone             => 'var(--cream)',
+                                $targetMin && $actualMin && ($actualMin > $targetMin) => 'rgba(192,39,45,0.04)',
+                                $isDone              => 'rgba(45,122,74,0.04)',
+                                default              => '#fff',
+                            };
+                        @endphp
+
+                        <div style="display:flex;align-items:flex-start;flex-shrink:0;">
+
+                            {{-- Carte de l'étape --}}
+                            <div style="width:160px;position:relative;">
+
+                                {{-- Connecteur ligne + dot --}}
+                                <div style="display:flex;align-items:center;margin-bottom:8px;">
+                                    {{-- Ligne gauche --}}
+                                    @if(!$loop->first)
+                                        <div style="flex:1;height:2px;
+                                                    background:{{ $isDone ? ($dotColor) : 'var(--cream-dd)' }};
+                                                    margin-right:-1px;"></div>
+                                    @else
+                                        <div style="width:20px;"></div>
+                                    @endif
+
+                                    {{-- Dot central --}}
+                                    <div style="width:14px;height:14px;border-radius:50%;flex-shrink:0;
+                                                background:{{ $isDone ? $dotColor : '#fff' }};
+                                                border:2px solid {{ $isDone ? $dotColor : 'var(--cream-dd)' }};
+                                                box-shadow:{{ $isDone ? '0 0 0 3px rgba(45,122,74,0.12)' : 'none' }};
+                                                z-index:1;position:relative;">
+                                    </div>
+
+                                    {{-- Ligne droite --}}
+                                    @if(!$loop->last)
+                                        <div style="flex:1;height:2px;
+                                                    background:var(--cream-dd);
+                                                    margin-left:-1px;"></div>
+                                    @else
+                                        <div style="width:20px;"></div>
+                                    @endif
+                                </div>
+
+                                {{-- Contenu de la carte --}}
+                                <div style="background:{{ $cardBg }};border:1px solid var(--cream-dd);
+                                            border-radius:7px;padding:10px;margin:0 4px;
+                                            border-top:2px solid {{ $isDone ? $dotColor : 'var(--cream-dd)' }};">
+
+                                    {{-- Numéro + type --}}
+                                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
+                                        <span style="font-family:var(--mono);font-size:9px;font-weight:700;
+                                                    color:{{ $isDone ? $dotColor : 'var(--muted)' }};">
+                                            T{{ $leg->order }}
+                                        </span>
+                                        <span style="font-size:8px;font-weight:700;text-transform:uppercase;
+                                                    letter-spacing:0.06em;color:var(--muted);
+                                                    background:var(--cream-d);padding:1px 5px;border-radius:10px;">
+                                            @if(str_contains($leg->event_type,'pass'))
+                                                CP
+                                            @elseif($leg->event_type === 'enter_zone')
+                                                IN
+                                            @else
+                                                OUT
+                                            @endif
+                                        </span>
+                                    </div>
+
+                                    {{-- Label --}}
+                                    <div style="font-size:11px;font-weight:600;color:var(--ink);
+                                                line-height:1.3;margin-bottom:5px;
+                                                display:-webkit-box;-webkit-line-clamp:2;
+                                                -webkit-box-orient:vertical;overflow:hidden;"
+                                        title="{{ $leg->label }}">
+                                        {{ $leg->label }}
+                                    </div>
+
+                                    @if($isDone)
+                                        {{-- Heure --}}
+                                        <div style="font-family:var(--mono);font-size:10px;
+                                                    color:var(--ink-light);margin-bottom:3px;">
+                                            {{ $rl->occurred_at->format('H:i') }}
+                                            <span style="color:var(--muted);font-size:9px;">
+                                                {{ $rl->occurred_at->format('d/m') }}
+                                            </span>
+                                        </div>
+
+                                        @if($actualMin !== null)
+                                            {{-- Durée depuis précédente --}}
+                                            <div style="font-size:10px;color:var(--muted);">
+                                                +{{ intdiv($actualMin,60) }}h{{ str_pad($actualMin%60,2,'0',STR_PAD_LEFT) }}m
+                                            </div>
+
+                                            @if($targetMin)
+                                                @php $ecart = $actualMin - $targetMin; @endphp
+                                                <div style="font-size:10px;font-weight:600;margin-top:2px;
+                                                            color:{{ $ecart > 0 ? 'var(--danger)' : 'var(--success)' }};">
+                                                    {{ $ecart > 0 ? '+' : '' }}{{ intdiv($ecart,60) }}h{{ str_pad(abs($ecart%60),2,'0',STR_PAD_LEFT) }}m
+                                                    vs obj.
+                                                </div>
+                                            @endif
+                                        @endif
+                                    @else
+                                        <div style="font-size:10px;color:var(--muted);font-style:italic;">Non atteint</div>
+                                    @endif
+                                </div>
+                            </div>
+
+                        </div>
+                    @endforeach
+
+                </div>
+            </div>
+
+            {{-- Légende --}}
+            <div style="display:flex;gap:16px;padding:8px 20px 14px;border-top:1px solid var(--cream-d);">
+                @foreach([
+                    ['var(--success)', 'Dans les temps'],
+                    ['var(--danger)',  'Dépassement'],
+                    ['var(--cream-dd)','Non atteint'],
+                ] as [$color, $label])
+                    <div style="display:flex;align-items:center;gap:5px;">
+                        <div style="width:8px;height:8px;border-radius:50%;background:{{ $color }};flex-shrink:0;"></div>
+                        <span style="font-size:10px;color:var(--muted);">{{ $label }}</span>
+                    </div>
+                @endforeach
+                <div style="margin-left:auto;font-size:10px;color:var(--muted);">← Faites défiler →</div>
+            </div>
+        </div>
+
+        {{-- ── VUE LISTE (compacte, pour beaucoup d'étapes) ──────────────────── --}}
+        <div id="view-list" style="display:none;">
+            <div style="max-height:420px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--cream-dd) transparent;">
+                <table style="width:100%;border-collapse:collapse;font-size:12px;">
+                    <thead style="position:sticky;top:0;z-index:10;">
+                        <tr style="background:var(--cream);">
+                            <th style="padding:8px 16px;text-align:left;font-size:9px;font-weight:700;
+                                    letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);
+                                    border-bottom:1px solid var(--cream-dd);"></th>
+                            <th style="padding:8px 16px;text-align:left;font-size:9px;font-weight:700;
+                                    letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);
+                                    border-bottom:1px solid var(--cream-dd);">Étape</th>
+                            <th style="padding:8px 16px;text-align:left;font-size:9px;font-weight:700;
+                                    letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);
+                                    border-bottom:1px solid var(--cream-dd);">Heure</th>
+                            <th style="padding:8px 16px;text-align:right;font-size:9px;font-weight:700;
+                                    letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);
+                                    border-bottom:1px solid var(--cream-dd);">Durée</th>
+                            <th style="padding:8px 16px;text-align:right;font-size:9px;font-weight:700;
+                                    letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);
+                                    border-bottom:1px solid var(--cream-dd);">Objectif</th>
+                            <th style="padding:8px 16px;text-align:right;font-size:9px;font-weight:700;
+                                    letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);
+                                    border-bottom:1px solid var(--cream-dd);">Écart</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($allLegs as $leg)
+                            @php
+                                $rl        = $completedLegs->get($leg->id);
+                                $isDone    = $rl !== null;
+                                $targetMin = $legObjectives[$leg->id] ?? null;
+                                $actualMin = $rl?->duration_since_previous_minutes;
+                                $ecart     = ($targetMin && $actualMin !== null) ? $actualMin - $targetMin : null;
+                            @endphp
+                            <tr style="border-bottom:1px solid var(--cream-d);
+                                    background:{{ !$isDone ? 'transparent' : ($ecart > 0 ? 'rgba(192,39,45,0.02)' : 'rgba(45,122,74,0.02)') }};">
+                                <td style="padding:9px 16px;">
+                                    <div style="display:flex;align-items:center;gap:7px;">
+                                        <div style="width:8px;height:8px;border-radius:50%;flex-shrink:0;
+                                                    background:{{ $isDone ? ($ecart > 0 ? 'var(--danger)' : 'var(--success)') : 'var(--cream-dd)' }};"></div>
+                                        <span style="font-family:var(--mono);font-size:10px;font-weight:600;
+                                                    color:{{ $isDone ? 'var(--bordeaux)' : 'var(--muted)' }};">
+                                            {{-- T{{ $leg->order }} --}}
+                                        </span>
+                                    </div>
+                                </td>
+                                <td style="padding:9px 16px;">
+                                    <div style="font-weight:600;color:{{ $isDone ? 'var(--ink)' : 'var(--muted)' }};">
+                                        {{ $leg->label }}
+                                    </div>
+                                    <div style="font-size:10px;color:var(--muted);margin-top:1px;">
+                                        @if(str_contains($leg->event_type,'pass')) checkpoint
+                                        @elseif($leg->event_type==='enter_zone') entrée zone
+                                        @else sortie zone @endif
+                                    </div>
+                                </td>
+                                <td style="padding:9px 16px;font-family:var(--mono);font-size:11px;color:var(--ink-light);">
+                                    @if($isDone)
+                                        {{ $rl->occurred_at->format('H:i:s') }}<br>
+                                        <span style="color:var(--muted);font-size:10px;">{{ $rl->occurred_at->format('d/m/Y') }}</span>
+                                    @else
+                                        <span style="color:var(--muted);">—</span>
+                                    @endif
+                                </td>
+                                <td style="padding:9px 16px;text-align:right;font-family:var(--mono);font-size:11px;">
+                                    @if($actualMin !== null)
+                                        +{{ intdiv($actualMin,60) }}h{{ str_pad($actualMin%60,2,'0',STR_PAD_LEFT) }}m
+                                    @else
+                                        <span style="color:var(--muted);">—</span>
+                                    @endif
+                                </td>
+                                <td style="padding:9px 16px;text-align:right;font-family:var(--mono);
+                                        font-size:11px;color:var(--muted);">
+                                    @if($targetMin)
+                                        {{ intdiv($targetMin,60) }}h{{ str_pad($targetMin%60,2,'0',STR_PAD_LEFT) }}m
+                                    @else —
+                                    @endif
+                                </td>
+                                <td style="padding:9px 16px;text-align:right;font-family:var(--mono);font-size:11px;">
+                                    @if($ecart !== null)
+                                        <span style="font-weight:700;color:{{ $ecart > 0 ? 'var(--danger)' : 'var(--success)' }};">
+                                            {{ $ecart > 0 ? '+' : '' }}{{ intdiv($ecart,60) }}h{{ str_pad(abs($ecart%60),2,'0',STR_PAD_LEFT) }}m
+                                        </span>
+                                    @else
+                                        <span style="color:var(--muted);">—</span>
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
     </div>
+
+    
 
 </div>
 @endsection

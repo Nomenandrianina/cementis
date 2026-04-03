@@ -86,20 +86,20 @@ class TestRawEvents
              '2026-04-01 07:49:31', '-18.925798', '47.499804', '0', '38', '9', $params],
 
             // ── Garage (séjour intermédiaire dans Ilanivato) ─────────────────
-            // ['zone_in', 'Entrée zone (Garage)', $imei, $name,
-            //  '2026-04-01 07:52:00', '-18.924799', '47.499433', '0', '90', '5', $params],
-            // ['stopped', 'Arrêt plus de 10mn', $imei, $name,
-            //  '2026-04-01 07:55:00', '-18.924799', '47.499500', '0', '0', '0', $params],
-            // ['zone_out', 'sortie zone (Garage)', $imei, $name,
-            //  '2026-04-01 08:05:00', '-18.924900', '47.499600', '0', '80', '4', $params],
+            ['zone_in', 'Entrée zone (Garage)', $imei, $name,
+             '2026-04-01 07:52:00', '-18.924799', '47.499433', '0', '90', '5', $params],
+            ['stopped', 'Arrêt plus de 10mn', $imei, $name,
+             '2026-04-01 07:55:00', '-18.924799', '47.499500', '0', '0', '0', $params],
+            ['zone_out', 'sortie zone (Garage)', $imei, $name,
+             '2026-04-01 08:05:00', '-18.924900', '47.499600', '0', '80', '4', $params],
 
             // ── Parking Ilanivato (séjour intermédiaire) ─────────────────────
-            // ['zone_in', 'Entrée zone (Parking ilanivato)', $imei, $name,
-            //  '2026-04-01 08:06:00', '-18.922186', '47.499905', '0', '45', '3', $params],
-            // ['stopped', 'Arrêt plus de 10mn', $imei, $name,
-            //  '2026-04-01 08:08:00', '-18.922186', '47.499905', '0', '0', '0', $params],
-            // ['zone_out', 'sortie zone (Parking ilanivato)', $imei, $name,
-            //  '2026-04-01 08:15:00', '-18.922323', '47.500044', '0', '60', '5', $params],
+            ['zone_in', 'Entrée zone (Parking ilanivato)', $imei, $name,
+             '2026-04-01 08:06:00', '-18.922186', '47.499905', '0', '45', '3', $params],
+            ['stopped', 'Arrêt plus de 10mn', $imei, $name,
+             '2026-04-01 08:08:00', '-18.922186', '47.499905', '0', '0', '0', $params],
+            ['zone_out', 'sortie zone (Parking ilanivato)', $imei, $name,
+             '2026-04-01 08:15:00', '-18.922323', '47.500044', '0', '60', '5', $params],
 
             // ── T4 : Sortie zone Ilanivato ──────────────────────────────────
             ['zone_out', 'sortie zone (Ilanivato)', $imei, $name,
