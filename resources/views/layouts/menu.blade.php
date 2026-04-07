@@ -277,7 +277,13 @@
     </a>
 </li>
 
-<li class="nav-item has-treeview {{ $isChauffeurActive || $isPenalitesActive || $isTransporteurActive || $isVehiculeActive || $isChauffeurUpdateActive ? 'menu-open' : '' }}">
+@php
+    $isCircuitsActive = Request::is('admin/circuits*');
+    $isCheckpointsActive = Request::is('admin/checkpoints*');
+    $isZoneActive = Request::is('admin/zones*');
+    $isVehiclesActive = Request::is('admin/vehicles*');
+@endphp
+<li class="nav-item has-treeview {{ $isCircuitsActive || $isCheckpointsActive || $isZoneActive || $isVehiclesActive ? 'menu-open' : '' }}">
     <a href="#" class="nav-link">
         <i class="nav-icon fas fa-database"></i>
         <p>
@@ -286,7 +292,7 @@
         </p>
     </a>
     <ul class="nav nav-treeview" style="padding-left:8px">
-        @can('chauffeurs.index')
+        @can('circuits.index')
             <li class="nav-item">
                 <a href="{{ route('circuits.index') }}" class="nav-link {{ request()->routeIs('circuits.*') ? 'active' : '' }}">
                     <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -298,7 +304,7 @@
 
         @endcan
         
-        @can('transporteurs.index')    
+        @can('checkpoints.index')    
             <li class="nav-item">
                 <a href="{{ route('checkpoints.index') }}" class="nav-link {{ request()->routeIs('checkpoints.*') ? 'active' : '' }}">
                     <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -309,7 +315,7 @@
                 </a>
             </li>
         @endcan
-        @can('vehicules.index')   
+        @can('zones.index')   
             <li class="nav-item">
                 <a href="{{ route('zones.index') }}" class="nav-link {{ request()->routeIs('zones.*') ? 'active' : '' }}">
                     <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -320,16 +326,18 @@
             </li>
         @endcan
 
-        <li class="nav-item">
-            <a href="{{ route('vehicles.index') }}" class="nav-link {{ request()->routeIs('vehicles.*') ? 'active' : '' }}">
-                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"/>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10l2 2 2-2h6z"/>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 8h4l3 4v3h-2m-5-7v7"/>
-                </svg>
-                Camions
-            </a>
-        </li>
+        @can('vehicles.index') 
+            <li class="nav-item">
+                <a href="{{ route('vehicles.index') }}" class="nav-link {{ request()->routeIs('vehicles.*') ? 'active' : '' }}">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10l2 2 2-2h6z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 8h4l3 4v3h-2m-5-7v7"/>
+                    </svg>
+                    Camions
+                </a>
+            </li>
+        @endcan
 
     </ul>
 </li>

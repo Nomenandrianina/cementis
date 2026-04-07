@@ -185,7 +185,7 @@ class RotationCalculatorService
                 $currentRotation->update([
                     'status'               => 'cancelled',
                     'is_valid'             => false,
-                    'invalidation_reason'  => "Sortie du circuit prévue : événement {$event['type']} à {$event['dt']}",
+                    'invalidation_reason'  => "Sortie du circuit prévue : événement {$event['normalized_type']} à {$event['dt']}",
                 ]);
                 $rotations[]     = $currentRotation;
                 $currentRotation = null;
@@ -211,18 +211,26 @@ class RotationCalculatorService
      */
     private function eventMatchesLeg(array $event, CircuitLeg $leg): bool
     {
-
         $eventType = strtolower($event['normalized_type'] ?? '');
+        $referenceName = strtolower($event['reference_name'] ?? '');
+        $legLabel = strtolower($leg->label ?? '');
 
-
-        return match ($leg->event_type) {
-            'enter_zone' => str_contains($eventType, 'enter'),
-            'leave_zone' => str_contains($eventType, 'leave') || str_contains($eventType, 'exit'),
-                            // && $this->referenceMatchesLeg($zoneId, $leg),
-            'pass_checkpoint' => str_contains($eventType, 'marker') || str_contains($eventType, 'checkpoint'),
-                                 // && $this->referenceMatchesLeg($markerId, $leg),
-            default => false,
-        };
+        $typeMatches = match ($leg->event_type) {
+                'enter_zone'      => str_contains($eventType, 'enter'),
+                'leave_zone'      => str_contains($eventType, 'leave') || str_contains($eventType, 'exit'),
+                'pass_checkpoint' => str_contains($eventType, 'marker') || str_contains($eventType, 'checkpoint'),
+                default           => false,
+            };
+        $labelMatches = empty($referenceName) || str_contains($legLabel, $referenceName);
+        // return match ($leg->event_type) {
+        //     'enter_zone' => str_contains($eventType, 'enter'),
+        //     'leave_zone' => str_contains($eventType, 'leave') || str_contains($eventType, 'exit'),
+        //                     // && $this->referenceMatchesLeg($zoneId, $leg),
+        //     'pass_checkpoint' => str_contains($eventType, 'marker') || str_contains($eventType, 'checkpoint'),
+        //                          // && $this->referenceMatchesLeg($markerId, $leg),
+        //     default => false,
+        // };
+        return $typeMatches && $labelMatches;
     }
 
     /**

@@ -48,25 +48,32 @@ class TestRawEvents
 
         return [
 
-            // ── Événements AVANT T1 (bruit à ignorer) ──────────────────────
-            ['stopped', 'Arrêt plus de 10mn', $imei, $name,
-             '2026-04-01 04:50:00', '-18.855800', '47.481000', '0', '0', '0', $params],
+            
 
             // ── T1 : Entrée zone Andranomena ────────────────────────────────
             ['zone_in', 'Entrée zone (Andranomena)', $imei, $name,
              '2026-04-01 05:03:36', '-18.855324', '47.480787', '0', '71', '7', $params],
 
             // Arrêt dans la zone (chargement) — bruit à ignorer
-            ['stopped', 'Arrêt plus de 10mn', $imei, $name,
-             '2026-04-01 05:09:19', '-18.854800', '47.481347', '0', '243', '0', $params],
+            // ['zone_in', 'Entrée zone (Client AND)', $imei, $name,
+            //  '2026-04-01 05:09:19', '-18.854800', '47.481347', '0', '243', '0', $params],
+
+            // ['zone_out', 'Sortie zone (Client AND)', $imei, $name,
+            //  '2026-04-01 05:20:19', '-18.854800', '47.481347', '0', '243', '0', $params],
+
+            // ['zone_in', 'Entrée zone (Embassade US)', $imei, $name,
+            //  '2026-04-01 05:25:19', '-18.854800', '47.481347', '0', '243', '0', $params],
+
+            // ['zone_out', 'Sortie zone (Embassade US)', $imei, $name,
+            //  '2026-04-01 05:30:19', '-18.854800', '47.481347', '0', '243', '0', $params],
 
             // ── T2 : Sortie zone Andranomena ────────────────────────────────
             ['zone_out', 'sortie zone (Andranomena)', $imei, $name,
              '2026-04-01 06:46:27', '-18.865449', '47.486018', '0', '162', '9', $params],
 
             // ── CP Ambodimita (aller) ────────────────────────────────────────
-            ['marker_in', 'Passage Check point  (Check point Ambodimita)', $imei, $name,
-             '2026-04-01 06:47:10', '-18.865449', '47.486018', '0', '162', '9', $params],
+            // ['marker_in', 'Passage Check point  (Check point Ambodimita)', $imei, $name,
+            //  '2026-04-01 06:47:10', '-18.865449', '47.486018', '0', '162', '9', $params],
 
 
             // ── CP Ambohitrimanjaka (aller) ──────────────────────────────────
