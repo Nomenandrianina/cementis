@@ -135,8 +135,8 @@ class GpsEventMapper
     private function loadReferences(): void
     {
         if ($this->zones === null) {
-            $this->zones       = Zone::where('active', true)->get(['id', 'name', 'gps_zone_id']);
-            $this->checkpoints = Checkpoint::where('active', true)->get(['id', 'name', 'gps_marker_id']);
+            $this->zones       = Zone::where('active', true)->get(['id', 'name']);
+            $this->checkpoints = Checkpoint::where('active', true)->get(['id', 'name']);
         }
     }
 
