@@ -9,7 +9,22 @@
         <button type="submit" class="btn btn-ghost btn-sm">↺ Sync GPS</button>
     </form>
 @endsection
-
+@push('scripts')
+<script>
+    function toggleEditZone(id) {
+        const el = document.getElementById('edit-zone-' + id);
+        if (!el) return;
+        const isOpen = el.style.display !== 'none';
+        document.querySelectorAll('[id^="edit-zone-"]').forEach(e => e.style.display = 'none');
+        if (!isOpen) el.style.display = 'block';
+    }
+    // Fermer en cliquant ailleurs
+    document.addEventListener('click', e => {
+        if (!e.target.closest('[id^="edit-zone-"]') && !e.target.closest('[onclick^="toggleEditZone"]')) {
+            document.querySelectorAll('[id^="edit-zone-"]').forEach(el => el.style.display = 'none');
+        }
+    });
+</script>
 @section('content')
     <link rel="stylesheet" href="{{ asset('css/rotation.css') }}">
 <div class="grid-2" style="gap:24px;">
@@ -47,63 +62,20 @@
     <div class="card">
         <div class="card-header">
             <span class="card-title">Zones définies</span>
-            <span class="badge badge-muted">{{ $zones->count() }}</span>
+            <span class="badge badge-muted">{{ $totalCount }}</span>
         </div>
-        <div class="table-wrap">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Nom</th>
-                        <th>Rôle</th>
-                        <th>GPS ID</th>
-                        <th>Statut</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($zones as $zone)
-                        <tr>
-                            <td>
-                                <div style="display:flex;align-items:center;gap:8px;">
-                                    @if($zone->color)
-                                        <div style="width:12px;height:12px;border-radius:3px;background:{{ $zone->color }};flex-shrink:0;"></div>
-                                    @endif
-                                    <span style="font-weight:600;">{{ $zone->name }}</span>
-                                </div>
-                            </td>
-                            <td>
-                                @if($zone->role)
-                                    <span class="badge badge-blue">{{ $zone->role }}</span>
-                                @else
-                                    <span style="color:var(--muted);">—</span>
-                                @endif
-                            </td>
-                            <td class="mono" style="font-size:11px;color:var(--muted);">{{ $zone->gps_zone_id ?? '—' }}</td>
-                            <td>
-                                @if($zone->active)
-                                    <span class="badge badge-success">Active</span>
-                                @else
-                                    <span class="badge badge-muted">Inactive</span>
-                                @endif
-                            </td>
-                            <td>
-                                <form action="{{ route('zones.destroy', $zone) }}" method="POST"
-                                      onsubmit="return confirm('Supprimer ?')">
-                                    @csrf @method('DELETE')
-                                    <button type="submit" class="btn btn-danger btn-sm">✕</button>
-                                </form>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="5" style="text-align:center;color:var(--muted);padding:24px;">
-                                Aucune zone. Synchronisez depuis l'API GPS.
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+        
+        @forelse($rootZones as $zone)
+            @include('zones.row', [
+                'zone'        => $zone,
+                'depth'       => 0,
+                'parentZones' => $parentZones,
+            ])
+        @empty
+            <div style="text-align:center;color:var(--muted);padding:40px;font-size:13px;">
+                Aucune zone. Synchronisez depuis l'API GPS.
+            </div>
+        @endforelse
     </div>
 </div>
 @endsection

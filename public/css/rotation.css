@@ -228,8 +228,9 @@
         /* ── Stat cards ─────────────────────────────────────────────────────── */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
-            gap: 16px;
+            width: 100% !important;
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            gap: 10px;
             margin-bottom: 24px;
         }
 

@@ -578,7 +578,7 @@ class RotationCalculatorService
 
         $a = strtolower(trim($cp->name));
         $b = strtolower(trim($rawName));
-
+        
         return $a === $b
             || str_contains($a, $b)
             || str_contains($b, $a);
@@ -741,7 +741,7 @@ class RotationCalculatorService
     private function getTestEvents(): array
     {
         return match (self::TEST_MODE) {
-            'complete'    => TestRawEvents::completeRotation(),
+            'complete'    => TestRawEvents::completeRotationAntonio(),
             'incomplete'  => TestRawEvents::incompleteRotation(),
             'cancelled'   => TestRawEvents::cancelledRotation(),
             'real_sample' => TestRawEvents::realApiSample(),

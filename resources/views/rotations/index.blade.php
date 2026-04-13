@@ -431,7 +431,7 @@
             <div class="form-group" style="margin:0; min-width:130px;">
                 <label>Statut</label>
                 <select name="status">
-                    <option value="">Tous</option>
+                    <option value="">Sélectionner un statut</option>
                     <option value="completed" @selected(request('status') === 'completed')>Complète</option>
                     <option value="in_progress" @selected(request('status') === 'in_progress')>En cours</option>
                     <option value="cancelled" @selected(request('status') === 'cancelled')>Annulée</option>
@@ -457,9 +457,10 @@
                     <th>Camion</th>
                     <th>Circuit</th>
                     <th>Mois compté</th>
-                    <th>Début </th>
-                    <th>Fin</th>
-                    <th>Durée</th>
+                    {{-- <th>Début </th>
+                    <th>Fin</th> --}}
+                    <th>Objectif</th>
+                    <th>Effectif</th>
                     <th>Statut</th>
                     <th>Validité</th>
                     <th></th>
@@ -477,8 +478,15 @@
                         </td>
                         <td>{{ $rotation->circuit->name }}</td>
                         <td class="mono">{{ $rotation->counted_month ?? '—' }}</td>
-                        <td class="mono">{{ $rotation->started_at?->format('d/m/Y H:i') ?? '—' }}</td>
-                        <td class="mono">{{ $rotation->completed_at?->format('d/m/Y H:i') ?? '—' }}</td>
+                        {{-- <td class="mono">{{ $rotation->started_at?->format('d/m/Y H:i') ?? '—' }}</td>
+                        <td class="mono">{{ $rotation->completed_at?->format('d/m/Y H:i') ?? '—' }}</td> --}}
+                        <td class="mono">
+                            @if($rotation->circuit->currentObjective()->target_duration_minutes)
+                                {{ intdiv($rotation->circuit->currentObjective()->target_duration_minutes, 60) }}h{{ $rotation->circuit->currentObjective()->target_duration_minutes % 60 }}m
+                            @else
+                                —
+                            @endif
+                        </td>
                         <td class="mono">
                             @if($rotation->duration_minutes)
                                 {{ intdiv($rotation->duration_minutes, 60) }}h{{ $rotation->duration_minutes % 60 }}m
