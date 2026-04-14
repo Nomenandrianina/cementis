@@ -5,10 +5,21 @@
 
 @section('topbar-actions')
     <a href="{{ route('reports.index') }}" class="btn btn-ghost btn-sm">← Rapports</a>
-    <a href="{{ route('reports.export_csv', ['circuit_id' => $circuit->id, 'year' => $report['year'], 'month' => $report['month']]) }}"
+    {{-- <a href="{{ route('reports.export_csv', ['circuit_id' => $circuit->id, 'year' => $report['year'], 'month' => $report['month']]) }}"
        class="btn btn-blue btn-sm">
         ↓ Export CSV
-    </a>
+    </a> --}}
+    <a href="{{ route('reports.export_csv', [
+        'circuit_id' => $circuit->id,
+        'year'       => $report['year'],
+        'month'      => $report['month'],
+    ]) }}" class="btn btn-ghost btn-sm">↓ CSV</a>
+
+    <a href="{{ route('reports.export_excel', [
+        'circuit_id' => $circuit->id,
+        'year'       => $report['year'],
+        'month'      => $report['month'],
+    ]) }}" class="btn btn-primary btn-sm">↓ Excel</a>
 @endsection
 <script>
 function toggleDetail(id) {

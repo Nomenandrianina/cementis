@@ -140,72 +140,130 @@ class TestRawEvents
         $params = self::params();
         return [
             // ── DÉPART : Zone Andoharanofotsy ──────────────────────────────────────
-            ['zone_in', 'Entrée zone (Andoharanofotsy)', $imei, $name, 
+            ['zone_in', 'Entrée zone (Andoharanofotsy)', $imei, $name,
             '2026-04-01 18:15:00', '-18.9667', '47.5333', '0', '0', '0', $params],
 
-            ['zone_in', 'Entrée zone (Garage Antonio)', $imei, $name, 
+            ['zone_in', 'Entrée zone (Garage Antonio)', $imei, $name,
             '2026-04-01 18:20:00', '-18.9667', '47.5333', '0', '0', '0', $params],
 
-            ['zone_out', 'Sortie zone (Garage Antonio)', $imei, $name, 
+            ['zone_out', 'Sortie zone (Garage Antonio)', $imei, $name,
             '2026-04-02 07:00:00', '-18.9650', '47.5320', '0', '45', '12', $params],
 
-            ['zone_out', 'Sortie zone (Andoharanofotsy)', $imei, $name, 
+            ['zone_out', 'Sortie zone (Andoharanofotsy)', $imei, $name,
             '2026-04-02 07:05:00', '-18.9650', '47.5320', '0', '45', '12', $params],
 
             // ── ALLER : Andoharanofotsy -> Andranomena ──────────────────────────────
             // CP Ankandimbahoaka
-            ['marker_in', 'Passage Check point (Ankadimbahoaka)', $imei, $name, 
+            ['marker_in', 'Passage Check point (Ankadimbahoaka)', $imei, $name,
             '2026-04-02 07:25:00', '-18.9500', '47.5200', '0', '50', '25', $params],
 
             // CP MBS
-            ['marker_in', 'Passage Check point (MBS)', $imei, $name, 
+            ['marker_in', 'Passage Check point (MBS)', $imei, $name,
             '2026-04-02 07:45:00', '-18.9303', '47.4962', '0', '55', '30', $params],
 
             // CP Ampasika
-            ['marker_in', 'Passage Check point (Ampasika)', $imei, $name, 
+            ['marker_in', 'Passage Check point (Ampasika)', $imei, $name,
             '2026-04-02 07:55:00', '-18.9102', '47.4988', '0', '40', '20', $params],
 
             // CP Ambohitrimanjaka
-            ['marker_in', 'Passage Check point (Ambohitrimanjaka)', $imei, $name, 
+            ['marker_in', 'Passage Check point (Ambohitrimanjaka)', $imei, $name,
             '2026-04-02 08:00:00', '-18.8794', '47.4808', '0', '60', '35', $params],
 
             // ── DESTINATION : Zone Andranomena ──────────────────────────────────────
-            ['zone_in', 'Entrée zone (Andranomena)', $imei, $name, 
+            ['zone_in', 'Entrée zone (Andranomena)', $imei, $name,
             '2026-04-02 08:05:00', '-18.8553', '47.4807', '0', '30', '15', $params],
 
-            ['zone_in', 'Entrée zone (M-TEC)', $imei, $name, 
+            ['zone_in', 'Entrée zone (M-TEC)', $imei, $name,
             '2026-04-02 08:10:00', '-18.8553', '47.4807', '0', '30', '15', $params],
 
-            ['zone_out', 'Sortie zone (M-TEC)', $imei, $name, 
+            ['zone_out', 'Sortie zone (M-TEC)', $imei, $name,
             '2026-04-02 17:10:00', '-18.8553', '47.4807', '0', '45', '10', $params],
 
-            ['zone_out', 'Sortie zone (Andranomena)', $imei, $name, 
+            ['zone_out', 'Sortie zone (Andranomena)', $imei, $name,
             '2026-04-02 17:20:00', '-18.8553', '47.4807', '0', '45', '10', $params],
 
             // ── RETOUR : Andranomena -> Andoharanofotsy ─────────────────────────────
             // CP Ambohitrimanjaka (Retour)
-            ['marker_in', 'Passage Check point (Ambohitrimanjaka)', $imei, $name, 
+            ['marker_in', 'Passage Check point (Ambohitrimanjaka)', $imei, $name,
             '2026-04-02 17:25:00', '-18.8794', '47.4808', '0', '58', '28', $params],
 
             // CP Ampasika (Retour)
-            ['marker_in', 'Passage Check point (Ampasika)', $imei, $name, 
+            ['marker_in', 'Passage Check point (Ampasika)', $imei, $name,
             '2026-04-02 17:45:00', '-18.9102', '47.4988', '0', '52', '22', $params],
 
             // CP MBS (Retour)
-            ['marker_in', 'Passage Check point (MBS)', $imei, $name, 
+            ['marker_in', 'Passage Check point (MBS)', $imei, $name,
             '2026-04-02 17:55:00', '-18.9303', '47.4962', '0', '48', '31', $params],
 
             // CP Ankandimbahoaka (Retour)
-            ['marker_in', 'Passage Check point (Ankadimbahoaka)', $imei, $name, 
+            ['marker_in', 'Passage Check point (Ankadimbahoaka)', $imei, $name,
             '2026-04-02 18:00:00', '-18.9500', '47.5200', '0', '55', '24', $params],
 
             // ── FIN DE ROTATION : Retour Andoharanofotsy ───────────────────────────
-            ['zone_in', 'Entrée zone (Andoharanofotsy)', $imei, $name, 
+            ['zone_in', 'Entrée zone (Andoharanofotsy)', $imei, $name,
             '2026-04-02 18:20:00', '-18.9667', '47.5333', '0', '20', '5', $params],
+            // R1 valide
+            //
+            ['zone_in', 'Entrée zone (Garage Antonio)', $imei, $name,
+            '2026-04-02 18:30:00', '-18.9667', '47.5333', '0', '0', '0', $params],
 
-            // Bruit après rotation (à ignorer par l'algo)
-            ['stopped', 'Fin de service / Arrêt', $imei, $name, 
-            '2026-04-01 11:30:00', '-18.9660', '47.5330', '0', '0', '0', $params],
+            ['zone_out', 'Sortie zone (Garage Antonio)', $imei, $name,
+            '2026-04-03 07:10:00', '-18.9650', '47.5320', '0', '45', '12', $params],
+
+            ['zone_out', 'Sortie zone (Andoharanofotsy)', $imei, $name,
+            '2026-04-03 07:15:00', '-18.9650', '47.5320', '0', '45', '12', $params],
+
+            // ── ALLER : Andoharanofotsy -> Andranomena ──────────────────────────────
+            // CP Ankandimbahoaka
+            ['marker_in', 'Passage Check point (Ankadimbahoaka)', $imei, $name,
+            '2026-04-03 07:30:00', '-18.9500', '47.5200', '0', '50', '25', $params],
+
+            // CP MBS
+            ['marker_in', 'Passage Check point (MBS)', $imei, $name,
+            '2026-04-03 07:50:00', '-18.9303', '47.4962', '0', '55', '30', $params],
+
+            // CP Ampasika
+            ['marker_in', 'Passage Check point (Ampasika)', $imei, $name,
+            '2026-04-03 08:00:00', '-18.9102', '47.4988', '0', '40', '20', $params],
+
+            // CP Ambohitrimanjaka
+            ['marker_in', 'Passage Check point (Ambohitrimanjaka)', $imei, $name,
+            '2026-04-03 08:10:00', '-18.8794', '47.4808', '0', '60', '35', $params],
+
+            // ── DESTINATION : Zone Andranomena ──────────────────────────────────────
+            ['zone_in', 'Entrée zone (Andranomena)', $imei, $name,
+            '2026-04-03 08:15:00', '-18.8553', '47.4807', '0', '30', '15', $params],
+
+            ['zone_in', 'Entrée zone (M-TEC)', $imei, $name,
+            '2026-04-03 08:20:00', '-18.8553', '47.4807', '0', '30', '15', $params],
+
+            ['zone_out', 'Sortie zone (M-TEC)', $imei, $name,
+            '2026-04-03 17:15:00', '-18.8553', '47.4807', '0', '45', '10', $params],
+
+            ['zone_out', 'Sortie zone (Andranomena)', $imei, $name,
+            '2026-04-03 17:20:00', '-18.8553', '47.4807', '0', '45', '10', $params],
+
+            // ── RETOUR : Andranomena -> Andoharanofotsy ─────────────────────────────
+            // CP Ambohitrimanjaka (Retour)
+            ['marker_in', 'Passage Check point (Ambohitrimanjaka)', $imei, $name,
+            '2026-04-03 17:30:00', '-18.8794', '47.4808', '0', '58', '28', $params],
+
+            // CP Ampasika (Retour)
+            ['marker_in', 'Passage Check point (Ampasika)', $imei, $name,
+            '2026-04-03 17:45:00', '-18.9102', '47.4988', '0', '52', '22', $params],
+
+            // CP MBS (Retour)
+            ['marker_in', 'Passage Check point (MBS)', $imei, $name,
+            '2026-04-03 17:55:00', '-18.9303', '47.4962', '0', '48', '31', $params],
+
+            // CP Ankandimbahoaka (Retour)
+            ['marker_in', 'Passage Check point (Ankadimbahoaka)', $imei, $name,
+            '2026-04-03 18:00:00', '-18.9500', '47.5200', '0', '55', '24', $params],
+
+            // ── FIN DE ROTATION : Retour Andoharanofotsy ───────────────────────────
+            ['zone_in', 'Entrée zone (Andoharanofotsy)', $imei, $name,
+            '2026-04-03 18:30:00', '-18.9667', '47.5333', '0', '20', '5', $params],
+
         ];
     }
 

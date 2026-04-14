@@ -64,7 +64,7 @@
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle position-relative" href="#" id="notificationsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         @if(Auth::user()->unreadNotifications->count() > 0)
-                            <span id="notif-badge" class="position-absolute translate-middle badge rounded-pill bg-danger" style="margin: -13% 0% 0% 16%; 
+                            <span id="notif-badge" class="position-absolute translate-middle badge rounded-pill bg-danger" style="margin: -13% 0% 0% 16%;
                                         display: {{ Auth::user()->unreadNotifications->count() > 0 ? 'inline' : 'none' }};">
                                     {{ Auth::user()->unreadNotifications->count() }}
                             </span>
@@ -80,7 +80,7 @@
                                 <!-- Icône de notification agrandie -->
                                 <div class="notification-icon" style="width: 40px; height: 40px; background-color: #e0e0e0; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin-right: 10px;">
                                     <i class="fa fa-edit text-primary" style="font-size: 20px;"></i>
-                                </div>  
+                                </div>
                                 <!-- Détails de la notification -->
                                 <a class="w-100" href="{{ $notification->data['url'] }}">
                                     <div class="mb-1 font-weight-bold" style="color: #333;"  >
@@ -104,7 +104,7 @@
                         </li> --}}
                     </ul>
 
-                
+
                     {{-- <ul class="dropdown-menu dropdown-menu-right" aria-labelledby="notificationsDropdown" data-bs-popper="static">
                         @foreach(Auth::user()->unreadNotifications as $notification)
                             <li>
@@ -113,11 +113,11 @@
                                 </a>
                             </li>
                         @endforeach
-                
+
                         @if(Auth::user()->unreadNotifications->isEmpty())
                             <li><a class="dropdown-item text-muted">Aucune notification</a></li>
                         @endif
-                
+
                         <li><hr class="dropdown-divider"></li>
                         <li>
                             <form action="{{ route('notifications.markAllAsRead') }}" method="POST">
@@ -128,7 +128,7 @@
                         </li>
                     </ul> --}}
                 </li>
-                
+
                 <li class="nav-item dropdown user-menu">
                     <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">
                         <img src="{{url('images/avatars.png')}}" class="user-image img-circle elevation-2" alt="User Image">
@@ -162,7 +162,7 @@
         @include('sweetalert::alert')
         @include('layouts.sidebar')
 
-    
+
 
         <!-- Content Wrapper. Contains page content -->
         <div class="content-wrapper">
@@ -170,10 +170,12 @@
 
                 <div id="loader"  class="lds-roller"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
                 <div id="overlay"></div>
-                <div class="topbar">
-                    <div class="topbar-title">@yield('page-title')</div>
-                    <div class="topbar-actions">@yield('topbar-actions')</div>
-                </div>
+                @if(Route::is(['rotations.*', 'reports.*', 'circuits.*', 'checkpoints.*', 'zones.*', 'vehicles.*']))
+                    <div class="topbar">
+                        <div class="topbar-title">@yield('page-title')</div>
+                        <div class="topbar-actions">@yield('topbar-actions')</div>
+                    </div>
+                @endif
                 @yield('content')
             </section>
         </div>
@@ -181,7 +183,7 @@
         <!-- Main Footer -->
         <footer class="main-footer">
             <div class="float-right d-none d-sm-block">
-                
+
             </div>
             <strong>Droits d'auteur &copy; 2025 <a> M-Tec</a>.</strong> Tous droits réservés.
         </footer>
@@ -208,7 +210,7 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-switch/3.3.4/js/bootstrap-switch.min.js" integrity="sha512-J+763o/bd3r9iW+gFEqTaeyi+uAphmzkE/zU8FxY6iAvD3nQKXa+ZAWkBI9QS9QkYEKddQoiy0I5GDxKf/ORBA==" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
-    
+
     {{-- <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script> --}}
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
@@ -236,7 +238,7 @@
                 }).then(() => {
                     window.location.reload(); // Recharge aussi en cas d'erreur
                 });
-            } 
+            }
             if (event.status === 'error') {
                 Swal.fire({
                     icon: 'error',
@@ -271,9 +273,9 @@
             return true; // Permettre la soumission du formulaire
         }
     </script>
-    
+
     <script type="text/javascript">
-        
+
 
         $(function() {
             bsCustomFileInput.init();
@@ -345,9 +347,9 @@
 
                 $.ajax({
                     type: 'POST',
-                    url: '/admin/chauffeur/updatetransporteur', 
+                    url: '/admin/chauffeur/updatetransporteur',
                     headers: {
-                        'X-CSRF-TOKEN': csrfToken 
+                        'X-CSRF-TOKEN': csrfToken
                     },
 
                     data: {
@@ -381,7 +383,7 @@
 
         }
 
-        
+
         var filterElement = document.getElementById('filter');
 
         if (filterElement) {
@@ -394,7 +396,7 @@
             });
         }
 
-        
+
         function filterChauffeurs(transporteurId) {
             fetch('/admin/chauffeur/filtre', {
                 method: 'POST',
@@ -419,7 +421,7 @@
             // Mettez à jour le contenu de la table avec les données filtrées
             var tbody = document.querySelector('.table tbody');
             tbody.innerHTML = '';
-            
+
             data.forEach(function (chauffeur) {
                 var row = `<tr>
                     <td><input type="checkbox" class="select-checkbox" name="selected_chauffeurs[]" value="${chauffeur.id}"></td>
@@ -458,7 +460,7 @@
 
             });
         });
-        
+
 
     </script>
 
@@ -542,13 +544,13 @@
             margin: 20px;
         },
 
-        
+
         .transporteur-icon {
-            color: rgb(61, 134, 203); 
+            color: rgb(61, 134, 203);
         }
 
         .top-icon {
-            color: #eded35; 
+            color: #eded35;
         }
 
         .worst-icon {
@@ -598,11 +600,11 @@
         .rounded-card{
             border-radius: 36px !important;
         }
-        
+
         .title-scoring{
             padding-left: 12px;
             padding-bottom: 12px;
-        } 
+        }
 
      #overlay {
         display: none;
@@ -614,7 +616,7 @@
         background-color: rgba(128, 128, 128, 0.7); /* Couleur semi-transparente gris */
         z-index: 9998; /* Assure que l'overlay est au-dessus de tout autre contenu */
     }
-  
+
     .lds-roller {
         display: none; /* Pour masquer le loader initialement */
         position: fixed;
@@ -627,12 +629,12 @@
         z-index: 9999;
         color: #ffffff; /* Couleur du loader */
     }
-  
+
     .lds-roller div {
         animation: lds-roller 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
         transform-origin: 40px 40px;
     }
-    
+
     .lds-roller div:after {
         content: " ";
         display: block;
@@ -643,7 +645,7 @@
         background: currentColor; /* Utilise la couleur définie dans .lds-roller */
         margin: -3.6px 0 0 -3.6px;
     }
-  
+
     .lds-roller div:nth-child(1) {
         animation-delay: -0.036s;
     }
@@ -700,7 +702,7 @@
         top: 56px;
         left: 12.28719px;
     }
-    
+
     @keyframes lds-roller {
         0% {
         transform: rotate(0deg);
@@ -715,8 +717,8 @@
         overflow-y: auto;  /* Active le scroll si le contenu dépasse la hauteur max */
         width: 646px;      /* Garde la largeur actuelle */
     }
-   
-    
+
+
  </style>
 
 

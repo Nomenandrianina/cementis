@@ -122,88 +122,6 @@ class RotationCalculatorService
      * Extrait les rotations depuis la séquence d'événements GPS.
      * Utilise un automate à états basé sur l'ordre des étapes du circuit.
      */
-    // private function extractRotations(
-    //     array $rawEvents,
-    //     Collection $legs,
-    //     Rvehicule $vehicle,
-    //     Circuit $circuit,
-    //     string $countedMonth
-    // ): array {
-    //     $rotations    = [];
-    //     $currentLegIdx = 0;
-    //     $currentRotation = null;
-    //     $legEvents    = []; // événements correspondant aux étapes de la rotation courante
-
-    //     foreach ($rawEvents as $event) {
-    //         $leg = $legs->get($currentLegIdx);
-    //         if (!$leg) {
-    //             continue;
-    //         }
-
-    //         if ($this->eventMatchesLeg($event, $leg)) {
-    //             if ($currentLegIdx === 0) {
-    //                 // Début d'une nouvelle rotation (T1)
-    //                 $currentRotation = $this->createRotation($vehicle, $circuit, $event, $countedMonth);
-    //                 $legEvents = [];
-    //             }
-
-    //             if ($currentRotation) {
-    //                 $occurredAt = Carbon::parse($event['dt'] ?? now());
-    //                 $prevOccurredAt = !empty($legEvents)
-    //                     ? Carbon::parse(end($legEvents)['dt'])
-    //                     : null;
-
-    //                 $durationSincePrev = $prevOccurredAt
-    //                     ? $prevOccurredAt->diffInMinutes($occurredAt)
-    //                     : null;
-
-    //                 RotationLeg::create([
-    //                     'rotation_id'                    => $currentRotation->id,
-    //                     'circuit_leg_id'                 => $leg->id,
-    //                     'occurred_at'                    => $occurredAt,
-    //                     'lat'                            => $event['lat'] ?? null,
-    //                     'lng'                            => $event['lng'] ?? null,
-    //                     'duration_since_previous_minutes'=> $durationSincePrev,
-    //                     'raw_event'                      => $event,
-    //                 ]);
-
-    //                 $legEvents[] = $event;
-    //                 $currentLegIdx++;
-
-    //                 // Dernière étape atteinte → rotation complète
-    //                 if ($currentLegIdx >= $legs->count()) {
-    //                     $this->completeRotation($currentRotation, $event, $legs);
-    //                     $rotations[]     = $currentRotation;
-    //                     $currentRotation = null;
-    //                     $currentLegIdx   = 0;
-    //                     $legEvents       = [];
-    //                 }
-    //             }
-    //         } elseif ($currentRotation && $this->eventInvalidatesRotation($event, $circuit, $legs)) {
-    //             // Véhicule sort du circuit prévu → annuler la rotation
-    //             $currentRotation->update([
-    //                 'status'               => 'cancelled',
-    //                 'is_valid'             => false,
-    //                 'invalidation_reason'  => "Sortie du circuit prévue : événement {$event['normalized_type']} à {$event['dt']}",
-    //             ]);
-    //             $rotations[]     = $currentRotation;
-    //             $currentRotation = null;
-    //             $currentLegIdx   = 0;
-    //             $legEvents       = [];
-    //         }
-    //     }
-
-    //     // Rotation en cours non terminée
-    //     if ($currentRotation) {
-    //         $currentRotation->update([
-    //             'status'   => 'in_progress',
-    //             'is_valid' => false,
-    //         ]);
-    //         $rotations[] = $currentRotation;
-    //     }
-
-    //     return $rotations;
-    // }
     private function extractRotations(
         array      $events,
         Collection $legs,
@@ -467,24 +385,6 @@ class RotationCalculatorService
         return $expectedLeg; // On retourne le leg qui a été manqué
     }
 
-    /**
-     * Vérifie si un événement GPS correspond à une étape du circuit.
-     */
-    // private function eventMatchesLeg(array $event, CircuitLeg $leg): bool
-    // {
-    //     $eventType = strtolower($event['normalized_type'] ?? '');
-    //     $referenceName = strtolower($event['reference_name'] ?? '');
-    //     $legLabel = strtolower($leg->label ?? '');
-
-    //     $typeMatches = match ($leg->event_type) {
-    //             'enter_zone'      => str_contains($eventType, 'enter'),
-    //             'leave_zone'      => str_contains($eventType, 'leave') || str_contains($eventType, 'exit'),
-    //             'pass_checkpoint' => str_contains($eventType, 'marker') || str_contains($eventType, 'checkpoint'),
-    //             default           => false,
-    //         };
-    //     $labelMatches = empty($referenceName) || str_contains($legLabel, $referenceName);
-    //     return $typeMatches && $labelMatches;
-    // }
 
     /**
      * Matching événement ↔ étape.
@@ -584,52 +484,6 @@ class RotationCalculatorService
             || str_contains($b, $a);
     }
 
-    /**
-     * Vérifie si la référence (zone/checkpoint) de l'événement correspond à l'étape.
-     */
-    // private function referenceMatchesLeg(string $refId, CircuitLeg $leg): bool
-    // {
-    //     if (empty($refId)) {
-    //         return false;
-    //     }
-
-    //     if ($leg->reference_type === 'zone') {
-    //         $zone = \App\Models\Zone::find($leg->reference_id);
-    //         return $zone && (string) $zone->gps_zone_id === $refId;
-    //     }
-
-    //     if ($leg->reference_type === 'checkpoint') {
-    //         $cp = \App\Models\Checkpoint::find($leg->reference_id);
-    //         return $cp && (string) $cp->gps_marker_id === $refId;
-    //     }
-
-    //     return false;
-    // }
-
-    /**
-     * Détecte si un événement invalide la rotation (sortie du circuit prévu).
-     */
-    // private function eventInvalidatesRotation(array $event, Circuit $circuit, Collection $legs): bool
-    // {
-    //     $eventType = strtolower($event['normalized_type'] ?? '');
-    //     if (!str_contains($eventType, 'enter')) {
-    //         return false;
-    //     }
-
-    //     $zoneId = (string) ($event['zone_id'] ?? $event['geofence_id'] ?? '');
-    //     if (empty($zoneId)) {
-    //         return false;
-    //     }
-
-    //     $allowedZoneGpsIds = $legs
-    //         ->where('reference_type', 'zone')
-    //         ->map(fn($leg) => \App\Models\Zone::find($leg->reference_id)?->gps_zone_id)
-    //         ->filter()
-    //         ->map(fn($id) => (string) $id)
-    //         ->toArray();
-
-    //     return !empty($allowedZoneGpsIds) && !in_array($zoneId, $allowedZoneGpsIds);
-    // }
 
     /**
      * Détecte si l'événement indique une déviation hors circuit.
