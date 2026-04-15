@@ -514,168 +514,190 @@ class ReportController extends Controller
         $MUTED     = '9CA3AF';
         $WHITE     = 'FFFFFF';
 
-        // Colonnes fixes
-        $NB_FIXED  = 4;
+        // Colonnes fixes avant les étapes
+        // A = Immat | B = Véhicule | C = Nb rotations (total véhicule) | D = Durée rotation
+        $NB_FIXED = 4;
 
-        // Définitions d'étapes (structure des colonnes par rotation)
+        // Définitions d'étapes : 1 colonne par étape (fixe, basé sur le circuit)
         $stepDefs = $this->buildStepDefinitions($circuit, $report);
         $nbSteps  = count($stepDefs);
-
-        // Max rotations
-        $maxRot = 0;
-        foreach ($report['vehicle_reports'] as $vr) {
-            $maxRot = max($maxRot, count($vr['rotations']));
-        }
-        if ($maxRot === 0 || $nbSteps === 0) {
+        $totalCols  = $NB_FIXED + $nbSteps;
+        $lastLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($totalCols);
+        if ($nbSteps === 0) {
             $sheet->setCellValue('A1', 'Aucune donnée.');
             return;
         }
 
-        $totalCols  = $NB_FIXED + $maxRot * $nbSteps;
-        $lastLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($totalCols);
-
         // ── Ligne 1 : Titre ──────────────────────────────────────────────────────
-        $sheet->setCellValue('A1', 'Rapport de Rotations ' . $circuit->name);
-        $sheet->mergeCells("A1:{$lastLetter}1");
+        $titre = "Rapport de Rotations – {$circuit->name} ({$report['month_label']})";
+        $sheet->setCellValue('A1', $titre);
+        $longueurTexte = strlen($titre);
+        $caracteresParColonne = 12; 
+        $nombreDeColonnes = ceil($longueurTexte / $caracteresParColonne);
+        $nombreDeColonnes = max(1, $nombreDeColonnes);
+        $derniereColonne = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($nombreDeColonnes);
+        // $sheet->mergeCells("A1:{$lastLetter}1");
+        $sheet->mergeCells("A1:{$derniereColonne}1");
         $sheet->getStyle('A1')->applyFromArray([
             'font'      => ['bold' => true, 'size' => 14, 'color' => $rgb($WHITE)],
             'fill'      => ['fillType' => 'solid', 'startColor' => $rgb($BORDEAUX)],
-            'alignment' => ['horizontal' => 'center', 'vertical' => 'center'],
+            'alignment' => [
+                'horizontal' => 'left', 
+                'vertical' => 'center'
+            ],
         ]);
         $sheet->getRowDimension(1)->setRowHeight(28);
 
         // ── Ligne 2 : Infos globales ──────────────────────────────────────────────
-        $sheet->setCellValue('A2', 'Flatte');
-        $sheet->setCellValue('B2', $circuit->code ?? '');
-        $sheet->setCellValue('C2', 'Génération');
-        $sheet->setCellValue('D2', $report['month_label'] ?? '');
-
-        $col5 = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(5);
-        $col6 = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(6);
-        $col7 = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(7);
-        $col8 = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(8);
-
-        $sheet->setCellValue("{$col5}2", 'Totaux Ciblé');
-        $sheet->setCellValue("{$col6}2", $report['target_rotations'] ?? '—');
-        $sheet->setCellValue("{$col7}2", 'Objectif (min)');
-        $sheet->setCellValue("{$col8}2",
-            isset($report['objective']) ? ($report['objective']->target_duration_minutes ?? '—') : '—'
-        );
-
+        $infoData = [
+            'A' => $circuit->code ?? '',
+            'B' => '',
+            'D' => '',
+            'E' => '',
+            'F' => '',
+            'G' => '',
+            'H' => '',
+        ];
+        foreach ($infoData as $col => $val) {
+            $sheet->setCellValue("{$col}2", $val);
+        }
+        $sheet->mergeCells("A2:C2");
         $sheet->getStyle("A2:{$lastLetter}2")->applyFromArray([
-            'font' => ['bold' => true, 'color' => $rgb('5C2B2B')],
+            'font' => ['bold' => true, 'size' => 14, 'color' => $rgb('5C2B2B')],
             'fill' => ['fillType' => 'solid', 'startColor' => $rgb($CREAM)],
+            'alignment' => [
+                'horizontal' => 'center', 
+                'vertical' => 'center'
+            ],
         ]);
         $sheet->getRowDimension(2)->setRowHeight(16);
 
-        // ── Ligne 3 : En-têtes "Rotation N" ──────────────────────────────────────
-        $rotColors = ['8B1A1A', 'A52020', 'B83030', 'C04040'];
-
-        $sheet->setCellValue('A3', '');
-        $sheet->setCellValue('B3', '');
-        $sheet->setCellValue('C3', '');
-        $sheet->setCellValue('D3', '');
-        $sheet->getStyle("A3:D3")->applyFromArray([
-            'fill' => ['fillType' => 'solid', 'startColor' => $rgb($BORDEAUX)],
+        // ── Ligne 3 : Valeurs cibles (Totaux ciblés + objectifs durée par étape) ─
+        // Optionnel : afficher les objectifs de durée dans la ligne 3
+        $sheet->setCellValue('A3', 'Valeurs Cibles');
+        $sheet->mergeCells("A3:C3");
+        $sheet->getStyle('A3')->applyFromArray([
+            'font'      => ['bold' => true, 'size' => 14, 'color' => $rgb($WHITE)],
+            'alignment' => [
+                'horizontal' => 'center', 
+                'vertical' => 'center'
+            ],
+        ]);
+        $sheet->setCellValue('D3', isset($report['objective'])
+            ? $fmt($report['objective']->target_duration_minutes ?? null) : '—'
+        );
+        $sheet->getStyle('D3')->applyFromArray([
+            'font'      => ['bold' => true, 'color' => $rgb($WHITE)],
+            'alignment' => [
+                'horizontal' => 'center', 
+                'vertical' => 'center'
+            ],
         ]);
 
-        for ($r = 0; $r < $maxRot; $r++) {
-            $startIdx = $NB_FIXED + $r * $nbSteps + 1;
-            $endIdx   = $startIdx + $nbSteps - 1;
-            $startL   = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($startIdx);
-            $endL     = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($endIdx);
-
-            $sheet->setCellValue("{$startL}3", 'Rotation ' . ($r + 1));
-            if ($startIdx < $endIdx) {
-                $sheet->mergeCells("{$startL}3:{$endL}3");
+        // Objectifs par étape dans les colonnes correspondantes
+        if (isset($report['objective'])) {
+            $legObjectives = $report['objective']->leg_objectives ?? [];
+            foreach ($stepDefs as $sIdx => $step) {
+                if (!in_array($step['type'], ['zone_duration', 'sub_duration'])) continue;
+                $obj = $legObjectives[$step['leg_id']] ?? $legObjectives[(string)$step['leg_id']] ?? null;
+                if ($obj) {
+                    $colL = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($NB_FIXED + $sIdx + 1);
+                    $sheet->setCellValue("{$colL}3", $fmt((int)$obj));
+                    $sheet->getStyle("{$colL}3")->applyFromArray([
+                        'font' => ['bold' => true, 'color' => $rgb('5C2B2B')],
+                        'alignment' => [
+                            'horizontal' => 'center', 
+                            'vertical' => 'center'
+                        ],
+                    ]);
+                }
             }
-            $bg = $rotColors[$r % count($rotColors)];
-            $sheet->getStyle("{$startL}3:{$endL}3")->applyFromArray([
-                'font'      => ['bold' => true, 'size' => 10, 'color' => $rgb($WHITE)],
-                'fill'      => ['fillType' => 'solid', 'startColor' => $rgb($bg)],
-                'alignment' => ['horizontal' => 'center', 'vertical' => 'center'],
-                'borders'   => [
-                    'left'  => ['borderStyle' => 'medium', 'color' => $rgb($WHITE)],
-                    'right' => ['borderStyle' => 'medium', 'color' => $rgb($WHITE)],
-                ],
-            ]);
         }
-        $sheet->getRowDimension(3)->setRowHeight(20);
+        $sheet->getStyle("A3:{$lastLetter}3")->applyFromArray([
+            'font' => ['bold' => true, 'color' => $rgb('5C2B2B')],
+            'fill' => ['fillType' => 'solid', 'startColor' => $rgb('EDD5D5')],
+        ]);
+        $sheet->getRowDimension(3)->setRowHeight(16);
 
-        // ── Ligne 4 : Sous-en-têtes étapes ────────────────────────────────────────
-        $sheet->setCellValue('A4', 'Immatriculation');
-        $sheet->setCellValue('B4', 'Véhicule');
-        $sheet->setCellValue('C4', 'Nb rot.');
-        $sheet->setCellValue('D4', 'Durée tot.');
-        $sheet->getStyle("A4:D4")->applyFromArray([
+        // ── Ligne 4 : En-têtes colonnes ───────────────────────────────────────────
+        $fixedHeaders = ['Immatriculation', 'Véhicule', 'Nb rot. total', 'Durée rotation'];
+        foreach ($fixedHeaders as $i => $h) {
+            $col = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($i + 1);
+            $sheet->setCellValue("{$col}4", $h);
+        }
+
+        foreach ($stepDefs as $sIdx => $step) {
+            $colL = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($NB_FIXED + $sIdx + 1);
+            $sheet->setCellValue("{$colL}4", $step['short_label']);
+        }
+
+        $sheet->getStyle("A4:{$lastLetter}4")->applyFromArray([
             'font'      => ['bold' => true, 'size' => 8, 'color' => $rgb($WHITE)],
             'fill'      => ['fillType' => 'solid', 'startColor' => $rgb($BORDEAUX)],
             'alignment' => ['horizontal' => 'center', 'vertical' => 'center', 'wrapText' => true],
-            'borders'   => ['allBorders' => ['borderStyle' => 'thin', 'color' => $rgb('DDDDDD')]],
+            'borders'   => ['allBorders' => ['borderStyle' => 'thin', 'color' => $rgb('CCCCCC')]],
         ]);
-
-        for ($r = 0; $r < $maxRot; $r++) {
-            $bg = $rotColors[$r % count($rotColors)];
-            foreach ($stepDefs as $sIdx => $step) {
-                $colIdx = $NB_FIXED + $r * $nbSteps + $sIdx + 1;
-                $colL   = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIdx);
-                $sheet->setCellValue("{$colL}4", $step['short_label']);
-                $sheet->getStyle("{$colL}4")->applyFromArray([
-                    'font'      => ['bold' => true, 'size' => 8, 'color' => $rgb($WHITE)],
-                    'fill'      => ['fillType' => 'solid', 'startColor' => $rgb($bg)],
-                    'alignment' => ['horizontal' => 'center', 'vertical' => 'center', 'wrapText' => true],
-                    'borders'   => ['allBorders' => ['borderStyle' => 'thin', 'color' => $rgb('DDDDDD')]],
-                ]);
-            }
-        }
         $sheet->getRowDimension(4)->setRowHeight(36);
 
-        // ── Lignes données ─────────────────────────────────────────────────────────
-        $row = 5;
+        // ── Lignes données : 1 ligne par rotation ─────────────────────────────────
+        $row       = 5;
+        $prevImmat = null; // Pour fusionner les cellules immat/vehicule/nb quand même véhicule
+
         foreach ($report['vehicle_reports'] as $vi => $vr) {
+            $rotCount    = count($vr['rotations']);
+            $vehicleStart = $row; // ligne de départ pour ce véhicule (fusion possible)
+
+            // Couleur alternée par véhicule
             $bg0 = $vi % 2 === 0 ? 'FFFFFF' : 'FBF7F3';
+            $bg1 = $vi % 2 === 0 ? 'FDF5F5' : 'FAF0EF'; // légèrement teinté pour 2e rotation+
 
-            // Colonnes fixes
-            $sheet->setCellValue("A{$row}", $vr['vehicle']->plate_number ?? '—');
-            $sheet->setCellValue("B{$row}", $vr['vehicle']->name);
-            $sheet->setCellValue("C{$row}", $vr['rotation_count']);
-            $sheet->setCellValue("D{$row}", $vr['total_duration'] ? round($vr['total_duration'] / 60, 1) : '—');
+            foreach ($vr['rotations'] as $ri => $rot) {
+                $isFirstRot = $ri === 0;
+                $rowBg      = $isFirstRot ? $bg0 : $bg1;
 
-            $sheet->getStyle("A{$row}:D{$row}")->applyFromArray([
-                'fill'      => ['fillType' => 'solid', 'startColor' => $rgb($bg0)],
-                'font'      => ['size' => 8],
-                'alignment' => ['vertical' => 'center'],
-                'borders'   => ['allBorders' => ['borderStyle' => 'thin', 'color' => $rgb('E0E0E0')]],
-            ]);
+                // ── Colonnes fixes ───────────────────────────────────────────────
 
-            // Nb rotations coloré
-            $cColor = $vr['target_rotations']
-                ? ($vr['rotation_count'] >= $vr['target_rotations'] ? $SUCCESS : $DANGER)
-                : '1A1208';
-            $sheet->getStyle("C{$row}")->applyFromArray([
-                'font'      => ['bold' => true, 'color' => $rgb($cColor)],
-                'alignment' => ['horizontal' => 'center'],
-            ]);
+                // Immatriculation — seulement sur la 1ère ligne du véhicule
+                $sheet->setCellValue("A{$row}", $isFirstRot ? ($vr['vehicle']->plate_number ?? '—') : '');
+                // Nom véhicule — seulement sur la 1ère ligne
+                $sheet->setCellValue("B{$row}", $isFirstRot ? $vr['vehicle']->name : '');
+                // Nb rotations total — seulement sur la 1ère ligne
+                $sheet->setCellValue("C{$row}", $isFirstRot ? $vr['rotation_count'] : '');
+                // Durée de CETTE rotation
+                $sheet->setCellValue("D{$row}", $rot['duration_label'] ?? '—');
 
-            // Colonnes dynamiques
-            for ($r = 0; $r < $maxRot; $r++) {
-                $rot = $vr['rotations'][$r] ?? null;
-                $bg1 = $rot
-                    ? ($r % 2 === 0 ? $bg0 : ($vi % 2 === 0 ? 'FDF5F5' : 'F9F0F0'))
-                    : 'F0F0F0';
+                // Style colonnes fixes
+                $sheet->getStyle("A{$row}:D{$row}")->applyFromArray([
+                    'fill'      => ['fillType' => 'solid', 'startColor' => $rgb($rowBg)],
+                    'font'      => ['size' => 8],
+                    'alignment' => ['vertical' => 'center'],
+                    'borders'   => ['allBorders' => ['borderStyle' => 'thin', 'color' => $rgb('E0E0E0')]],
+                ]);
+                $sheet->getStyle("D{$row}")->getAlignment()
+                ->setHorizontal('center')
+                ->setVertical('center');
 
+                // Colonne C : colorée selon objectif (seulement 1ère ligne)
+                if ($isFirstRot && $vr['target_rotations']) {
+                    $cColor = $vr['rotation_count'] >= $vr['target_rotations'] ? $SUCCESS : $DANGER;
+                    $sheet->getStyle("C{$row}")->applyFromArray([
+                        'font'      => ['bold' => true, 'color' => $rgb($cColor)],
+                        'alignment' => ['horizontal' => 'center'],
+                    ]);
+                }
+
+                // Bordure gauche marquant le début d'un véhicule (1ère rotation seulement)
+                if ($isFirstRot) {
+                    $sheet->getStyle("A{$row}:D{$row}")->applyFromArray([
+                        'borders' => [
+                            'top' => ['borderStyle' => 'medium', 'color' => $rgb($BORDEAUX2)],
+                        ],
+                    ]);
+                }
+
+                // ── Colonnes étapes ──────────────────────────────────────────────
                 foreach ($stepDefs as $sIdx => $step) {
-                    $colIdx = $NB_FIXED + $r * $nbSteps + $sIdx + 1;
-                    $colL   = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIdx);
-
-                    if (!$rot) {
-                        $sheet->setCellValue("{$colL}{$row}", '');
-                        $sheet->getStyle("{$colL}{$row}")->applyFromArray([
-                            'fill'    => ['fillType' => 'solid', 'startColor' => $rgb('F0F0F0')],
-                            'borders' => ['allBorders' => ['borderStyle' => 'thin', 'color' => $rgb('E8E8E8')]],
-                        ]);
-                        continue;
-                    }
+                    $colL = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($NB_FIXED + $sIdx + 1);
 
                     [$val, $color, $bold] = $this->getCellValue($step, $rot, $fmt);
 
@@ -686,40 +708,51 @@ class ReportController extends Controller
                             'size'  => 8,
                             'color' => $color ? $rgb($color) : $rgb('1A1208'),
                         ],
-                        'fill'      => ['fillType' => 'solid', 'startColor' => $rgb($bg1)],
+                        'fill'      => ['fillType' => 'solid', 'startColor' => $rgb($rowBg)],
                         'alignment' => ['horizontal' => 'center', 'vertical' => 'center'],
                         'borders'   => ['allBorders' => ['borderStyle' => 'thin', 'color' => $rgb('E8E8E8')]],
                     ]);
+
+                    // Bordure top sur 1ère rotation du véhicule
+                    if ($isFirstRot) {
+                        $sheet->getStyle("{$colL}{$row}")->applyFromArray([
+                            'borders' => ['top' => ['borderStyle' => 'medium', 'color' => $rgb($BORDEAUX2)]],
+                        ]);
+                    }
                 }
 
-                // Séparateur droit entre groupes rotation
-                $lastGroupL = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(
-                    $NB_FIXED + ($r + 1) * $nbSteps
-                );
-                $sheet->getStyle("{$lastGroupL}{$row}")->applyFromArray([
-                    'borders' => ['right' => ['borderStyle' => 'medium', 'color' => $rgb('AAAAAA')]],
-                ]);
+                $sheet->getRowDimension($row)->setRowHeight(14);
+                $row++;
             }
 
-            $sheet->getRowDimension($row)->setRowHeight(14);
-            $row++;
+            // Fusionner A, B, C sur les lignes du même véhicule (si >1 rotation)
+            if ($rotCount > 1) {
+                $vehicleEnd = $row - 1;
+                foreach (['A', 'B', 'C'] as $mergeCol) {
+                    $sheet->mergeCells("{$mergeCol}{$vehicleStart}:{$mergeCol}{$vehicleEnd}");
+                    $sheet->getStyle("{$mergeCol}{$vehicleStart}")->applyFromArray([
+                        'alignment' => [
+                            'horizontal' => 'center',
+                            'vertical'   => 'center',
+                            'wrapText'   => true,
+                        ],
+                    ]);
+                }
+            }
         }
 
         // ── Largeurs colonnes ─────────────────────────────────────────────────────
         $sheet->getColumnDimension('A')->setWidth(14);
-        $sheet->getColumnDimension('B')->setWidth(30);
+        $sheet->getColumnDimension('B')->setWidth(28);
         $sheet->getColumnDimension('C')->setWidth(8);
-        $sheet->getColumnDimension('D')->setWidth(10);
+        $sheet->getColumnDimension('D')->setWidth(11);
 
-        for ($r = 0; $r < $maxRot; $r++) {
-            foreach ($stepDefs as $sIdx => $step) {
-                $colIdx = $NB_FIXED + $r * $nbSteps + $sIdx + 1;
-                $col    = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIdx);
-                $sheet->getColumnDimension($col)->setWidth($step['width'] ?? 14);
-            }
+        foreach ($stepDefs as $sIdx => $step) {
+            $col = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($NB_FIXED + $sIdx + 1);
+            $sheet->getColumnDimension($col)->setWidth($step['width'] ?? 14);
         }
 
-        // Figer colonnes fixes + lignes en-têtes
+        // Figer les 4 premières colonnes + les 4 lignes d'en-tête
         $freezeCol = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($NB_FIXED + 1);
         $sheet->freezePane("{$freezeCol}5");
         $sheet->setAutoFilter("A4:{$lastLetter}4");
@@ -829,8 +862,8 @@ class ReportController extends Controller
         }
 
         // Colonne écart rotation (RHT var)
-        $steps[] = ['type' => 'rht_var', 'leg_id' => null, 'leave_id' => null,
-                    'short_label' => 'RHT var Rotation', 'width' => 12];
+        $steps[] = ['type' => 'ecart', 'leg_id' => null, 'leave_id' => null,
+                    'short_label' => 'Ecart', 'width' => 12];
 
         return $steps;
     }
@@ -841,7 +874,7 @@ class ReportController extends Controller
         $DANGER  = 'C0272D';
         $MUTED   = '9CA3AF';
 
-        if ($step['type'] === 'rht_var') {
+        if ($step['type'] === 'ecart') {
             $v = $rot['vs_target'];
             return [
                 $v !== null ? ($v > 0 ? '+' : '') . $fmt($v) : '—',

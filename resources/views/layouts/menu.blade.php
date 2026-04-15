@@ -339,6 +339,20 @@
             </li>
         @endcan
 
+        @can('vehicles.index') 
+            <li class="nav-item">
+                <a href="{{ route('rotations.event.index') }}" class="nav-link {{ request()->routeIs('rotations.event.*') ? 'active' : '' }}">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10l2 2 2-2h6z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 8h4l3 4v3h-2m-5-7v7"/>
+                    </svg>
+                    Events
+                </a>
+            </li>
+        @endcan
+
+
     </ul>
 </li>
 

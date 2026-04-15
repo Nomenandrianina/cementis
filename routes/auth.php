@@ -289,6 +289,8 @@ Route::prefix('rotations')->name('rotations.')->group(function () {
     Route::get('/{rotation}',         [RotationController::class, 'show'])->name('show');
     Route::post('/calculate',         [RotationController::class, 'calculate'])->name('calculate');
     Route::delete('/{rotation}',      [RotationController::class, 'destroy'])->name('destroy');
+    Route::get('/event/index',       [\App\Http\Controllers\GpsEventController::class, 'index'])->name('event.index');
+    Route::post('/event/fetch', [\App\Http\Controllers\GpsEventController::class, 'fetch'])->name('event.fetch');
 });
  
 // ── Rapports ───────────────────────────────────────────────────────────────
