@@ -2,50 +2,50 @@
 @section('title', 'Événements GPS')
 @section('page-title', 'Visualisation des événements GPS')
 <style>
-@keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
-.filter-btn {
-    padding: 5px 12px;
-    border-radius: 20px;
-    border: 1px solid var(--cream-dd);
-    background: var(--cream);
-    color: var(--muted);
-    font-size: 11px;
-    font-weight: 600;
-    cursor: pointer;
-    font-family: var(--sans);
-    transition: all 0.15s;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-}
-.filter-btn:hover { background: var(--cream-d); color: var(--ink); }
-.filter-btn.active {
-    background: var(--bordeaux);
-    color: #fff;
-    border-color: var(--bordeaux);
-}
+    .filter-btn {
+        padding: 5px 12px;
+        border-radius: 20px;
+        border: 1px solid var(--cream-dd);
+        background: var(--cream);
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: var(--sans);
+        transition: all 0.15s;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+    }
+    .filter-btn:hover { background: var(--cream-d); color: var(--ink); }
+    .filter-btn.active {
+        background: var(--bordeaux);
+        color: #fff;
+        border-color: var(--bordeaux);
+    }
 
-.ev-row { transition: background 0.1s; }
-.ev-row:hover td { background: rgba(139,26,26,0.03) !important; }
-.ev-row.hidden { display: none; }
+    .ev-row { transition: background 0.1s; }
+    .ev-row:hover td { background: rgba(139,26,26,0.03) !important; }
+    .ev-row.hidden { display: none; }
 
-.type-badge {
-    display: inline-flex;
-    align-items: center;
-    padding: 2px 8px;
-    border-radius: 12px;
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    font-family: var(--sans);
-}
-.badge-enter   { background: rgba(45,122,74,0.12);  color: #2D7A4A; }
-.badge-leave   { background: rgba(184,114,10,0.12); color: #B8720A; }
-.badge-cp      { background: rgba(26,18,8,0.08);    color: #3D2E1A; }
-.badge-indb    { background: rgba(45,122,74,0.1);   color: #2D7A4A; }
-.badge-notindb { background: rgba(192,39,45,0.1);   color: #C0272D; }
-.badge-raw     { background: var(--cream-d);        color: var(--muted); font-family: var(--mono); }
+    .type-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        font-family: var(--sans);
+    }
+    .badge-enter   { background: rgba(45,122,74,0.12);  color: #2D7A4A; }
+    .badge-leave   { background: rgba(184,114,10,0.12); color: #B8720A; }
+    .badge-cp      { background: rgba(26,18,8,0.08);    color: #3D2E1A; }
+    .badge-indb    { background: rgba(45,122,74,0.1);   color: #2D7A4A; }
+    .badge-notindb { background: rgba(192,39,45,0.1);   color: #C0272D; }
+    .badge-raw     { background: var(--cream-d);        color: var(--muted); font-family: var(--mono); }
 </style>
 @section('content')
 
