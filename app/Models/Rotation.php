@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 
+
 // ============================================================
 // Rotation
 // ============================================================
@@ -32,5 +33,15 @@ class Rotation extends Model
     public function rotationLegs(): HasMany
     {
         return $this->hasMany(RotationLeg::class)->orderBy('occurred_at');
+    }
+
+    public function getStartedAtLocalAttribute()
+    {
+        if (!$this->started_at) {
+            return null;
+        }
+
+        // On s'assure que c'est une instance Carbon, puis on change la timezone
+        return $this->started_at->copy()->timezone('Africa/Nairobi'); 
     }
 }

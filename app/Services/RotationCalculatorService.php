@@ -14,7 +14,8 @@ use Illuminate\Support\Facades\Log;
 
 class RotationCalculatorService
 {
-    public const TEST_MODE = 'complete'; 
+    // public const TEST_MODE = 'complete'; 
+    public const TEST_MODE = 'API'; 
 
     public function __construct(
         private readonly GpsApiService $gpsApi,
@@ -53,11 +54,12 @@ class RotationCalculatorService
                 $periodStart->format('YmdHis'),
                 $periodEnd->format('YmdHis')
             );
+            
         }
 
         
         $rawEvents = $this->mapper->normalize($rawEvents);
-        // dd($rawEvents);
+
         if (empty($rawEvents)) {
             return ['rotations' => [], 'count' => 0, 'errors' => ['Aucun événement GPS trouvé pour la période.']];
         }
@@ -76,7 +78,7 @@ class RotationCalculatorService
             ->delete();
 
         $rotations = $this->extractRotations($rawEvents, $legs, $vehicle, $circuit, $countedMonth);
-
+        
         // Appliquer la règle de chevauchement :
         // - Si la rotation commence dans le mois courant → on la compte CE mois
         // - Si elle commence avant et se termine dans le mois → on la compte dans le mois de fin
@@ -164,7 +166,7 @@ class RotationCalculatorService
                         'raw_events'    => [],
                     ]);
                     $legEvents = [];
-
+                    
                     Log::info('Rotation démarrée.', [
                         'rotation_id' => $currentRotation->id,
                         'dt'          => $event['dt'],

@@ -1,0 +1,132 @@
+:root {
+    --primary: #8B1A1A; /* Bordeaux */
+    --primary-light: rgba(139, 26, 26, 0.05);
+    --accent: #B8720A;  /* Or/Bronze */
+    --bg-glass: rgba(255, 255, 255, 0.9);
+    --border-color: #e2e8f0;
+    --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Conteneurs et Cartes */
+.card {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    margin-bottom: 24px;
+}
+
+.card-header {
+    background: #f8fafc;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Formulaire & Boutons */
+select, input[type="date"], input[type="text"] {
+    width: 100%;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    font-size: 13px;
+    transition: border-color 0.2s;
+}
+
+select:focus, input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.1s, background 0.2s;
+}
+
+.btn-primary:hover { background: #6b1414; transform: translateY(-1px); }
+
+/* Boutons de Filtre */
+.filter-btn {
+    padding: 6px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background: white;
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.filter-btn:hover { border-color: var(--primary); color: var(--primary); }
+.filter-btn.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+    box-shadow: 0 4px 10px rgba(139, 26, 26, 0.2);
+}
+
+/* Badges */
+.type-badge {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+.badge-enter { background: #dcfce7; color: #166534; }
+.badge-leave { background: #fef3c7; color: #92400e; }
+.badge-cp    { background: #f1f5f9; color: #475569; }
+.badge-indb  { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+.badge-notindb { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+
+/* Tableau */
+table { width: 100%; border-collapse: collapse; }
+th { 
+    background: #f8fafc; 
+    text-align: left; 
+    padding: 14px 16px; 
+    font-size: 11px; 
+    text-transform: uppercase; 
+    color: #64748b; 
+    letter-spacing: 0.05em;
+}
+td { padding: 12px 16px; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
+.ev-row:hover td { background: var(--primary-light); }
+
+/* Stats Grid */
+.stats-grid { display: grid; gap: 16px; margin-bottom: 24px; }
+.stat-card {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    text-align: center;
+}
+.stat-value { font-size: 24px; font-weight: 800; color: var(--primary); }
+.stat-label { font-size: 11px; text-transform: uppercase; color: #64748b; margin-bottom: 4px; }
+
+/* Cache les options par défaut */
+#test-options {
+    display: none; 
+}
+
+/* Si la case est cochée, on affiche le voisin #test-options */
+#chk-test:checked ~ #test-options, 
+#chk-test:checked + #test-options {
+    display: flex;
+}

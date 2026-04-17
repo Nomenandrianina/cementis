@@ -49,30 +49,23 @@
             </ul>
 
             <ul class="navbar-nav ml-auto">
-                {{-- <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        <span class="flag-icon flag-icon-{{Config::get('languages')[App::getLocale()]['flag-icon']}}"></span> {{ Config::get('languages')[App::getLocale()]['display'] }}
-                    </a>
-                    <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-                        @foreach (Config::get('languages') as $lang => $language)
-                        @if ($lang != App::getLocale())
-                        <a class="dropdown-item" href="{{ route('lang.switch', $lang) }}"><span class="flag-icon flag-icon-{{$language['flag-icon']}}"></span> {{$language['display']}}</a>
-                        @endif
-                        @endforeach
-                    </div>
-                </li> --}}
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle position-relative" href="#" id="notificationsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <a class="nav-link dropdown-toggle position-relative d-flex align-items-center justify-content-center" 
+                    href="#" id="notificationsDropdown" role="button" data-toggle="dropdown" aria-expanded="false" 
+                    style="width: 40px; height: 40px;">
+                        
+                        <i class="fas fa-bell" style="font-size: 1.3rem; color: #64748b;"></i>
+
                         @if(Auth::user()->unreadNotifications->count() > 0)
-                            <span id="notif-badge" class="position-absolute translate-middle badge rounded-pill bg-danger" style="margin: -13% 0% 0% 16%;
-                                        display: {{ Auth::user()->unreadNotifications->count() > 0 ? 'inline' : 'none' }};">
-                                    {{ Auth::user()->unreadNotifications->count() }}
+                            <span id="notif-badge" 
+                                class="position-absolute badge rounded-pill bg-danger shadow-sm" 
+                                style="top: 2px; right: 2px; font-size: 0.65rem; padding: 0.35em 0.5em; border: 2px solid #fff; z-index: 10;">
+                                {{ Auth::user()->unreadNotifications->count() }}
                             </span>
                         @endif
-                        🔔
                     </a>
 
-                    <ul class="dropdown-menu dropdown-menu-right" aria-labelledby="notificationsDropdown" data-bs-popper="static" style="width: 646px; max-height: 400px; overflow-y: auto;">
+                    <ul class="dropdown-menu dropdown-menu-right" aria-labelledby="notificationsDropdown" style="width: 646px; max-height: 400px; overflow-y: auto;">
                         <div class="dropdown-header">Notifications</div>
                         @forelse (Auth::user()->notifications as $notification)
 
@@ -95,46 +88,24 @@
                             <span class="dropdown-item text-muted">Aucune notification</span>
                         @endforelse
                         <li><hr class="dropdown-divider"></li>
-                        {{-- <li>
-                            <form action="{{ route('notifications.markAllAsRead') }}" method="POST">
-                                @csrf
-                                @method('PATCH')
-                                <button type="submit" class="dropdown-item text-center text-primary">Tout marquer comme lu</button>
-                            </form>
-                        </li> --}}
                     </ul>
-
-
-                    {{-- <ul class="dropdown-menu dropdown-menu-right" aria-labelledby="notificationsDropdown" data-bs-popper="static">
-                        @foreach(Auth::user()->unreadNotifications as $notification)
-                            <li>
-                                <a class="dropdown-item" href="{{ $notification->data['url'] }}">
-                                    {{ $notification->data['message'] }}
-                                </a>
-                            </li>
-                        @endforeach
-
-                        @if(Auth::user()->unreadNotifications->isEmpty())
-                            <li><a class="dropdown-item text-muted">Aucune notification</a></li>
-                        @endif
-
-                        <li><hr class="dropdown-divider"></li>
-                        <li>
-                            <form action="{{ route('notifications.markAllAsRead') }}" method="POST">
-                                @csrf
-                                @method('PATCH')
-                                <button type="submit" class="dropdown-item text-center text-primary">Tout marquer comme lu</button>
-                            </form>
-                        </li>
-                    </ul> --}}
                 </li>
 
                 <li class="nav-item dropdown user-menu">
-                    <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">
-                        <img src="{{url('images/avatars.png')}}" class="user-image img-circle elevation-2" alt="User Image">
-                        <span class="d-none d-md-inline">{{ Auth::user()->name }}</span>
+                    <a href="#" class="nav-link dropdown-toggle d-flex align-items-center" data-toggle="dropdown" id="userDropdown">
+                        {{-- <img src="{{url('images/avatars.png')}}" class="user-image img-circle elevation-2" alt="User Image"> --}}
+                        <div class="user-avatar shadow-sm d-flex align-items-center justify-content-center" 
+                            style="background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%); 
+                                    width: 32px; height: 32px; border-radius: 8px; 
+                                    color: white; font-size: 0.9rem; font-weight: bold; 
+                                    transition: transform 0.2s ease;">
+                            {{ substr(Auth::user()->name, 0, 1) }}
+                        </div>
+                        <span class="d-none d-md-inline ml-2 font-weight-600" style="color: #4b5563;">
+                            {{ Auth::user()->name }}
+                        </span>
                     </a>
-                    <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
+                    <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-right" aria-labelledby="userDropdown">
                         <!-- User image -->
                         <li class="user-header">
                             <img src="{{url('images/alpha_ciment.jpg')}}" class="img-circle elevation-2" alt="User Image">
@@ -170,7 +141,7 @@
 
                 <div id="loader"  class="lds-roller"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
                 <div id="overlay"></div>
-                @if(Route::is(['rotations.*', 'reports.*', 'circuits.*', 'checkpoints.*', 'zones.*', 'vehicles.*']))
+                @if(Route::is([ 'rotations.show', 'reports.*', 'circuits.*', 'checkpoints.*', 'zones.*', 'vehicles.*']))
                     <div class="topbar">
                         <div class="topbar-title">@yield('page-title')</div>
                         <div class="topbar-actions">@yield('topbar-actions')</div>
@@ -180,16 +151,16 @@
             </section>
         </div>
 
-        <!-- Main Footer -->
-        <footer class="main-footer">
-            <div class="float-right d-none d-sm-block">
 
+        <footer class="main-footer">
+            <div class="float-right d-none d-sm-inline-block">
+                <b>Version</b> 2.0.0
             </div>
-            <strong>Droits d'auteur &copy; 2025 <a> M-Tec</a>.</strong> Tous droits réservés.
+            <strong>Droits d'auteur &copy; 2023 - {{ date('Y') }} <a href="https://www.m-tec.mg/">M-Tec</a>.</strong> Tous droits réservés.
         </footer>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script>
+    {{-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script> --}}
 
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
 
@@ -211,8 +182,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-switch/3.3.4/js/bootstrap-switch.min.js" integrity="sha512-J+763o/bd3r9iW+gFEqTaeyi+uAphmzkE/zU8FxY6iAvD3nQKXa+ZAWkBI9QS9QkYEKddQoiy0I5GDxKf/ORBA==" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
 
-    {{-- <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script> --}}
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    {{-- <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script> --}}
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -222,6 +192,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/jstree.min.js"></script>
     <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 
 
     <script type="text/javascript">
@@ -290,33 +261,6 @@
                     $('#user_online').html($rs);
             })
         }, 10000);
-
-
-
-
-        // document.addEventListener("DOMContentLoaded", function() {
-        //     document.getElementById('select-all').addEventListener('change', function () {
-        //         var selectAllCheckbox = this; // Stockez une référence à la case à cocher "Sélectionner tout"
-        //         var checkboxes = document.querySelectorAll('.select-checkbox');
-        //         // console.log("checkboxes",checkboxes);
-        //         checkboxes.forEach(function (checkbox) {
-        //             checkbox.checked = selectAllCheckbox.checked;
-        //         });
-        //     });
-
-        //     var selectCheckboxes = document.querySelectorAll('.select-checkbox');
-        //     selectCheckboxes.forEach(function(checkbox) {
-        //         checkbox.addEventListener('change', function() {
-        //             var allChecked = true;
-        //             selectCheckboxes.forEach(function(cb) {
-        //                 if (!cb.checked) {
-        //                     allChecked = false;
-        //                 }
-        //             });
-        //             document.getElementById('select-all').checked = allChecked;
-        //         });
-        //     });
-        // });
 
 
         // Fonction pour modifier ou ajouter le transporteur_id selectionné dans la table transporteur
@@ -433,14 +377,117 @@
             });
         }
 
-        document.addEventListener("DOMContentLoaded", function() {
-            document.getElementById("notificationsDropdown").addEventListener("click", function() {
-                // Envoyer la requête AJAX pour marquer les notifications comme lues
+        // function updateNotifications() {
+        //     $.get("{{ route('notifications.fetch') }}", function (data) {
+        //         $('#notificationsDropdown .badge').text(data.count);
 
+        //         let dropdownMenu = $('#notificationsDropdown').next('.dropdown-menu');
+        //         dropdownMenu.empty();
+
+        //         if (data.notifications.length > 0) {
+        //             data.notifications.forEach(notification => {
+        //                 dropdownMenu.append(`
+
+
+        //                     <div class="d-flex align-items-start p-3" style="border-radius: 5px; background-color: #f8f9fa; margin-bottom: 5px;">
+        //                         <!-- Icône de notification agrandie -->
+        //                         <div class="notification-icon" style="width: 40px; height: 40px; background-color: #e0e0e0; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin-right: 10px;">
+        //                             <i class="fa fa-edit text-primary" style="font-size: 20px;"></i>
+        //                         </div>
+        //                         <!-- Détails de la notification -->
+
+        //                         <a class="w-100" href=" ${notification.url}">
+        //                             <div class="mb-1 font-weight-bold" style="color: #333;"  >
+        //                                 ${notification.message}
+        //                             </div>
+        //                         </a>
+        //                     </div>
+        //                 `);
+        //             });
+
+        //             dropdownMenu.append('<li><hr class="dropdown-divider"></li>');
+        //         } else {
+        //             dropdownMenu.append('<li><a class="dropdown-item text-muted">Aucune notification</a></li>');
+        //         }
+        //     });
+        // }
+
+        // document.addEventListener("DOMContentLoaded", function() {
+        //     document.getElementById("notificationsDropdown").addEventListener("click", function() {
+        //         // Envoyer la requête AJAX pour marquer les notifications comme lues
+
+        //         let badge = document.getElementById("notif-badge");
+        //         if (badge && badge.style.display !== "none") {
+        //             console.log('tafiditra');
+        //             // Envoyer la requête AJAX pour marquer comme lues
+        //             fetch("{{ route('notifications.markAsRead') }}", {
+        //                 method: "POST",
+        //                 headers: {
+        //                     "X-CSRF-TOKEN": "{{ csrf_token() }}",
+        //                     "Content-Type": "application/json",
+        //                 },
+        //             })
+        //             .then(response => response.json())
+        //             .then(data => {
+        //                 if (data.success) {
+        //                     // Masquer seulement le badge, sans toucher la liste des notifications
+        //                     badge.style.display = "none";
+        //                 }
+        //             })
+        //             .catch(error => console.error("Erreur lors du marquage des notifications :", error));
+        //         }
+
+        //     });
+        // });
+
+        function updateNotifications() {
+            $.get("{{ route('notifications.fetch') }}", function (data) {
+                let badge = $('#notif-badge');
+                
+                // Mise à jour du badge
+                if (data.count > 0) {
+                    badge.text(data.count).show();
+                } else {
+                    badge.hide();
+                }
+
+                // On cible uniquement la liste des notifications
+                let dropdownMenu = $('#notificationsDropdown').next('.dropdown-menu');
+                
+                // On garde le header s'il existe, on vide le reste
+                dropdownMenu.find('.notification-item').remove(); 
+                dropdownMenu.find('.no-notif').remove();
+
+                if (data.notifications.length > 0) {
+                    data.notifications.forEach(notification => {
+                        dropdownMenu.prepend(`
+                            <div class="notification-item d-flex align-items-start p-3 border-bottom" style="background-color: #f8f9fa;">
+                                <div class="notification-icon mr-3" style="width: 35px; height: 35px; background-color: #e3f2fd; border-radius: 50%; display: flex; justify-content: center; align-items: center;">
+                                    <i class="fa fa-bell text-primary" style="font-size: 16px;"></i>
+                                </div>
+                                <a class="w-100 text-decoration-none" href="${notification.url}">
+                                    <div class="mb-1 font-weight-bold" style="color: #333; font-size: 0.9rem;">
+                                        ${notification.message}
+                                    </div>
+                                </a>
+                            </div>
+                        `);
+                    });
+                } else {
+                    dropdownMenu.append('<div class="no-notif p-3 text-center text-muted">Aucune notification</div>');
+                }
+            });
+        }
+
+        
+
+        $(document).ready(function() {
+            // S'exécute à chaque fois que le menu s'ouvre
+            $('#notificationsDropdown').parent().on('show.bs.dropdown', function () {
                 let badge = document.getElementById("notif-badge");
+
+                // Si le badge est visible, on marque comme lu
                 if (badge && badge.style.display !== "none") {
-                    console.log('tafiditra');
-                    // Envoyer la requête AJAX pour marquer comme lues
                     fetch("{{ route('notifications.markAsRead') }}", {
                         method: "POST",
                         headers: {
@@ -451,67 +498,17 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            // Masquer seulement le badge, sans toucher la liste des notifications
-                            badge.style.display = "none";
+                            $(badge).fadeOut(); // Effet fluide pour faire disparaître le badge
                         }
                     })
-                    .catch(error => console.error("Erreur lors du marquage des notifications :", error));
+                    .catch(error => console.error("Erreur :", error));
                 }
-
             });
         });
 
 
     </script>
 
-{{-- <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> --}}
-<script>
-    function updateNotifications() {
-        $.get("{{ route('notifications.fetch') }}", function (data) {
-            $('#notificationsDropdown .badge').text(data.count);
-
-            let dropdownMenu = $('#notificationsDropdown').next('.dropdown-menu');
-            dropdownMenu.empty();
-
-            if (data.notifications.length > 0) {
-                data.notifications.forEach(notification => {
-                    dropdownMenu.append(`
-
-
-                        <div class="d-flex align-items-start p-3" style="border-radius: 5px; background-color: #f8f9fa; margin-bottom: 5px;">
-                            <!-- Icône de notification agrandie -->
-                            <div class="notification-icon" style="width: 40px; height: 40px; background-color: #e0e0e0; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin-right: 10px;">
-                                <i class="fa fa-edit text-primary" style="font-size: 20px;"></i>
-                            </div>
-                            <!-- Détails de la notification -->
-
-                            <a class="w-100" href=" ${notification.url}">
-                                <div class="mb-1 font-weight-bold" style="color: #333;"  >
-                                    ${notification.message}
-                                </div>
-                            </a>
-                        </div>
-                    `);
-                });
-
-                dropdownMenu.append('<li><hr class="dropdown-divider"></li>');
-                // dropdownMenu.append(`
-                //     <li>
-                //         <form action="{{ route('notifications.markAllAsRead') }}" method="POST">
-                //             @csrf
-                //             @method('PATCH')
-                //             <button type="submit" class="dropdown-item text-center text-primary">Tout marquer comme lu</button>
-                //         </form>
-                //     </li>
-                // `);
-            } else {
-                dropdownMenu.append('<li><a class="dropdown-item text-muted">Aucune notification</a></li>');
-            }
-        });
-    }
-
-    // setInterval(updateNotifications, 10000); // Rafraîchissement toutes les 10 secondes
-</script>
 
 
 <style>
@@ -613,21 +610,21 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background-color: rgba(128, 128, 128, 0.7); /* Couleur semi-transparente gris */
-        z-index: 9998; /* Assure que l'overlay est au-dessus de tout autre contenu */
+        background-color: rgba(128, 128, 128, 0.7);
+        z-index: 9998;
     }
 
     .lds-roller {
-        display: none; /* Pour masquer le loader initialement */
+        display: none;
         position: fixed;
         width: 80px;
         height: 80px;
         top: 50%;
         left: 50%;
-        margin-top: -40px; /* La moitié de la hauteur du loader */
-        margin-left: -40px; /* La moitié de la largeur du loader */
+        margin-top: -40px;
+        margin-left: -40px; 
         z-index: 9999;
-        color: #ffffff; /* Couleur du loader */
+        color: #ffffff; 
     }
 
     .lds-roller div {
@@ -642,7 +639,7 @@
         width: 7.2px;
         height: 7.2px;
         border-radius: 50%;
-        background: currentColor; /* Utilise la couleur définie dans .lds-roller */
+        background: currentColor; 
         margin: -3.6px 0 0 -3.6px;
     }
 
@@ -713,13 +710,11 @@
     }
 
     .dropdown-menu {
-        max-height: 400px; /* Ajuste la hauteur maximale selon ton besoin */
-        overflow-y: auto;  /* Active le scroll si le contenu dépasse la hauteur max */
-        width: 646px;      /* Garde la largeur actuelle */
+        max-height: 400px; 
+        overflow-y: auto;  
+        width: 646px;      
     }
-
-
- </style>
+</style>
 
 
 

@@ -1,326 +1,90 @@
 @extends('layouts.app')
 
 @section('content')
+@php
+    $hour = now()->timezone('Africa/Nairobi')->format('H');
+    if ($hour >= 5 && $hour < 12) { $greeting = 'Bonjour'; }
+    elseif ($hour >= 12 && $hour < 18) { $greeting = 'Bon après-midi'; }
+    else { $greeting = 'Bonsoir'; }
+@endphp
 <!-- Content Header (Page header) -->
-<div class="content-header">
+<div class="content-header py-3">
     <div class="container-fluid">
-        <div class="row mb-2">
-            <div class="col-sm-6">
-                <h1 class="m-0">@lang('models/dashboards.header.index')</h1>
-            </div><!-- /.col -->
-            <div class="col-sm-6">
-                <ol class="breadcrumb float-sm-right">
-                    <li class="breadcrumb-item"><a href="">@lang('models/dashboards.header.home')</a></li>
-                    <li class="breadcrumb-item active">@lang('models/dashboards.header.index')</li>
-                </ol>
-            </div><!-- /.col -->
-        </div><!-- /.row -->
-    </div><!-- /.container-fluid -->
+        <div class="card border-0 shadow-sm" style="border-radius: 20px;">
+            <div class="card-body p-4">
+                
+                <div class="row align-items-center">
+                    <div class="col-sm-8">
+                        <div class="welcome-box d-flex align-items-center">
+                            <div class="welcome-avatar mr-3 d-flex align-items-center justify-content-center shadow-sm" 
+                                 style="background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%); width: 50px; height: 50px; border-radius: 12px; color: white;">
+                                {{ substr(Auth::user()->name, 0, 1) }}
+                            </div>
+                            <div>
+                                <h1 class="m-0 font-weight-bold" style="font-size: 1.4rem; color: #1f2937;">
+                                    {{ $greeting }}, {{ Auth::user()->name }} !
+                                </h1>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-4 text-right">
+                        <button class="btn btn-light px-3" type="button" id="filterToggle" style="border-radius: 10px; font-weight: 600;">
+                            <i class="fas fa-filter text-primary mr-2"></i> Filtres
+                        </button>
+                    </div>
+                </div>
+
+                <div id="filterContent" class="mt-4 pt-4 border-top" style="display: none;">
+                        <div class="d-flex flex-wrap align-items-center gap-4 py-2 px-3">
+                            
+                            <div class="d-flex align-items-center">
+                                <div class="icon-circle bg-light mr-3 d-flex align-items-center justify-content-center" style="width:35px; height:35px; border-radius:8px;">
+                                    <i class="fas fa-calendar-alt text-primary"></i>
+                                </div>
+                                <div style="min-width: 200px;">
+                                    <label class="d-block text-muted small font-weight-bold mb-1 text-uppercase">Planning</label>
+                                    <select class="form-control border-0 bg-light shadow-none" name="planning" id="planning" style="border-radius: 8px; font-size: 0.9rem;">
+                                        <option value="">Tous les plannings</option>
+                                        @foreach($import_calendar as $calendar)
+                                            <option value="{{ $calendar->id }}" {{ $calendar->id == $selectedPlanning ? 'selected' : '' }}>
+                                                {{ $calendar->name }}
+                                            </option>    
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="d-none d-md-block bg-light mx-2" style="width: 2px; height: 40px;"></div>
+
+                            @if (Auth::user()->role_text != "transporteur")
+                            <div class="d-flex align-items-center">
+                                <div class="icon-circle bg-light mr-3 d-flex align-items-center justify-content-center" style="width:35px; height:35px; border-radius:8px;">
+                                    <i class="fas fa-truck text-primary"></i>
+                                </div>
+                                <div style="min-width: 220px;">
+                                    <label class="d-block text-muted small font-weight-bold mb-1 text-uppercase">Transporteur</label>
+                                    <select class="form-control border-0 bg-light shadow-none" name="transporteur" id="transporteur" style="border-radius: 8px; font-size: 0.9rem;">
+                                        <option value="">Tous les transporteurs</option>
+                                        @foreach($transporteurs as $transporteur)
+                                            <option value="{{ $transporteur->id }}">{{ $transporteur->nom }}</option>    
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            @endif
+                        </div>
+                    </div>
+
+            </div>
+        </div>
+        </div>
 </div>
 <!-- /.content-header -->
 
 <!-- Main content -->
 <section class="content">
     <div class="container-fluid">
-        {{-- <div class="card shadow-sm rounded">
-            <div class="card-body">
-                <div class="row align-items-center justify-content-between">
-                    <!-- Colonne gauche : Filtres et boutons -->
-                    <div class="col-md-8">
-                        <div class="d-flex flex-wrap align-items-center gap-3">
-
-                            <div class="form-group">
-                                <label for="planning" class="form-label">Planning</label>
-                                <select class="form-control custom-select w-auto" name="planning" id="planning">
-                                    <option value="">Veuillez choisir le planning</option>
-                                    @foreach($import_calendar as $calendar)
-                                        <option value="{{ $calendar->id }}" {{ $calendar->id == $selectedPlanning ? 'selected' : '' }}>
-                                            {{ $calendar->name }}
-                                        </option>    
-                                    @endforeach
-                                </select>
-                            </div>
-                            @if (Auth::user()->role_text != "transporteur")    
-                                <div class="form-group">
-                                    <label for="planning" class="form-label">Transporteur</label>
-                                    <select class="form-control custom-select w-auto" name="transporteur" id="transporteur">
-                                        <option value="" selected>Veuillez choisir un transporteur</option>
-                                        @foreach($transporteurs as $transporteur)
-                                            <option value="{{ $transporteur->id }}">
-                                                {{ $transporteur->nom }}
-                                            </option>    
-                                        @endforeach
-                                    </select>
-                                </div>
-                            @endif
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-        </div>
-
-       
-        <div class="row">
-            <!-- Première ligne -->
-            <div class="col-md-3">
-                <a href="{{ route('transporteurs.index') }}" class="text-decoration-none">
-                    <div class="card card-custom transporteur">
-                        <div class="card-body card-body-transporteurs">
-                            <div>
-                                <h4 class="card-title-custom">Transporteurs</h4>
-                                <h3>{{$totalTransporteurs}}</h3>
-                            </div>
-                            <div class="icon-container">
-                                <i class="nav-icon fas fa-city"></i>
-                            </div>
-                        </div>
-                    </div>
-                </a>
-            </div>
-        
-            <div class="col-md-3">
-                <a id="vehicule-link" href="{{ route('vehicules.index', ['selectedTransporteur' => $selectedTransporteur]) }}" class="text-decoration-none">
-                    <div class="card card-custom vehicule">
-                        <div class="card-body card-body-vehicules">
-                            <div>
-                                <h4 class="card-title-custom">Véhicules</h4>
-                                <h3 id="total_vehicule">{{ $totalVehicules }}</h3>
-                            </div>
-                            <div class="icon-container">
-                                <i class="nav-icon fas fa-truck"></i>
-                            </div>
-                        </div>
-                    </div>
-                </a>
-            </div>
-        
-            <div class="col-md-3">
-                <a id="driver-link" href="{{ route('chauffeurs.index', ['selectedTransporteur' => $selectedTransporteur]) }}" class="text-decoration-none">
-                    <div class="card card-custom chauffeur">
-                        <div class="card-body card-body-chauffeurs">
-                            <div>
-                                <h4 class="card-title-custom">Chauffeurs</h4>
-                                <h3 id="total_chauffeur">{{ $totalChauffeurs }}</h3>
-                            </div>
-                            <div class="icon-container">
-                                <i class="nav-icon fas fa-user"></i>
-                            </div>
-                        </div>
-                    </div>
-                </a>
-            </div>
-
-            <div class="col-md-3">
-                <a id="truck-calendar-link" href="{{ route('detail.truck-calendar') }}" class="text-decoration-none">
-                    <div class="card card-custom chauffeur">
-                        <div class="card-body card-body-chauffeurs">
-                            <div>
-                                <h4 class="card-title-custom">Véhicules dans le calendrier</h4>
-                                <h3 id="truck_in_calendar">{{ $truck_in_calendar }}</h3>
-                            </div>
-                            <div class="icon-container">
-                                <i class="nav-icon fas fa-user"></i>
-                            </div>
-                        </div>
-                    </div>
-                </a>
-            </div>
-        
-        </div>
-        
-        <div class="row">
-            <div class="col-md-3">
-                <a id="driver-has-scoring-link" href="{{ route('driver.score') }}" class="text-decoration-none">
-                    <div class="card card-custom scoring">
-                        <div class="card-body card-body-custom">
-                            <div>
-                                <h4 class="card-title-custom">Nombre de chauffeurs avec score</h4>
-                                <h3 id="driver_has_score">{{ $driver_has_score }}</h3>
-                            </div>
-                            <div class="icon-container">
-                                <i class="nav-icon fas fa-user"></i>
-                            </div>
-                        </div>
-                    </div>
-                </a>
-            </div>
-            <!-- Deuxième ligne -->
-            <div class="col-md-3">
-                <a id="driver-have-not-scoring-link" href="{{ route('detail.driver-have-not-scoring') }}" class="text-decoration-none">
-                    <div class="card card-custom no-scoring">
-                        <div class="card-body card-body-custom">
-                            <div>
-                                <h4 class="card-title-custom">Nombre de chauffeur sans score</h4>
-                                <h3 id="driver_not_has_score">{{ $driver_not_has_score }}</h3>
-                            </div>
-                            <div class="icon-container">
-                                <i class="nav-icon fas fa-user"></i>
-                            </div>
-                        </div>
-                    </div>
-                </a>
-            </div>
-
-            <div class="col-md-3">
-                <a id="badge-calendar-link" href="{{ route('detail.badge-calendar') }}" class="text-decoration-none">
-                    <div class="card card-custom no-scoring">
-                        <div class="card-body card-body-custom">
-                            <div>
-                                <h4 class="card-title-custom">Nombre de badge dans le calendrier</h4>
-                                <h3 id="badge_numbers_in_calendars">
-                                    {{ $drivers_badge_in_calendars }}
-                                </h3>
-                            </div>
-                            <div class="icon-container">
-                                <i class="nav-icon fas fas fa-id-badge"></i>
-                            </div>
-                        </div>
-                    </div>
-                </a>
-            </div>
-
-            <div class="col-md-3">
-                <a id="driver-match-rfid-link" href="{{ route('detail.driver-match-rfid') }}" class="text-decoration-none">
-                    <div class="card card-custom no-scoring">
-                        <div class="card-body card-body-custom">
-                            <div>
-                                <h4 class="card-title-custom">Taux d'utilisation RFID</h4>
-                                <h3 id="driver_match_rfid">
-                                    {{ $match_rfid->match_percentage !== null ? $match_rfid->match_percentage . ' %' : 0 }}
-                                </h3>
-                            </div>
-                            <div class="icon-container">
-                                <i class="nav-icon fas fa-chart-line"></i>
-                            </div>
-                        </div>
-                    </div>
-                </a>
-            </div>
-
-            <div class="col-md-3">
-                <a id="score-zero-link" href="{{ route('driver.detail.score.zero') }}" class="text-decoration-none">
-                    <div class="card card-custom no-scoring">
-                        <div class="card-body card-body-custom">
-                            <div>
-                                <h4 class="card-title-custom">Nombre de cas avec score 0</h4>
-                                <h3 id="score_zero">
-                                    {{ $score_zero }}
-                                </h3>
-                            </div>
-                            <div class="icon-container">
-                                <i class="nav-icon fas fa-circle"></i>
-                            </div>
-                        </div>
-                    </div>
-                </a>
-            </div>
-
-            <div class="col-md-3">
-                <a id="score-zero-more-than-3-planning-link" href="{{ route('driver.detail.score.zero.more.than.3.plannings') }}" class="text-decoration-none">
-                    <div class="card card-custom no-scoring">
-                        <div class="card-body card-body-custom">
-                            <div>
-                                <h4 class="card-title-custom">Nombre score 0 plus de 3 trajets</h4>
-                                <h3 id="score_zero_more_than_3_planning">
-                                    {{ $score_zero_more_than_3_planning }}
-                                </h3>
-                            </div>
-                            <div class="icon-container">
-                                <i class="nav-icon fas fa-circle"></i>
-                            </div>
-                        </div>
-                    </div>
-                </a>
-            </div>
-        
-        </div> --}}
-
-        <!-- Filters Card -->
-        {{-- <div class="card border-0 shadow-sm rounded-4 mb-4">
-            <div class="card-body p-4">
-                <div class="row g-3 align-items-end">
-                    <!-- Planning Filter -->
-                    <div class="col-md-4">
-                        <label for="planning" class="form-label fw-semibold text-secondary mb-2">
-                            <i class="fas fa-calendar-alt me-2"></i> Planning
-                        </label>
-                        <select class="form-select custom-select w-auto" name="planning" id="planning">
-                            <option value="">Sélectionner un planning</option>
-                            @foreach($import_calendar as $calendar)
-                                <option value="{{ $calendar->id }}" {{ $calendar->id == $selectedPlanning ? 'selected' : '' }}>
-                                    {{ $calendar->name }}
-                                </option>    
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <!-- Transporteur Filter -->
-                    @if (Auth::user()->role_text != "transporteur")
-                    <div class="col-md-6">
-                        <label for="transporteur" class="form-label fw-semibold text-secondary mb-2">
-                            <i class="fas fa-truck me-2"></i> Transporteur
-                        </label>
-                        <select class="form-select custom-select w-auto shadow-sm" name="transporteur" id="transporteur">
-                            <option value="" selected>Sélectionner un transporteur</option>
-                            @foreach($transporteurs as $transporteur)
-                                <option value="{{ $transporteur->id }}">
-                                    {{ $transporteur->nom }}
-                                </option>    
-                            @endforeach
-                        </select>
-                    </div>
-                    @endif
-                </div>
-            </div>
-        </div> --}}
-       <div class="card border-0 shadow-sm rounded-4 mb-4">
-            <div class="card-body p-4">
-                <!-- Ligne principale : bouton à gauche, selects à droite -->
-                <div class="d-flex align-items-end justify-content-between">
-                    <!-- Bouton filtre à gauche -->
-                    <button class="btn btn-outline-secondary" type="button" id="filterToggle">
-                        <i class="fas fa-filter"> Filtres</i>
-                    </button>
-
-                    <!-- Contenu du filtre (hidden au départ) -->
-                    <div id="filterContent" class="d-flex align-items-end gap-4" style="display: none;">
-                        <!-- Planning Filter -->
-                        <div class="d-flex align-items-center gap-2" style="padding: 0px 13px 0px 0px;">
-                            <i class="fas fa-calendar-alt text-secondary" style="padding: 0px 7px 0px 0px;"></i>
-                            <span class="text-secondary fw-semibold" style="padding: 0px 7px 0px 0px;"> Planning</span>
-                            <select class="form-select custom-select w-auto shadow-sm" name="planning" id="planning">
-                                <option value="">Sélectionner un planning</option>
-                                @foreach($import_calendar as $calendar)
-                                    <option value="{{ $calendar->id }}" {{ $calendar->id == $selectedPlanning ? 'selected' : '' }}>
-                                        {{ $calendar->name }}
-                                    </option>    
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <!-- Transporteur Filter -->
-                        @if (Auth::user()->role_text != "transporteur")
-                            <div class="d-flex align-items-center gap-2">
-                                <i class="fas fa-truck text-secondary" style="padding: 0px 7px 0px 0px;"></i>
-                                <span class="text-secondary fw-semibold" style="padding: 0px 7px 0px 0px;"> Transporteur</span>
-                                <select class="form-select custom-select w-auto shadow-sm" name="transporteur" id="transporteur">
-                                    <option value="" selected>Sélectionner un transporteur</option>
-                                    @foreach($transporteurs as $transporteur)
-                                        <option value="{{ $transporteur->id }}">
-                                            {{ $transporteur->nom }}
-                                        </option>    
-                                    @endforeach
-                                </select>
-                            </div>
-                        @endif
-                    </div>
-                </div>
-            </div>
-        </div>
-
-
-
         <!-- KPI Cards Grid -->
         <div class="row g-4 mb-4">
             
@@ -336,11 +100,6 @@
                                 <p class="kpi-label">Transporteurs</p>
                                 <h2 class="kpi-value">{{ $totalTransporteurs }}</h2>
                             </div>
-                            {{-- <div class="kpi-trend">
-                                <span class="trend-badge trend-up">
-                                    <i class="fas fa-arrow-up"></i>
-                                </span>
-                            </div> --}}
                         </div>
                     </div>
                 </a>
@@ -546,11 +305,6 @@
                                 <p class="kpi-label">Score 0 sur +3 trajets</p>
                                 <h2 class="kpi-value" id="score_zero_more_than_3_planning">{{ $score_zero_more_than_3_planning }}</h2>
                             </div>
-                            {{-- <div class="kpi-trend">
-                                <span class="trend-badge trend-alert">
-                                    <i class="fas fa-exclamation-circle"></i>
-                                </span>
-                            </div> --}}
                         </div>
                     </div>
                 </a>
@@ -558,115 +312,8 @@
 
         </div>
         
-        
-        <!-- /.row -->
-        {{-- <div class="row">
-            <div class="col-12 col-sm-12 col-md-12">
-                <div class="card">
-                    <!-- Header de la carte avec les tabs -->
-                    <div class="card-header d-flex  align-items-center">
-                        <!-- Navigation des Tabs dans le header -->
-                        
-                        <ul class="nav nav-tabs card-header-tabs flex-grow-1" id="myTab" role="tablist">
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home" type="button" role="tab" aria-controls="home" aria-selected="true">
-                                    <strong>Classement des scores</strong> 
-                                </button>
-                            </li>
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="vehicule-tab" data-bs-toggle="tab" data-bs-target="#vehicule" type="button" role="tab" aria-controls="vehicule" aria-selected="false">
-                                    <strong>Répartition des véhicules par transporteurs</strong> 
-                                </button>
-                            </li>
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="chauffeur-tab" data-bs-toggle="tab" data-bs-target="#chauffeur" type="button" role="tab" aria-controls="chauffeur" aria-selected="false">
-                                    <strong>Répartition des chauffeurs par transporteurs</strong> 
-                                </button>
-                            </li>
-                        </ul>
-        
-                        <!-- Boutons de gestion de la carte -->
-                        <div class="card-tools d-flex justify-content-end">
-                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                                <i class="fas fa-minus"></i>
-                            </button>
-                            <button type="button" class="btn btn-tool" data-card-widget="remove">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <!-- /.card-header -->
-        
-                    <div class="card-body">
-                        <!-- Contenu des Tabs -->
-                        <div class="tab-content mt-3" id="myTabContent">
-                            <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="card">
-                                            <div class="card-header">
-                                                <h1 class="card-title" style="padding-left: 31px;"><i class="fas fa-medal" style="color: #eded3c;"></i> Meilleur Scoring </h1>
-                                                <div class="card-tools">
-                                                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                                                        <i class="fas fa-minus"></i>
-                                                    </button>
-                                                    <button type="button" class="btn btn-tool" data-card-widget="remove">
-                                                        <i class="fas fa-times"></i>
-                                                    </button>
-                                                </div>
-                                            </div>
-                        
-                                            <div class="card-body">
-                                                <div class="card-body" id="best_scoring_container">
-                                                    @include('dashboard.best_scoring', ['best_scoring' => $best_scoring, 'selectedPlanning' => $selectedPlanning])
-                                                </div>
-                                            </div>
-                                            <!-- /.card-header -->
-                                        </div>
-                                        <!-- /.card -->
-                                    </div>
-                        
-                                    <div class="col-md-6">
-                                        <div class="card">
-                                            <div class="card-header">
-                                                <h1 class="card-title" style="padding-left: 31px;"><i class="fas fa-exclamation-triangle" style="color: red;"></i> Moins Bon Scoring </h1>
-                        
-                                                <div class="card-tools">
-                                                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                                                        <i class="fas fa-minus"></i>
-                                                    </button>
-                                                    <button type="button" class="btn btn-tool" data-card-widget="remove">
-                                                        <i class="fas fa-times"></i>
-                                                    </button>
-                                                </div>
-                                            </div>
-                        
-                                            <div class="card-body">
-                                                <div class="card-body" id="bad_scoring_container">
-                                                    @include('dashboard.bad_scoring', ['best_scoring' => $bad_scoring, 'selectedPlanning' => $selectedPlanning])
-                                                </div>
-                                            </div>
-                                            <!-- /.card-header -->
-                                        </div>
-                                        <!-- /.card -->
-                                    </div>
-                                </div> 
-                            </div>
-                            <div class="tab-pane fade" id="vehicule" role="tabpanel" aria-labelledby="vehicule-tab">
-                                <canvas id="vehiculeChart" ></canvas>
-                            </div>
-                            <div class="tab-pane fade" id="chauffeur" role="tabpanel" aria-labelledby="chauffeur-tab">
-                                <canvas id="chauffeurChart" ></canvas>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- /.card -->
-            </div>
 
-        </div> --}}
-
-        <div class="row" style="padding: 5px;">
+        <div class="row" style="padding: 5px;margin-top: 27px;">
             <div class="col-12">
                 <!-- Main Dashboard Card -->
                 <div class="card border-0 shadow-sm rounded-4">
@@ -936,63 +583,6 @@
         planningSelect.addEventListener("change", updateLinks);
         transporteurSelect.addEventListener("change", updateLinks);
     });
-
-
-
-
-    // document.addEventListener("DOMContentLoaded", function() {
-    //     const planningSelect = document.getElementById("planning");
-    //     const transporteurSelect = document.getElementById("transporteur");
-    //     const rfidLink = document.getElementById("driver-match-rfid-link");
-    //     console.log(rfidLink);
-    //     function updateRfidLink() {
-    //         const planning = planningSelect.value;
-    //         const transporteur = transporteurSelect.value;
-
-    //         const params = [];
-    //         if (planning) params.push(`id_planning=${planning}`);
-    //         if (transporteur) params.push(`id_transporteur=${transporteur}`);
-
-    //         rfidLink.href = params.length 
-    //             ? `{{ route('detail.driver-match-rfid') }}?${params.join("&")}` 
-    //             : `{{ route('detail.driver-match-rfid') }}`;
-
-    //         console.log("Lien RFID mis à jour :", rfidLink.href); // pour vérifier
-    //     }
-
-    //     // Mise à jour au chargement
-    //     updateRfidLink();
-
-    //     // Mise à jour à chaque changement
-    //     planningSelect.addEventListener("change", updateRfidLink);
-    //     transporteurSelect.addEventListener("change", updateRfidLink);
-    // });
-
-    // document.addEventListener("DOMContentLoaded", function() {
-    //     let select = document.getElementById("planning");
-    //     let links = {
-    //         "driver-not-having-scoring": "{{ route('detail.driver-have-not-scoring') }}",
-    //         "driver-having-scoring": "{{ route('detail.driver-has-scoring') }}",
-    //         "truck-in-calendar": "{{ route('detail.truck-calendar') }}",
-    //         "badge-in-calendar": "{{ route('detail.badge-calendar') }}",
-    //     };
-
-    //     function updateLinks() {
-    //         let selectedValue = select.value;
-    //         for (let id in links) {
-    //             let linkElement = document.getElementById(id);
-    //             if (linkElement) {
-    //                 linkElement.href = selectedValue ? `${links[id]}?id_planning=${selectedValue}` : links[id];
-    //             }
-    //         }
-    //     }
-
-    //     // Mettre à jour les liens au chargement de la page
-    //     updateLinks();
-
-    //     // Mettre à jour les liens lorsqu'on change la sélection
-    //     select.addEventListener("change", updateLinks);
-    // });
 
     
     Chart.register(ChartDataLabels);

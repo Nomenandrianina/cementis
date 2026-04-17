@@ -101,7 +101,8 @@
                         <div class="mono" style="font-size:14px;color:var(--text);">
                             {{ $rotation->started_at?->format('d/m/Y') }}<br>
                             <span style="color:var(--accent);font-size:18px;font-family:var(--head);font-weight:700;">
-                                {{ $rotation->started_at?->format('H:i') }}
+                                {{-- {{ $rotation->started_at?->format('H:i') }} --}}
+                                {{ $rotation->started_at_local?->format('H:i') }}
                             </span>
                         </div>
                     </div>
@@ -412,7 +413,7 @@
                             {{ $block['leg']->label }}
                         </span>
                         <span style="margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--muted);">
-                            {{ $block['rl']?->occurred_at?->format('H:i:s') ?? '—' }}
+                            {{ $block['rl']?->occurred_at?->timezone('Africa/Nairobi')->format('H:i:s') ?? '—' }}
                         </span>
                     </div>
 
@@ -456,14 +457,14 @@
                                         <span style="font-family:var(--mono);font-size:10px;
                                                     background:#fff;padding:1px 6px;border-radius:4px;
                                                     border:1px solid var(--cream-dd);color:var(--ink-light);">
-                                            Entrée : {{ $block['enter_rl']->occurred_at->format('H:i:s') }}
+                                            Entrée : {{ $block['enter_rl']->occurred_at->timezone('Africa/Nairobi')->format('H:i:s') }}
                                         </span>
                                     @endif
                                     @if($block['leave_rl'])
                                         <span style="font-family:var(--mono);font-size:10px;
                                                     background:#fff;padding:1px 6px;border-radius:4px;
                                                     border:1px solid var(--cream-dd);color:var(--ink-light);">
-                                            Sortie : {{ $block['leave_rl']->occurred_at->format('H:i:s') }}
+                                            Sortie : {{ $block['leave_rl']->occurred_at->timezone('Africa/Nairobi')->format('H:i:s') }}
                                         </span>
                                     @endif
                                     @if(!$isDone)
@@ -540,13 +541,13 @@
                                                 @if($child['enter_rl'])
                                                     <span style="font-family:var(--mono);font-size:10px;color:var(--muted);background:#fff;padding:1px 6px;border-radius:4px;
                                                     border:1px solid var(--cream-dd);color:var(--ink-light);">
-                                                        Entrée {{ $child['enter_rl']->occurred_at->format('H:i:s') }}
+                                                        Entrée {{ $child['enter_rl']->occurred_at->timezone('Africa/Nairobi')->format('H:i:s') }}
                                                     </span>
                                                 @endif
                                                 @if($child['leave_rl'])
                                                     <span style="font-family:var(--mono);font-size:10px;color:var(--muted);background:#fff;padding:1px 6px;border-radius:4px;
                                                     border:1px solid var(--cream-dd);color:var(--ink-light);">
-                                                        Sortie {{ $child['leave_rl']->occurred_at->format('H:i:s') }}
+                                                        Sortie {{ $child['leave_rl']->occurred_at->timezone('Africa/Nairobi')->format('H:i:s') }}
                                                     </span>
                                                 @endif
                                                 @if(!$childDone)

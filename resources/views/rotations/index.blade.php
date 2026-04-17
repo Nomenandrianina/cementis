@@ -1,545 +1,421 @@
 @extends('layouts.app')
-<style>
-  .topbar {
-        background: var(--surface);
-        border-bottom: 1px solid var(--border);
-        padding: 0 24px;
-        height: 52px;
-        display: flex;
-        align-items: center;
-        gap: 16px;
-        position: sticky;
-        top: 0;
-        z-index: 100;
-    }
-
-    .topbar-title {
-        font-family: var(--head);
-        font-size: 18px;
-        font-weight: 700;
-        letter-spacing: 0.04em;
-        flex: 1;
-    }
-
-    .topbar-actions { display: flex; gap: 8px; align-items: center; }
-
-    .page-content { padding: 24px; flex: 1; }
-
-     /* ── Components ────────────────────────────────────────────────── */
-        .card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            overflow: hidden;
-        }
- 
-        .card-header {
-            padding: 14px 18px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
- 
-        .card-title {
-            font-family: var(--head);
-            font-size: 15px;
-            font-weight: 700;
-            letter-spacing: 0.05em;
-            text-transform: uppercase;
-            flex: 1;
-        }
- 
-        .card-body { padding: 18px; }
-         /* Buttons */
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 7px 14px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: 600;
-            letter-spacing: 0.05em;
-            text-transform: uppercase;
-            cursor: pointer;
-            border: none;
-            text-decoration: none;
-            transition: all 0.15s;
-            font-family: var(--body);
-            white-space: nowrap;
-        }
- 
-        .btn-primary  { background: var(--accent); color: #000; }
-        .btn-primary:hover { background: #d97706; }
- 
-        .btn-blue     { background: var(--accent2); color: #fff; }
-        .btn-blue:hover { background: #2563eb; }
- 
-        .btn-ghost    { background: var(--panel); color: var(--text); border: 1px solid var(--border); }
-        .btn-ghost:hover { background: var(--border); }
- 
-        .btn-danger   { background: rgba(239,68,68,0.15); color: var(--danger); border: 1px solid rgba(239,68,68,0.3); }
-        .btn-danger:hover { background: rgba(239,68,68,0.25); }
- 
-        .btn-sm { padding: 4px 10px; font-size: 11px; }
- 
-        /* Badges */
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            padding: 2px 8px;
-            border-radius: 3px;
-            font-size: 11px;
-            font-weight: 600;
-            letter-spacing: 0.05em;
-            text-transform: uppercase;
-            font-family: var(--mono);
-        }
- 
-        .badge-success  { background: rgba(16,185,129,0.15); color: var(--success); }
-        .badge-danger   { background: rgba(239,68,68,0.15);  color: var(--danger); }
-        .badge-warning  { background: rgba(245,158,11,0.15); color: var(--warning); }
-        .badge-muted    { background: var(--panel); color: var(--muted); }
-        .badge-blue     { background: rgba(59,130,246,0.15); color: var(--accent2); }
- 
-        /* Tables */
-        .table-wrap { overflow-x: auto; }
- 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 13px;
-        }
- 
-        thead tr { background: var(--panel); }
- 
-        th {
-            padding: 10px 14px;
-            text-align: left;
-            font-size: 10px;
-            font-weight: 700;
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-            color: var(--muted);
-            border-bottom: 1px solid var(--border);
-            white-space: nowrap;
-        }
- 
-        td {
-            padding: 11px 14px;
-            border-bottom: 1px solid var(--border);
-            vertical-align: middle;
-        }
- 
-        tbody tr:hover { background: rgba(255,255,255,0.02); }
-        tbody tr:last-child td { border-bottom: none; }
- 
-        /* Forms */
-        .form-group { margin-bottom: 16px; }
- 
-        label {
-            display: block;
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            color: var(--muted);
-            margin-bottom: 6px;
-        }
- 
-        input[type=text], input[type=number], input[type=date],
-        input[type=email], select, textarea {
-            width: 100%;
-            background: var(--panel);
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            color: var(--text);
-            padding: 8px 12px;
-            font-size: 13px;
-            font-family: var(--body);
-            outline: none;
-            transition: border-color 0.15s;
-        }
- 
-        input:focus, select:focus, textarea:focus {
-            border-color: var(--accent);
-        }
- 
-        select option { background: var(--panel); }
- 
-        /* Alerts */
-        .alert {
-            padding: 12px 16px;
-            border-radius: 4px;
-            margin-bottom: 16px;
-            font-size: 13px;
-            display: flex;
-            align-items: flex-start;
-            gap: 10px;
-        }
- 
-        .alert-success { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); color: var(--success); }
-        .alert-error   { background: rgba(239,68,68,0.1);  border: 1px solid rgba(239,68,68,0.3);  color: var(--danger); }
- 
-        /* Stats grid */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 14px;
-            margin-bottom: 24px;
-        }
- 
-        .stat-card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 16px;
-            position: relative;
-            overflow: hidden;
-        }
- 
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0;
-            height: 2px;
-            background: var(--accent);
-        }
- 
-        .stat-label {
-            font-size: 10px;
-            font-weight: 700;
-            letter-spacing: 0.15em;
-            text-transform: uppercase;
-            color: var(--muted);
-            margin-bottom: 8px;
-        }
- 
-        .stat-value {
-            font-family: var(--head);
-            font-size: 32px;
-            font-weight: 900;
-            line-height: 1;
-            color: var(--accent);
-        }
- 
-        .stat-sub {
-            font-size: 11px;
-            color: var(--muted);
-            margin-top: 4px;
-        }
- 
-        /* Progress bar */
-        .progress {
-            height: 6px;
-            background: var(--panel);
-            border-radius: 3px;
-            overflow: hidden;
-            margin-top: 8px;
-        }
- 
-        .progress-bar {
-            height: 100%;
-            background: var(--accent);
-            border-radius: 3px;
-            transition: width 0.5s ease;
-        }
- 
-        .progress-bar.over { background: var(--danger); }
-        .progress-bar.good { background: var(--success); }
- 
-        /* Grid helpers */
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
- 
-        /* Timeline for rotation legs */
-        .timeline { position: relative; padding-left: 28px; }
- 
-        .timeline::before {
-            content: '';
-            position: absolute;
-            left: 9px; top: 8px; bottom: 8px;
-            width: 2px;
-            background: var(--border);
-        }
- 
-        .timeline-item { position: relative; padding-bottom: 20px; }
-        .timeline-item:last-child { padding-bottom: 0; }
- 
-        .timeline-dot {
-            position: absolute;
-            left: -22px;
-            top: 4px;
-            width: 14px;
-            height: 14px;
-            border-radius: 50%;
-            border: 2px solid var(--accent);
-            background: var(--bg);
-        }
- 
-        .timeline-dot.done { background: var(--accent); }
- 
-        .timeline-label {
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            color: var(--accent);
-        }
- 
-        .timeline-time {
-            font-family: var(--mono);
-            font-size: 12px;
-            color: var(--text);
-            margin-top: 2px;
-        }
- 
-        .timeline-duration {
-            font-size: 11px;
-            color: var(--muted);
-            margin-top: 2px;
-        }
- 
-        /* Mono text */
-        .mono { font-family: var(--mono); }
- 
-        /* Utility */
-        .text-success { color: var(--success); }
-        .text-danger  { color: var(--danger); }
-        .text-muted   { color: var(--muted); }
-        .text-accent  { color: var(--accent); }
-        .text-right   { text-align: right; }
-        .mt-16  { margin-top: 16px; }
-        .mt-24  { margin-top: 24px; }
-        .mb-16  { margin-bottom: 16px; }
-        .flex   { display: flex; }
-        .items-center { align-items: center; }
-        .gap-8  { gap: 8px; }
-        .gap-16 { gap: 16px; }
-        .flex-1 { flex: 1; }
- 
-        /* Scrollbar */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: var(--bg); }
-        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
- 
-        @media (max-width: 768px) {
-            .sidebar { display: none; }
-            .main-wrapper { margin-left: 0; }
-            .grid-2, .grid-3 { grid-template-columns: 1fr; }
-        }
-</style>
 @section('title', 'Rotations')
 @section('page-title', 'Rotations')
 
-@section('topbar-actions')
-    <a href="{{ route('reports.index') }}" class="btn btn-ghost btn-sm">
-        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10"/>
-        </svg>
-        Rapports
-    </a>
-@endsection
-
+<link rel="stylesheet" href="{{ asset('css/rotation_index.css') }}">
 @section('content')
-<link rel="stylesheet" href="{{ asset('css/rotation.css') }}">
-{{-- Calcul de rotations --}}
-<div class="card mb-16">
-    <div class="card-header">
-        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-        </svg>
-        <span class="card-title">Calculer les rotations</span>
+<div class="container-fluid pt-3">
+    <div class="card shadow-sm">
+        <div class="card-header d-flex justify-content-between align-items-center bg-white py-3">
+            <div class="rot-page-header mb-0">
+                <h3 class="card-title mb-0" style="font-size: 1.5rem; font-weight: 600;">
+                    Rotations
+                    <small class="text-muted d-block" style="font-size: 0.9rem;">
+                        Gestion des tournées véhicules
+                    </small>
+                </h3>
+            </div>
+
+            <div class="d-flex align-items-center ml-auto">
+                <button type="button" class="rot-btn mr-2" data-toggle="modal" data-target="#modalFilter">
+                    <i class="fas fa-filter mr-1"></i> Filtrer
+                </button>
+
+                <a href="{{ route('reports.index') }}" class="rot-btn mr-2">
+                    <svg class="rot-icon" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10"/>
+                    </svg>
+                    Rapports
+                </a>
+                <button type="button" class="rot-btn rot-btn-primary" data-toggle="modal" data-target="#modalCalcul" style="margin-left: 1rem;">
+                    <svg class="rot-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                            d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                    </svg>
+                    Calculer les rotations
+                </button>
+            </div>
+        </div>
     </div>
-    <div class="card-body">
-        <form action="{{ route('rotations.calculate') }}" method="POST">
-            @csrf
-            <div style="display:grid; grid-template-columns: 2fr 2fr 1fr 1fr auto; gap:12px; align-items:end;">
-                <div class="form-group" style="margin:0">
-                    <label>Circuit</label>
-                    <select name="circuit_id" required>
-                        <option value="">— Sélectionner —</option>
-                        @foreach($circuits as $c)
-                            <option value="{{ $c->id }}">{{ $c->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="form-group" style="margin:0">
-                    <label>Camion (optionnel)</label>
-                    <select name="vehicle_id">
-                        <option value="">— Tous les camions —</option>
-                        @foreach($vehicles as $v)
-                            <option value="{{ $v->id }}">{{ $v->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="form-group" style="margin:0">
-                    <label>Année</label>
-                    <input type="number" name="year" value="{{ date('Y') }}" min="2020" max="2099" required>
-                </div>
-                <div class="form-group" style="margin:0">
-                    <label>Mois</label>
-                    <select name="month" required>
-                        @foreach(range(1,12) as $m)
-                            <option value="{{ $m }}" @selected($m == date('n'))>
-                                {{ \Carbon\Carbon::createFromDate(null, $m, 1)->translatedFormat('F') }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                <div>
-                    <button type="submit" class="btn btn-primary">
-                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                        Calculer
+    {{-- Statistiques rapides --}}
+    @php
+        $total      = $rotations->total();
+        $completed  = $rotations->getCollection()->where('status','completed')->count();
+        $inProgress = $rotations->getCollection()->where('status','in_progress')->count();
+        $cancelled  = $rotations->getCollection()->where('status','cancelled')->count();
+    @endphp
+
+    <div class="rot-stats mb-18">
+        <div class="rot-stat">
+            <div class="rot-stat-label">Total rotations</div>
+            <div class="rot-stat-value">{{ $total }}</div>
+            <div class="rot-stat-sub">Ce mois-ci</div>
+        </div>
+        <div class="rot-stat stat-success">
+            <div class="rot-stat-label">Complètes</div>
+            <div class="rot-stat-value">{{ $completed }}</div>
+            <div class="rot-stat-sub">
+                {{ $total > 0 ? round($completed / $total * 100) : 0 }}% du total
+            </div>
+        </div>
+        <div class="rot-stat stat-info">
+            <div class="rot-stat-label">En cours</div>
+            <div class="rot-stat-value">{{ $inProgress }}</div>
+            <div class="rot-stat-sub">Actives maintenant</div>
+        </div>
+        <div class="rot-stat stat-danger">
+            <div class="rot-stat-label">Annulées</div>
+            <div class="rot-stat-value">{{ $cancelled }}</div>
+            <div class="rot-stat-sub">
+                {{ $total > 0 ? round($cancelled / $total * 100) : 0 }}% du total
+            </div>
+        </div>
+    </div>
+
+    {{-- Calcul de rotations --}}
+    <div class="modal fade" id="modalCalcul" tabindex="-1" role="dialog" aria-labelledby="modalCalculLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document"> <div class="modal-content border-0 shadow-lg" style="border-radius: 15px; overflow: hidden;">
+                <div class="modal-header text-white" style="background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%); border: none; padding: 1.5rem;">
+                    <h5 class="modal-title d-flex align-items-center" id="modalCalculLabel" style="font-weight: 600; letter-spacing: 0.5px;">
+                        <div class="bg-white rounded-circle p-2 mr-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                            <svg class="text-primary" style="width:24px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                            </svg>
+                        </div>
+                        Calculer les rotations
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close" style="opacity: 0.8;">
+                        <span aria-hidden="true" style="font-size: 1.5rem;">&times;</span>
                     </button>
                 </div>
-            </div>
-        </form>
-    </div>
-</div>
+                
+                <form action="{{ route('rotations.calculate') }}" method="POST">
+                    @csrf
+                    <div class="modal-body p-4" style="background-color: #f8f9fa;">
+                        
+                        <div class="alert alert-info border-0 shadow-sm mb-4" style="border-radius: 10px; background-color: #e3f2fd; color: #0d47a1;">
+                            <small><i class="fas fa-info-circle mr-1"></i> Sélectionnez les paramètres pour générer les rapports mensuels des véhicules.</small>
+                        </div>
 
-{{-- Filtres --}}
-<div class="card mb-16">
-    <div class="card-body" style="padding:14px 18px;">
-        <form method="GET" style="display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap;">
-            <div class="form-group" style="margin:0; min-width:180px;">
-                <label>Circuit</label>
-                <select name="circuit_id">
-                    <option value="">Tous</option>
-                    @foreach($circuits as $c)
-                        <option value="{{ $c->id }}" @selected(request('circuit_id') == $c->id)>{{ $c->name }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="form-group" style="margin:0; min-width:160px;">
-                <label>Camion</label>
-                <select name="vehicle_id">
-                    <option value="">Tous</option>
-                    @foreach($vehicles as $v)
-                        <option value="{{ $v->id }}" @selected(request('vehicle_id') == $v->id)>{{ $v->name }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="form-group" style="margin:0; min-width:120px;">
-                <label>Mois (YYYY-MM)</label>
-                <input type="text" name="month" value="{{ request('month') }}" placeholder="{{ date('Y-m') }}">
-            </div>
-            <div class="form-group" style="margin:0; min-width:130px;">
-                <label>Statut</label>
-                <select name="status">
-                    <option value="">Sélectionner un statut</option>
-                    <option value="completed" @selected(request('status') === 'completed')>Complète</option>
-                    <option value="in_progress" @selected(request('status') === 'in_progress')>En cours</option>
-                    <option value="cancelled" @selected(request('status') === 'cancelled')>Annulée</option>
-                </select>
-            </div>
-            <button type="submit" class="btn btn-ghost btn-sm">Filtrer</button>
-            <a href="{{ route('rotations.index') }}" class="btn btn-ghost btn-sm">Réinitialiser</a>
-        </form>
-    </div>
-</div>
-
-{{-- Table des rotations --}}
-<div class="card">
-    <div class="card-header">
-        <span class="card-title">Liste des rotations</span>
-        <span class="badge badge-muted">{{ $rotations->total() }} entrée(s)</span>
-    </div>
-    <div class="table-wrap">
-        <table>
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Camion</th>
-                    <th>Circuit</th>
-                    <th>Mois compté</th>
-                    {{-- <th>Début </th>
-                    <th>Fin</th> --}}
-                    <th>Objectif</th>
-                    <th>Effectif</th>
-                    <th>Statut</th>
-                    <th>Validité</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($rotations as $rotation)
-                    <tr>
-                        <td class="mono" style="color:var(--muted)">{{ $rotation->id }}</td>
-                        <td>
-                            <div style="font-weight:600;">{{ $rotation->rvehicule->name }}</div>
-                            @if($rotation->rvehicule->plate_number)
-                                <div style="font-size:11px;color:var(--muted);" class="mono">{{ $rotation->rvehicule->plate_number }}</div>
-                            @endif
-                        </td>
-                        <td>{{ $rotation->circuit->name }}</td>
-                        <td class="mono">{{ $rotation->counted_month ?? '—' }}</td>
-                        {{-- <td class="mono">{{ $rotation->started_at?->format('d/m/Y H:i') ?? '—' }}</td>
-                        <td class="mono">{{ $rotation->completed_at?->format('d/m/Y H:i') ?? '—' }}</td> --}}
-                        <td class="mono">
-                            @if($rotation->circuit->currentObjective()->target_duration_minutes)
-                                {{ intdiv($rotation->circuit->currentObjective()->target_duration_minutes, 60) }}h{{ $rotation->circuit->currentObjective()->target_duration_minutes % 60 }}m
-                            @else
-                                —
-                            @endif
-                        </td>
-                        <td class="mono">
-                            @if($rotation->duration_minutes)
-                                {{ intdiv($rotation->duration_minutes, 60) }}h{{ $rotation->duration_minutes % 60 }}m
-                            @else
-                                —
-                            @endif
-                        </td>
-                        <td>
-                            @switch($rotation->status)
-                                @case('completed')
-                                    <span class="badge badge-success">Complète</span>
-                                    @break
-                                @case('in_progress')
-                                    <span class="badge badge-blue">En cours</span>
-                                    @break
-                                @case('cancelled')
-                                    <span class="badge badge-danger">Annulée</span>
-                                    @break
-                                @default
-                                    <span class="badge badge-muted">{{ $rotation->status }}</span>
-                            @endswitch
-                        </td>
-                        <td>
-                            @if($rotation->is_valid)
-                                <span class="badge badge-success">✓ Valide</span>
-                            @else
-                                <span class="badge badge-danger">✗ Invalide</span>
-                            @endif
-                        </td>
-                        <td>
-                            <div style="display:flex;gap:6px;">
-                                <a href="{{ route('rotations.show', $rotation) }}" class="btn btn-ghost btn-sm">Détail</a>
-                                <form action="{{ route('rotations.destroy', $rotation) }}" method="POST" onsubmit="return confirm('Supprimer cette rotation ?')">
-                                    @csrf @method('DELETE')
-                                    <button type="submit" class="btn btn-danger btn-sm">✕</button>
-                                </form>
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <label class="text-muted small font-weight-bold text-uppercase mb-2 d-block">Circuit de transport</label>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text bg-white border-right-0" style="border-radius: 8px 0 0 8px;"><i class="fas fa-route text-primary"></i></span>
+                                    </div>
+                                    <select name="circuit_id" class="form-control border-left-0 shadow-none" style="border-radius: 0 8px 8px 0; height: 45px;" required>
+                                        <option value="">— Sélectionner —</option>
+                                        @foreach($circuits as $c)
+                                            <option value="{{ $c->id }}" {{ old('circuit_id') == $c->id ? 'selected' : '' }}>{{ $c->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
                             </div>
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="10" style="text-align:center;color:var(--muted);padding:32px;">
-                            Aucune rotation trouvée. Lancez un calcul ci-dessus.
-                        </td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
-    @if($rotations->hasPages())
-        <div style="padding:14px 18px;border-top:1px solid var(--border);">
-            {{ $rotations->links() }}
+
+                            <div class="col-md-6 mb-4">
+                                <label class="text-muted small font-weight-bold text-uppercase mb-2 d-block">Véhicule spécifique</label>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text bg-white border-right-0" style="border-radius: 8px 0 0 8px;"><i class="fas fa-truck text-primary"></i></span>
+                                    </div>
+                                    <select name="vehicle_id" class="form-control border-left-0 shadow-none" style="border-radius: 0 8px 8px 0; height: 45px;">
+                                        <option value="">Tous les camions</option>
+                                        @foreach($vehicles as $v)
+                                            <option value="{{ $v->id }}" {{ old('vehicle_id') == $v->id ? 'selected' : '' }}>{{ $v->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-4">
+                                <label class="text-muted small font-weight-bold text-uppercase mb-2 d-block">Période (Année)</label>
+                                <input type="number" name="year" class="form-control shadow-none" 
+                                    style="border-radius: 8px; height: 45px;"
+                                    value="{{ old('year', date('Y')) }}"
+                                    min="2020" max="2099" required>
+                            </div>
+
+                            <div class="col-md-6 mb-4">
+                                <label class="text-muted small font-weight-bold text-uppercase mb-2 d-block">Période (Mois)</label>
+                                <select name="month" class="form-control shadow-none" style="border-radius: 8px; height: 45px;" required>
+                                    @foreach(range(1,12) as $m)
+                                        <option value="{{ $m }}" @selected($m == (old('month', date('n'))))>
+                                            {{ \Carbon\Carbon::createFromDate(null, $m, 1)->translatedFormat('F') }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer border-0 p-4 bg-white">
+                        <button type="button" class="btn btn-link text-muted font-weight-bold" data-dismiss="modal" style="text-decoration: none;">Annuler</button>
+                        <button type="submit" class="btn btn-primary px-5 shadow-sm" style="border-radius: 8px; height: 48px; font-weight: 600; background: #1a73e8;">
+                            <i class="fas fa-play-circle mr-2"></i> Lancer le calcul
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
-    @endif
+    </div>
+
+    <div class="modal fade" id="modalFilter" tabindex="-1" role="dialog" aria-labelledby="modalFilterLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 15px; overflow: hidden;">
+                
+                <div class="modal-header text-white" style="background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%); border: none; padding: 1.5rem;">
+                    <h5 class="modal-title d-flex align-items-center" id="modalFilterLabel" style="font-weight: 600; letter-spacing: 0.5px;">
+                        <div class="bg-white rounded-circle p-2 mr-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                            <svg class="text-primary" style="width:24px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+                            </svg>
+                        </div>
+                        Filtrer les rotations
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close" style="opacity: 0.8;">
+                        <span aria-hidden="true" style="font-size: 1.5rem;">&times;</span>
+                    </button>
+                </div>
+                
+                <form method="GET" action="{{ route('rotations.index') }}">
+                    <div class="modal-body p-4" style="background-color: #f8f9fa;">
+                        
+                        <div class="alert alert-info border-0 shadow-sm mb-4" style="border-radius: 10px; background-color: #e3f2fd; color: #0d47a1;">
+                            <small><i class="fas fa-filter mr-1"></i> Utilisez les options ci-dessous pour affiner la liste des rotations affichées.</small>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <label class="text-muted small font-weight-bold text-uppercase mb-2 d-block">Par Circuit</label>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text bg-white border-right-0" style="border-radius: 8px 0 0 8px;"><i class="fas fa-route text-primary"></i></span>
+                                    </div>
+                                    <select name="circuit_id" class="form-control border-left-0 shadow-none" style="border-radius: 0 8px 8px 0; height: 45px;">
+                                        <option value="">Tous les circuits</option>
+                                        @foreach($circuits as $c)
+                                            <option value="{{ $c->id }}" {{ request('circuit_id') == $c->id ? 'selected' : '' }}>{{ $c->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-4">
+                                <label class="text-muted small font-weight-bold text-uppercase mb-2 d-block">Par Camion</label>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text bg-white border-right-0" style="border-radius: 8px 0 0 8px;"><i class="fas fa-truck text-primary"></i></span>
+                                    </div>
+                                    <select name="vehicle_id" class="form-control border-left-0 shadow-none" style="border-radius: 0 8px 8px 0; height: 45px;">
+                                        <option value="">Tous les camions</option>
+                                        @foreach($vehicles as $v)
+                                            <option value="{{ $v->id }}" {{ request('vehicle_id') == $v->id ? 'selected' : '' }}>{{ $v->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-4">
+                                <label class="text-muted small font-weight-bold text-uppercase mb-2 d-block">Période (Mois)</label>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text bg-white border-right-0" style="border-radius: 8px 0 0 8px;"><i class="fas fa-calendar-alt text-primary"></i></span>
+                                    </div>
+                                    <input type="month" name="month" class="form-control border-left-0 shadow-none" 
+                                        style="border-radius: 0 8px 8px 0; height: 45px;"
+                                        value="{{ request('month') }}">
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-4">
+                                <label class="text-muted small font-weight-bold text-uppercase mb-2 d-block">Statut du voyage</label>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text bg-white border-right-0" style="border-radius: 8px 0 0 8px;"><i class="fas fa-info-circle text-primary"></i></span>
+                                    </div>
+                                    <select name="status" class="form-control border-left-0 shadow-none" style="border-radius: 0 8px 8px 0; height: 45px;">
+                                        <option value="">Tous les statuts</option>
+                                        <option value="completed" {{ request('status') === 'completed' ? 'selected' : '' }}>Complète</option>
+                                        <option value="in_progress" {{ request('status') === 'in_progress' ? 'selected' : '' }}>En cours</option>
+                                        <option value="cancelled" {{ request('status') === 'cancelled' ? 'selected' : '' }}>Annulée</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer border-0 p-4 bg-white d-flex justify-content-between">
+                        <a href="{{ route('rotations.index') }}" class="btn btn-link text-muted font-weight-bold" style="text-decoration: none;">
+                            <i class="fas fa-undo mr-1"></i> Réinitialiser
+                        </a>
+                        <div>
+                            <button type="button" class="btn btn-link text-muted font-weight-bold mr-3" data-dismiss="modal" style="text-decoration: none;">Annuler</button>
+                            <button type="submit" class="btn btn-primary px-5 shadow-sm" style="border-radius: 8px; height: 48px; font-weight: 600; background: #1a73e8;">
+                                <i class="fas fa-check-circle mr-2"></i> Appliquer les filtres
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- Filtres --}}
+
+    {{-- Table des rotations --}}
+    <div class="rot-card">
+        <div class="rot-card-header">
+            <span class="rot-card-title">Liste des rotations</span>
+            <span class="rot-badge rot-badge-muted">{{ $rotations->total() }} entrée(s)</span>
+        </div>
+
+        <div class="rot-table-wrap">
+            <table class="rot-table">
+                <thead>
+                    <tr>
+                        <th>Camion</th>
+                        <th>Circuit</th>
+                        <th>Mois compté</th>
+                        <th>Début</th>
+                        <th>Fin</th>
+                        <th>Durée / Objectif</th>
+                        <th>Statut</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($rotations as $rotation)
+                        @php
+                            $obj = $rotation->circuit->currentObjective()->target_duration_minutes ?? null;
+                            $dur = $rotation->duration_minutes;
+                            $pct = ($obj && $dur) ? min(round($dur / $obj * 100), 140) : 0;
+                            $barClass = $pct > 105 ? 'over' : ($pct >= 90 ? 'good' : '');
+                        @endphp
+                        <tr>
+                            <td>
+                                <div class="rot-vehicle-name">{{ $rotation->rvehicule->name }}</div>
+                                @if($rotation->rvehicule->plate_number)
+                                    <div class="rot-vehicle-plate">{{ $rotation->rvehicule->plate_number }}</div>
+                                @endif
+                            </td>
+
+                            <td>
+                                <span class="mono" style="font-size:12px;font-weight:600">
+                                    {{ $rotation->circuit->code }}
+                                </span>
+                            </td>
+
+                            <td>
+                                <span class="mono">{{ $rotation->counted_month ?? '—' }}</span>
+                            </td>
+
+                            <td>
+                                <span class="mono">
+                                    {{ $rotation->started_at?->timezone('Africa/Nairobi')->format('d/m/Y H:i') ?? '—' }}
+                                </span>
+                            </td>
+
+                            <td>
+                                <span class="mono">
+                                    {{ $rotation->completed_at?->timezone('Africa/Nairobi')->format('d/m/Y H:i') ?? '—' }}
+                                </span>
+                            </td>
+
+                            <td>
+                                @if($obj)
+                                    <div class="rot-dur-cell">
+                                        <span class="rot-dur-text">
+                                            @if($dur)
+                                                {{ intdiv($dur, 60) }}h{{ str_pad($dur % 60, 2, '0', STR_PAD_LEFT) }}m
+                                            @else
+                                                —
+                                            @endif
+                                            <span class="rot-dur-obj">
+                                                / {{ intdiv($obj, 60) }}h{{ str_pad($obj % 60, 2, '0', STR_PAD_LEFT) }}m
+                                            </span>
+                                        </span>
+                                        <div class="rot-bar-track">
+                                            <div class="rot-bar-fill {{ $barClass }}"
+                                                style="width:{{ $pct }}%"></div>
+                                        </div>
+                                    </div>
+                                @else
+                                    <span class="mono">—</span>
+                                @endif
+                            </td>
+
+                            <td>
+                                @switch($rotation->status)
+                                    @case('completed')
+                                        <span class="rot-badge rot-badge-success">Complète</span>
+                                        @break
+                                    @case('in_progress')
+                                        <span class="rot-badge rot-badge-info">En cours</span>
+                                        @break
+                                    @case('cancelled')
+                                        <span class="rot-badge rot-badge-danger">Annulée</span>
+                                        @break
+                                    @default
+                                        <span class="rot-badge rot-badge-muted">{{ $rotation->status }}</span>
+                                @endswitch
+                            </td>
+
+                            <td>
+                                <div class="rot-actions">
+                                    <a href="{{ route('rotations.show', $rotation) }}"
+                                    class="rot-btn rot-btn-sm">Détail</a>
+                                    <form action="{{ route('rotations.destroy', $rotation) }}"
+                                        method="POST"
+                                        onsubmit="return confirm('Supprimer cette rotation ?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="rot-btn rot-btn-sm rot-btn-danger">✕</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="8" style="text-align:center;color:var(--muted);padding:40px 16px;font-size:13px;">
+                                Aucune rotation trouvée. Lancez un calcul ci-dessus.
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        @if($rotations->hasPages())
+            <div class="rot-pagination">
+                <span class="rot-pg-info">
+                    Page {{ $rotations->currentPage() }} sur {{ $rotations->lastPage() }}
+                    — {{ $rotations->total() }} résultats
+                </span>
+                <div class="rot-pg-btns">
+                    @if($rotations->onFirstPage())
+                        <span class="rot-pg-btn" style="opacity:.35;cursor:default">‹</span>
+                    @else
+                        <a class="rot-pg-btn" href="{{ $rotations->previousPageUrl() }}">‹</a>
+                    @endif
+
+                    @foreach($rotations->getUrlRange(
+                        max(1, $rotations->currentPage() - 2),
+                        min($rotations->lastPage(), $rotations->currentPage() + 2)
+                    ) as $page => $url)
+                        <a class="rot-pg-btn {{ $page == $rotations->currentPage() ? 'active' : '' }}"
+                        href="{{ $url }}">{{ $page }}</a>
+                    @endforeach
+
+                    @if($rotations->hasMorePages())
+                        <a class="rot-pg-btn" href="{{ $rotations->nextPageUrl() }}">›</a>
+                    @else
+                        <span class="rot-pg-btn" style="opacity:.35;cursor:default">›</span>
+                    @endif
+                </div>
+            </div>
+        @endif
+    </div>
 </div>
 @endsection
