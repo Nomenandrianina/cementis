@@ -94,74 +94,74 @@ function renderStats(data) {
     );
 }
 
-function renderTable(events) {
-    const tbody = document.getElementById('events-tbody');
-    tbody.innerHTML = '';
+// function renderTable(events) {
+//     const tbody = document.getElementById('events-tbody');
+//     tbody.innerHTML = '';
 
-    if (!events.length) {
-        tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:32px;">Aucun événement.</td></tr>`;
-        updateCount(0);
-        return;
-    }
+//     if (!events.length) {
+//         tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:32px;">Aucun événement.</td></tr>`;
+//         updateCount(0);
+//         return;
+//     }
 
-    events.forEach((ev, idx) => {
-        const typeClass = {
-            'enter_zone':      'badge-enter',
-            'leave_zone':      'badge-leave',
-            'pass_checkpoint': 'badge-cp',
-        }[ev.normalized_type] ?? '';
+//     events.forEach((ev, idx) => {
+//         const typeClass = {
+//             'enter_zone':      'badge-enter',
+//             'leave_zone':      'badge-leave',
+//             'pass_checkpoint': 'badge-cp',
+//         }[ev.normalized_type] ?? '';
 
-        const rawClass = {
-            'zone_in':   'badge-enter',
-            'zone_out':  'badge-leave',
-            'marker_in': 'badge-cp',
-        }[ev.raw_type] ?? 'badge-raw';
+//         const rawClass = {
+//             'zone_in':   'badge-enter',
+//             'zone_out':  'badge-leave',
+//             'marker_in': 'badge-cp',
+//         }[ev.raw_type] ?? 'badge-raw';
 
-        const inDbHtml = ev.in_db
-            ? '<span class="type-badge badge-indb">✓ BDD</span>'
-            : '<span class="type-badge badge-notindb">⚠ Hors BDD</span>';
+//         const inDbHtml = ev.in_db
+//             ? '<span class="type-badge badge-indb">✓ BDD</span>'
+//             : '<span class="type-badge badge-notindb">⚠ Hors BDD</span>';
 
-        const idHtml = ev.zone_id
-            ? `<span class="mono" style="font-size:11px;color:var(--bordeaux);">zone #${ev.zone_id}</span>`
-            : ev.checkpoint_id
-                ? `<span class="mono" style="font-size:11px;color:#2D7A4A;">cp #${ev.checkpoint_id}</span>`
-                : '<span style="color:var(--muted);">—</span>';
+//         const idHtml = ev.zone_id
+//             ? `<span class="mono" style="font-size:11px;color:var(--bordeaux);">zone #${ev.zone_id}</span>`
+//             : ev.checkpoint_id
+//                 ? `<span class="mono" style="font-size:11px;color:#2D7A4A;">cp #${ev.checkpoint_id}</span>`
+//                 : '<span style="color:var(--muted);">—</span>';
 
-        const tr = document.createElement('tr');
-        tr.className = 'ev-row';
-        tr.dataset.type  = ev.normalized_type;
-        tr.dataset.in_db = ev.in_db ? '1' : '0';
-        let displayDate = '—';
+//         const tr = document.createElement('tr');
+//         tr.className = 'ev-row';
+//         tr.dataset.type  = ev.normalized_type;
+//         tr.dataset.in_db = ev.in_db ? '1' : '0';
+//         let displayDate = '—';
 
-        if (ev.dt) {
-            let dateObj = new Date(ev.dt);
-            dateObj.setHours(dateObj.getHours() + 3);
+//         if (ev.dt) {
+//             let dateObj = new Date(ev.dt);
+//             dateObj.setHours(dateObj.getHours() + 3);
 
-            const pad = (n) => String(n).padStart(2, '0');
+//             const pad = (n) => String(n).padStart(2, '0');
 
-            const day = pad(dateObj.getDate());
-            const month = pad(dateObj.getMonth() + 1);
-            const year = dateObj.getFullYear();
-            const hours = pad(dateObj.getHours());
-            const minutes = pad(dateObj.getMinutes());
-            const seconds = pad(dateObj.getSeconds()); 
+//             const day = pad(dateObj.getDate());
+//             const month = pad(dateObj.getMonth() + 1);
+//             const year = dateObj.getFullYear();
+//             const hours = pad(dateObj.getHours());
+//             const minutes = pad(dateObj.getMinutes());
+//             const seconds = pad(dateObj.getSeconds()); 
 
-            displayDate = `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
-        }
+//             displayDate = `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+//         }
 
-        tr.innerHTML = `
-            <td class="mono" style="font-size:12px;white-space:nowrap;">${displayDate}</td>
-            <td><span class="type-badge ${rawClass}">${ev.raw_type}</span></td>
-            <td><span class="type-badge ${typeClass}">${ev.normalized_type}</span></td>
-            <td style="font-weight:600;font-size:13px;">${ev.reference_name ?? '—'}</td>
-            <td>${inDbHtml}</td>
-            <td class="mono" style="font-size:11px;color:var(--muted);">${ev.lat + ',' + ev.lng ?? '—'}</td>
-        `;
-        tbody.appendChild(tr);
-    });
+//         tr.innerHTML = `
+//             <td class="mono" style="font-size:12px;white-space:nowrap;">${displayDate}</td>
+//             <td><span class="type-badge ${rawClass}">${ev.raw_type}</span></td>
+//             <td><span class="type-badge ${typeClass}">${ev.normalized_type}</span></td>
+//             <td style="font-weight:600;font-size:13px;">${ev.reference_name ?? '—'}</td>
+//             <td>${inDbHtml}</td>
+//             <td class="mono" style="font-size:11px;color:var(--muted);">${ev.lat + ',' + ev.lng ?? '—'}</td>
+//         `;
+//         tbody.appendChild(tr);
+//     });
 
-    updateCount(events.length);
-}
+//     updateCount(events.length);
+// }
 
 function filterEvents(type) {
     // 1. Mise à jour visuelle des boutons
@@ -207,4 +207,79 @@ function showError(msg) {
     const el = document.getElementById('error-msg');
     el.style.display = 'block';
     el.innerHTML = `<div class="alert alert-error">${msg}</div>`;
+}
+
+let currentPage = 1;
+const rowsPerPage = 15; // Nombre d'éléments par page
+let filteredEvents = [];
+
+function renderTable(events) {
+    filteredEvents = events;
+    const tbody = document.getElementById('events-tbody');
+
+    const startIndex = (currentPage - 1) * rowsPerPage;
+    const endIndex = startIndex + rowsPerPage;
+    const paginatedEvents = filteredEvents.slice(startIndex, endIndex);
+
+    document.getElementById('count-visible').textContent = filteredEvents.length;
+    if (!paginatedEvents.length) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--muted);font-family:var(--mono);font-size:12px;">Aucun événement correspondant</td></tr>';
+        renderPaginationControls();
+        return;
+    }
+    tbody.innerHTML = paginatedEvents.map(e => {
+        if (e.dt) {
+            let dateObj = new Date(e.dt);
+            dateObj.setHours(dateObj.getHours() + 3);
+
+            const pad = (n) => String(n).padStart(2, '0');
+
+            const day = pad(dateObj.getDate());
+            const month = pad(dateObj.getMonth() + 1);
+            const year = dateObj.getFullYear();
+            const hours = pad(dateObj.getHours());
+            const minutes = pad(dateObj.getMinutes());
+            const seconds = pad(dateObj.getSeconds()); 
+
+            displayDate = `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+        }
+        const typeBadge = e.normalized_type === 'enter_zone'
+        ? `<span class="badge badge-enter">↓ enter_zone</span>`
+        : e.type === 'leave_zone'
+        ? `<span class="badge badge-leave">↑ leave_zone</span>`
+        : `<span class="badge badge-check">● checkpoint</span>`;
+        const normBadge = typeBadge;
+        const dbBadge = e.in_db
+        ? `<span class="badge badge-ok"><span class="dot dot-ok"></span> BDD</span>`
+        : `<span class="badge badge-warn"><span class="dot dot-warn"></span> Hors BDD</span>`;
+        return `<tr>
+        <td class="mono-small">${displayDate}</td>
+        <td class="mono-small" style="color:var(--ink)">${e.raw_type}</td>
+        <td>${typeBadge}</td>
+        <td style="font-size:12px;font-weight:600;">${e.reference_name}</td>
+        <td>${dbBadge}</td>
+        <td class="mono-small">${e.lat.toFixed(4)}, ${e.lng.toFixed(4)}</td>
+        </tr>`;
+    }).join('');
+
+    renderPaginationControls();
+}
+
+function renderPaginationControls() {
+    const totalPages = Math.ceil(filteredEvents.length / rowsPerPage);
+    const container = document.getElementById('pagination-container');
+    
+    let html = `
+        <button onclick="changePage(1)" ${currentPage === 1 ? 'disabled' : ''}>&laquo;</button>
+        <button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>&lsaquo;</button>
+        <span class="page-info">Page ${currentPage} sur ${totalPages || 1}</span>
+        <button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages || totalPages === 0 ? 'disabled' : ''}>&rsaquo;</button>
+        <button onclick="changePage(${totalPages})" ${currentPage === totalPages || totalPages === 0 ? 'disabled' : ''}>&raquo;</button>
+    `;
+    container.innerHTML = html;
+}
+
+function changePage(page) {
+    currentPage = page;
+    renderTable(filteredEvents);
 }

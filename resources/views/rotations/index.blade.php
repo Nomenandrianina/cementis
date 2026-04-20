@@ -280,7 +280,7 @@
                         <th>Mois compté</th>
                         <th>Début</th>
                         <th>Fin</th>
-                        <th>Durée / Objectif</th>
+                        <th>Effectif / Objectif</th>
                         <th>Statut</th>
                         <th></th>
                     </tr>

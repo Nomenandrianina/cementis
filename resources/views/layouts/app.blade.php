@@ -137,11 +137,11 @@
 
         <!-- Content Wrapper. Contains page content -->
         <div class="content-wrapper">
-            <section class="content">
+            <section class="content pt-2">
 
                 <div id="loader"  class="lds-roller"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
                 <div id="overlay"></div>
-                @if(Route::is([ 'rotations.show', 'reports.*', 'circuits.*', 'checkpoints.*', 'zones.*', 'vehicles.*']))
+                @if(Route::is([ 'rotations.show', 'reports.*', 'circuits.edit', 'circuits.objectives.*', 'checkpoints.*', 'zones.*', 'vehicles.*']))
                     <div class="topbar">
                         <div class="topbar-title">@yield('page-title')</div>
                         <div class="topbar-actions">@yield('topbar-actions')</div>

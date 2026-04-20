@@ -16,7 +16,7 @@ class CheckpointController extends Controller
 
     public function index()
     {
-        $checkpoints = Checkpoint::withTrashed()->orderBy('name')->get();
+        $checkpoints = Checkpoint::orderBy('name')->get();
         return view('checkpoints.index', compact('checkpoints'));
     }
 
