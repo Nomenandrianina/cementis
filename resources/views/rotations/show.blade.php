@@ -91,27 +91,27 @@
             </div>
             <div class="card-body">
                 @php
-                    $targetDur = $objective?->target_duration_minutes;
-                    $actualDur = $rotation->duration_minutes;
+                    $targetDur = $objective?->target_duration_seconds;
+                    $actualDur = $rotation->duration_seconds;
                 @endphp
 
                 <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;text-align:center;margin-bottom:16px;">
                     <div>
-                        <div class="stat-label">Début (T1)</div>
+                        <div class="stat-label">Début de la rotation</div>
                         <div class="mono" style="font-size:14px;color:var(--text);">
                             {{ $rotation->started_at?->format('d/m/Y') }}<br>
                             <span style="color:var(--accent);font-size:18px;font-family:var(--head);font-weight:700;">
                                 {{-- {{ $rotation->started_at?->format('H:i') }} --}}
-                                {{ $rotation->started_at_local?->format('H:i') }}
+                                {{ $rotation->started_at_local?->format('H:i:s') }}
                             </span>
                         </div>
                     </div>
                     <div>
-                        <div class="stat-label">Fin (T5)</div>
+                        <div class="stat-label">Fin de la rotation</div>
                         <div class="mono" style="font-size:14px;color:var(--text);">
                             {{ $rotation->completed_at?->format('d/m/Y') ?? '—' }}<br>
                             <span style="color:var(--accent);font-size:18px;font-family:var(--head);font-weight:700;">
-                                {{ $rotation->completed_at?->format('H:i') ?? '—' }}
+                                {{ $rotation->completed_at?->format('H:i:s') ?? '—' }}
                             </span>
                         </div>
                     </div>
@@ -125,7 +125,7 @@
                             @endif
                         ">
                             @if($actualDur)
-                                {{ intdiv($actualDur, 60) }}h{{ $actualDur % 60 }}m
+                                @durSec($actualDur)
                             @else
                                 —
                             @endif
@@ -137,7 +137,7 @@
                     @php $pct = min(round($actualDur / $targetDur * 100), 150); @endphp
                     <div style="margin-top:8px;">
                         <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:4px;">
-                            <span>Objectif : {{ intdiv($targetDur, 60) }}h{{ $targetDur % 60 }}m</span>
+                            <span>Objectif : @durSec($targetDur)</span>
                             <span>{{ $pct }}%</span>
                         </div>
                         <div class="progress">
@@ -145,7 +145,7 @@
                         </div>
                         @php $ecart = $actualDur - $targetDur; @endphp
                         <div style="text-align:right;font-size:12px;margin-top:6px;" class="{{ $ecart > 0 ? 'text-danger' : 'text-success' }}">
-                            {{ $ecart > 0 ? '+' : '' }}{{ intdiv($ecart, 60) }}h{{ abs($ecart % 60) }}m vs objectif
+                            @durSec($ecart) vs objectif
                         </div>
                     </div>
                 @elseif(!$targetDur)
@@ -200,7 +200,7 @@
             $currentParentId = null;
             // Pré-calculer les paires entrée→sortie et les durées
             $zonePairs    = []; // enter_leg_id => exit_leg_id
-            $zoneActualMin = []; // enter_leg_id => minutes réels
+            $zoneActualSec = []; // enter_leg_id => minutes réels
             $pendingEntries = []; // reference_id => ['leg_id', 'occurred_at']
 
             foreach ($allLegs as $leg) {
@@ -215,7 +215,7 @@
                         $entry = $pendingEntries[$leg->reference_id];
                         $zonePairs[$entry['leg_id']] = $leg->id;
                         if ($entry['occurred_at'] && $rl) {
-                            $zoneActualMin[$entry['leg_id']] = (int) $rl->occurred_at->diffInMinutes($entry['occurred_at']);
+                            $zoneActualSec[$entry['leg_id']] = (int) $rl->occurred_at->diffInSeconds($entry['occurred_at']);
                         }
                         unset($pendingEntries[$leg->reference_id]);
                     }
@@ -256,17 +256,17 @@
                             $isSubZone = (str_contains(strtolower($leg->label), 'garage') || str_contains(strtolower($leg->label), 'parking'));
                             
                             // 4. Récupération des données de performance
-                            $actualMinZone = $zoneActualMin[$leg->id] ?? null;
-                            $targetMinZone = $legObjectives[$leg->id] ?? null;
-                            // dd($zoneActualMin, $actualMinZone, $targetMinZone);
+                            $actualSecZone = $zoneActualSec[$leg->id] ?? null;
+                            $targetSecZone = $legObjectives[$leg->id] ?? null;
+                            // dd($zoneActualSec, $actualSecZone, $targetSecZone);
                             
                             // 5. Calcul des couleurs
-                            $ecartZone = ($actualMinZone !== null && $targetMinZone !== null) ? $actualMinZone - $targetMinZone : null;
+                            $ecartZone = ($actualSecZone !== null && $targetSecZone !== null) ? $actualSecZone - $targetSecZone : null;
 
                             $dotColor = match(true) {
                                 !$isDone => 'var(--cream-dd)',
                                 $ecartZone > 0 => 'var(--danger)',
-                                $isDone && $actualMinZone !== null => 'var(--success)',
+                                $isDone && $actualSecZone !== null => 'var(--success)',
                                 $isDone => 'var(--bordeaux)',
                                 default => 'var(--muted)',
                             };
@@ -331,37 +331,37 @@
                                     @endif
 
                                     {{-- SECTION PERFORMANCE (Objectif vs Réel) --}}
-                                    @if($isEnter && ($targetMinZone !== null || $actualMinZone !== null))
+                                    @if($isEnter && ($targetSecZone !== null || $actualSecZone !== null))
                                         <div style="margin-top:8px; padding-top:8px; border-top:1px dashed var(--cream-dd);">
                                             
                                             {{-- Ligne Objectif (Toujours visible si défini) --}}
-                                            @if($targetMinZone !== null)
+                                            @if($targetSecZone !== null)
                                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom:2px;">
                                                     <span style="font-size: 7px; color: var(--muted); text-transform: uppercase; font-weight:600;">Objectif:</span>
                                                     <span style="font-size: 9px; font-weight: 700; color: var(--ink);">
-                                                        {{ is_numeric($targetMinZone) ? $fmt($targetMinZone) : $targetMinZone }}
+                                                        {{ is_numeric($targetSecZone) ? $fmt($targetSecZone) : $targetSecZone }}
                                                     </span>
                                                 </div>
                                             @endif
 
                                             {{-- Ligne Réel --}}
-                                            @if($actualMinZone !== null)
+                                            @if($actualSecZone !== null)
                                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom:2px;">
                                                     <span style="font-size: 7px; color: var(--muted); text-transform: uppercase; font-weight:600;">Réalisé:</span>
                                                     <span style="font-size: 10px; font-weight: 800; color: {{ $dotColor }};">
-                                                        {{ $fmt($actualMinZone) }}
+                                                        @durSec($actualSecZone)
                                                     </span>
                                                 </div>
 
                                                 {{-- Ligne Écart --}}
-                                                @if($targetMinZone !== null && is_numeric($targetMinZone))
-                                                    @php $ecart = $actualMinZone - $targetMinZone; @endphp
+                                                @if($targetSecZone !== null && is_numeric($targetSecZone))
+                                                    @php $ecart = $actualSecZone - $targetSecZone; @endphp
                                                     <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px; padding-top: 4px; border-top: 1px solid #f0f0f0;">
                                                         <span style="font-size: 7px; font-weight:bold; color: {{ $ecart > 0 ? 'var(--danger)' : 'var(--success)' }}; text-transform: uppercase;">
                                                             {{ $ecart > 0 ? 'Retard' : 'Avance' }}:
                                                         </span>
                                                         <span style="font-size: 9px; font-weight: 800; color: {{ $ecart > 0 ? 'var(--danger)' : 'var(--success)' }};">
-                                                            {{ $ecart > 0 ? '+' : '' }}{{ $fmt($ecart) }}
+                                                            {{ $ecart > 0 ? '+' : '' }}@durSec($ecart)
                                                         </span>
                                                     </div>
                                                 @endif
@@ -422,7 +422,7 @@
                     @php
                         $isDone  = $block['enter_rl'] !== null;
                         $ecart   = $block['ecart'];
-                        $hasObj  = $block['target_min'] !== null;
+                        $hasObj  = $block['target_sec'] !== null;
 
                         $borderColor = !$isDone         ? 'var(--cream-dd)'
                             : ($ecart === null          ? 'var(--bordeaux)'
@@ -477,14 +477,14 @@
                             <div style="text-align:right;flex-shrink:0;min-width:80px;">
                                 <div style="font-family:var(--mono);font-size:16px;font-weight:800;
                                             color:{{ $borderColor }};line-height:1;">
-                                    Effectif : {{ $fmt($block['actual_min']) }}
+                                    Effectif : @durSec($block['actual_sec'])
                                 </div>
                                 @if($hasObj)
                                     <div style="font-size:10px;font-weight:600;margin-top:2px;
                                                 color:{{ $ecart > 0 ? 'var(--danger)' : 'var(--success)' }};">
-                                        {{ $ecart > 0 ? '+' : '' }}{{ $fmt($ecart) }}
+                                        {{ $ecart > 0 ? '+' : '' }}@durSec($ecart)
                                     </div>
-                                    <div style="font-size:16px;color:var(--muted);font-weight:800">Objectif : {{ $fmt($block['target_min']) }}</div>
+                                    <div style="font-size:16px;color:var(--muted);font-weight:800">Objectif : @durSec($block['target_sec'])</div>
                                 @endif
                             </div>
                         </div>
@@ -504,7 +504,7 @@
                                     @php
                                         $childDone   = $child['enter_rl'] !== null;
                                         $childEcart  = $child['ecart'];
-                                        $childHasObj = $child['target_min'] !== null;
+                                        $childHasObj = $child['target_sec'] !== null;
 
                                         $childBorder = !$childDone      ? 'var(--cream-dd)'
                                             : ($childEcart === null     ? 'var(--bordeaux)'
@@ -560,14 +560,14 @@
                                         <div style="text-align:right;flex-shrink:0;min-width:70px;">
                                             <div style="font-family:var(--mono);font-size:14px;font-weight:700;
                                                         color:{{ $childBorder }};line-height:1;">
-                                                Effectif : {{ $fmt($child['actual_min']) }}
+                                                Effectif : @durSec($child['actual_sec'])
                                             </div>
                                             @if($childHasObj)
                                                 <div style="font-size:10px;font-weight:600;margin-top:1px;
                                                             color:{{ $childEcart > 0 ? 'var(--danger)' : 'var(--success)' }};">
-                                                    {{ $childEcart > 0 ? '+' : '' }}{{ $fmt($childEcart) }}
+                                                    {{ $childEcart > 0 ? '+' : '' }}@durSec($childEcart)
                                                 </div>
-                                                <div style="font-size:14px;color:var(--muted);font-weight:700">Objectif : {{ $fmt($child['target_min']) }}</div>
+                                                <div style="font-size:14px;color:var(--muted);font-weight:700">Objectif : @durSec($child['target_sec'])</div>
                                             @endif
                                         </div>
                                     </div>

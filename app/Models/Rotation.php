@@ -16,7 +16,7 @@ class Rotation extends Model
 {
      protected $fillable = [
         'rvehicule_id', 'circuit_id', 'started_at', 'completed_at',
-        'duration_minutes', 'status', 'counted_month', 'is_valid',
+        'duration_seconds', 'status', 'counted_month', 'is_valid',
         'invalidation_reason', 'raw_events',
     ];
  

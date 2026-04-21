@@ -287,10 +287,18 @@
                 </thead>
                 <tbody>
                     @forelse($rotations as $rotation)
-                        @php
+                        {{-- @php
                             $obj = $rotation->circuit->currentObjective()->target_duration_minutes ?? null;
-                            $dur = $rotation->duration_minutes;
+                            $dur = $rotation->duration_seconds;
                             $pct = ($obj && $dur) ? min(round($dur / $obj * 100), 140) : 0;
+                            $barClass = $pct > 105 ? 'over' : ($pct >= 90 ? 'good' : '');
+                        @endphp --}}
+                        @php
+                            $objSeconds = $rotation->circuit->currentObjective()->target_duration_seconds ?? null;
+                            // $objSeconds = $objMinutes ? $objMinutes * 60 : null;
+                            $dur        = $rotation->duration_seconds;
+
+                            $pct      = ($objSeconds && $dur) ? min(round($dur / $objSeconds * 100), 140) : 0;
                             $barClass = $pct > 105 ? 'over' : ($pct >= 90 ? 'good' : '');
                         @endphp
                         <tr>
@@ -313,18 +321,18 @@
 
                             <td>
                                 <span class="mono">
-                                    {{ $rotation->started_at?->timezone('Africa/Nairobi')->format('d/m/Y H:i') ?? '—' }}
+                                    {{ $rotation->started_at?->timezone('Africa/Nairobi')->format('d/m/Y H:i:s') ?? '—' }}
                                 </span>
                             </td>
 
                             <td>
                                 <span class="mono">
-                                    {{ $rotation->completed_at?->timezone('Africa/Nairobi')->format('d/m/Y H:i') ?? '—' }}
+                                    {{ $rotation->completed_at?->timezone('Africa/Nairobi')->format('d/m/Y H:i:s') ?? '—' }}
                                 </span>
                             </td>
 
                             <td>
-                                @if($obj)
+                                {{-- @if($obj)
                                     <div class="rot-dur-cell">
                                         <span class="rot-dur-text">
                                             @if($dur)
@@ -334,6 +342,26 @@
                                             @endif
                                             <span class="rot-dur-obj">
                                                 / {{ intdiv($obj, 60) }}h{{ str_pad($obj % 60, 2, '0', STR_PAD_LEFT) }}m
+                                            </span>
+                                        </span>
+                                        <div class="rot-bar-track">
+                                            <div class="rot-bar-fill {{ $barClass }}"
+                                                style="width:{{ $pct }}%"></div>
+                                        </div>
+                                    </div>
+                                @else
+                                    <span class="mono">—</span>
+                                @endif --}}
+                                @if($objSeconds)
+                                    <div class="rot-dur-cell">
+                                        <span class="rot-dur-text">
+                                            @if($dur)
+                                                @durSec($dur)
+                                            @else
+                                                —
+                                            @endif
+                                            <span class="rot-dur-obj">
+                                                / @durSec($objSeconds)
                                             </span>
                                         </span>
                                         <div class="rot-bar-track">

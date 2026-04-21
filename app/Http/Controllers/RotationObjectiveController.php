@@ -26,14 +26,14 @@ class RotationObjectiveController extends Controller
     {
         $data = $request->validate([
             'target_rotations_per_month' => 'nullable|integer|min:1',
-            'target_duration_minutes'    => 'nullable|integer|min:1',
+            'target_duration_seconds'    => 'nullable|integer|min:1',
             'effective_from'             => 'required|date',
             'effective_until'            => 'nullable|date|after:effective_from',
             'notes'                      => 'nullable|string',
             'leg_objectives'             => 'nullable|array',
             'leg_objectives.*'           => 'nullable|integer|min:1',
         ]);
- 
+
         $circuit->objectives()->create($data);
         return back()->with('success', 'Objectif créé.');
     }
@@ -42,7 +42,7 @@ class RotationObjectiveController extends Controller
     {
         $data = $request->validate([
             'target_rotations_per_month' => 'nullable|integer|min:1',
-            'target_duration_minutes'    => 'nullable|integer|min:1',
+            'target_duration_seconds'    => 'nullable|integer|min:1',
             'effective_from'             => 'required|date',
             'effective_until'            => 'nullable|date|after:effective_from',
             'notes'                      => 'nullable|string',

@@ -11,7 +11,7 @@ class RotationLeg extends Model
 {
     protected $fillable = [
         'rotation_id', 'circuit_leg_id', 'occurred_at',
-        'lat', 'lng', 'duration_since_previous_minutes', 'raw_event',
+        'lat', 'lng', 'duration_since_previous_seconds', 'raw_event','skipped_by_parent',
     ];
  
     protected $casts = [

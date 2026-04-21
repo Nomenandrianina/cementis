@@ -43,11 +43,12 @@ class RotationController extends Controller
             // Si l'utilisateur a choisi un statut spécifique (ex: 'pending', 'cancelled')
             // On filtre par ce statut
             $query->where('status', $request->status);
-        } else {
-            // Si aucune requête de statut n'est envoyée (chargement initial)
-            // On applique le filtre par défaut
-            $query->where('status', 'completed');
-        }
+        } 
+        // else {
+        //     // Si aucune requête de statut n'est envoyée (chargement initial)
+        //     // On applique le filtre par défaut
+        //     $query->where('status', 'completed');
+        // }
         
         $rotations = $query->paginate(25)->withQueryString();
         
@@ -96,15 +97,16 @@ class RotationController extends Controller
         }
 
         // ── Calcul durée réelle par zone (enter → leave) ──────────────────────────
-        $zoneActualMin = [];
+        $zoneActualSec = [];
         foreach ($zonePairs as $enterId => $exitId) {
             $enterRl = $completedLegs->get($enterId);
             $exitRl  = $completedLegs->get($exitId);
             if ($enterRl && $exitRl) {
-                $zoneActualMin[$enterId] = (int) $enterRl->occurred_at
-                    ->diffInMinutes($exitRl->occurred_at);
+                $zoneActualSec[$enterId] = (int) $enterRl->occurred_at
+                    ->diffInSeconds($exitRl->occurred_at);
             }
         }
+
 
         // ── Construction de l'arbre pour l'affichage ──────────────────────────────
         // Un "bloc zone" = zone parente avec ses sous-zones imbriquées.
@@ -114,13 +116,13 @@ class RotationController extends Controller
         $displayBlocks = $this->buildDisplayBlocks(
             $allLegs, $completedLegs, $zonePairs,
             $pairedEnterIds, $pairedExitIds,
-            $zoneActualMin, $legObjectives
+            $zoneActualSec, $legObjectives
         );
 
         return view('rotations.show', compact(
             'rotation', 'objective', 'allLegs', 'completedLegs',
             'zonePairs', 'pairedEnterIds', 'pairedExitIds',
-            'zoneActualMin', 'legObjectives', 'displayBlocks'
+            'zoneActualSec', 'legObjectives', 'displayBlocks'
         ));
     }
 
@@ -146,7 +148,7 @@ class RotationController extends Controller
     private function buildDisplayBlocks(
         $allLegs, $completedLegs, $zonePairs,
         $pairedEnterIds, $pairedExitIds,
-        $zoneActualMin, $legObjectives
+        $zoneActualSec, $legObjectives
     ): array {
         $blocks     = [];
         $skipIds    = []; // IDs de legs déjà traités (sub-zones absorbées dans leur parent)
@@ -177,10 +179,10 @@ class RotationController extends Controller
                 $leaveLeg   = $leaveLegId ? $allLegs->firstWhere('id', $leaveLegId) : null;
                 $enterRl    = $completedLegs->get($leg->id);
                 $leaveRl    = $leaveLegId ? $completedLegs->get($leaveLegId) : null;
-                $actualMin  = $zoneActualMin[$leg->id] ?? null;
+                $actualSec  = $zoneActualSec[$leg->id] ?? null;
                 $rawTarget  = $legObjectives[$leg->id] ?? $legObjectives[(string)$leg->id] ?? null;
-                $targetMin  = ($rawTarget !== null && $rawTarget !== 'null') ? (int)$rawTarget : null;
-                $ecart      = ($actualMin !== null && $targetMin !== null) ? $actualMin - $targetMin : null;
+                $targetSec  = ($rawTarget !== null && $rawTarget !== 'null') ? (int)$rawTarget : null;
+                $ecart      = ($actualSec !== null && $targetSec !== null) ? $actualSec - $targetSec : null;
 
                 // Charger la zone BDD pour vérifier si elle a un parent
                 $zone      = \App\Models\Zone::find($leg->reference_id);
@@ -214,7 +216,7 @@ class RotationController extends Controller
                         $innerLeaveLeg = $innerLeaveId ? $allLegs->firstWhere('id', $innerLeaveId) : null;
                         $innerEnterRl  = $completedLegs->get($innerLeg->id);
                         $innerLeaveRl  = $innerLeaveId ? $completedLegs->get($innerLeaveId) : null;
-                        $innerActual   = $zoneActualMin[$innerLeg->id] ?? null;
+                        $innerActual   = $zoneActualSec[$innerLeg->id] ?? null;
                         $innerRawT     = $legObjectives[$innerLeg->id] ?? $legObjectives[(string)$innerLeg->id] ?? null;
                         $innerTarget   = ($innerRawT !== null && $innerRawT !== 'null') ? (int)$innerRawT : null;
                         $innerEcart    = ($innerActual !== null && $innerTarget !== null)
@@ -226,8 +228,8 @@ class RotationController extends Controller
                             'leave_leg'  => $innerLeaveLeg,
                             'enter_rl'   => $innerEnterRl,
                             'leave_rl'   => $innerLeaveRl,
-                            'actual_min' => $innerActual,
-                            'target_min' => $innerTarget,
+                            'actual_sec' => $innerActual,
+                            'target_sec' => $innerTarget,
                             'ecart'      => $innerEcart,
                             'children'   => [],
                             'is_subzone' => true,
@@ -244,8 +246,8 @@ class RotationController extends Controller
                     'leave_leg'  => $leaveLeg,
                     'enter_rl'   => $enterRl,
                     'leave_rl'   => $leaveRl,
-                    'actual_min' => $actualMin,
-                    'target_min' => $targetMin,
+                    'actual_sec' => $actualSec,
+                    'target_sec' => $targetSec,
                     'ecart'      => $ecart,
                     'children'   => $children,
                     'is_subzone' => $isSubZone,
@@ -265,8 +267,8 @@ class RotationController extends Controller
                     'leave_leg'  => null,
                     'enter_rl'   => $enterRl,
                     'leave_rl'   => null,
-                    'actual_min' => null,
-                    'target_min' => null,
+                    'actual_sec' => null,
+                    'target_sec' => null,
                     'ecart'      => null,
                     'children'   => [],
                     'is_subzone' => false,

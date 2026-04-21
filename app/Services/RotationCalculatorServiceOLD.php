@@ -180,7 +180,7 @@ class RotationCalculatorService
                         ? Carbon::parse(end($legEvents)['dt'])
                         : null;
                     $durationSincePrev = $prevOccurredAt
-                        ? (int) $prevOccurredAt->diffInSeconds($occurredAt)
+                        ? (int) $prevOccurredAt->diffInMinutes($occurredAt)
                         : null;
 
                     RotationLeg::create([
@@ -189,7 +189,7 @@ class RotationCalculatorService
                         'occurred_at'                     => $occurredAt,
                         'lat'                             => $event['lat'] ?? null,
                         'lng'                             => $event['lng'] ?? null,
-                        'duration_since_previous_seconds' => $durationSincePrev,
+                        'duration_since_previous_minutes' => $durationSincePrev,
                         'raw_event'                       => $event['raw'] ?? $event,
                     ]);
 
@@ -207,18 +207,18 @@ class RotationCalculatorService
                     if ($currentLegIdx >= $legs->count()) {
                         $completedAt = Carbon::parse($event['dt']);
                         $duration    = (int) Carbon::parse($currentRotation->started_at)
-                                                ->diffInSeconds($completedAt);
+                                                ->diffInMinutes($completedAt);
 
                         $currentRotation->update([
                             'completed_at'     => $completedAt,
-                            'duration_seconds' => $duration,
+                            'duration_minutes' => $duration,
                             'status'           => 'completed',
                             'is_valid'         => true,
                         ]);
 
                         Log::info('Rotation complète.', [
                             'rotation_id'  => $currentRotation->id,
-                            'duration_seconds' => $duration,
+                            'duration_min' => $duration,
                         ]);
 
                         $rotations[]     = $currentRotation;
@@ -256,68 +256,6 @@ class RotationCalculatorService
                 );
 
                 if ($skippedLeg !== null) {
-
-                    // ── NOUVEAU : sous-zones couvertes par la zone mère ──────────────
-                    $coveringParentEvent = $this->getCoveringParentEvent(
-                        $skippedLeg, $legEvents
-                    );
-
-                    if ($coveringParentEvent !== null) {
-                        // Identifier toutes les étapes sous-zones consécutives
-                        // appartenant à la même zone mère, à partir de currentLegIdx
-                        $parentZoneId = \App\Models\Zone::find($skippedLeg->reference_id)?->parent_id;
-
-                        while ($currentLegIdx < $legs->count()) {
-                            $nextLeg = $legs->get($currentLegIdx);
-                            if ($nextLeg === null) break;
-
-                            // On sort du groupe dès qu'on rencontre une étape
-                            // qui n'est pas une sous-zone de ce même parent
-                            $isSubzoneOfSameParent =
-                                $nextLeg->reference_type === 'zone'
-                                && !empty($nextLeg->reference_id)
-                                && \App\Models\Zone::find($nextLeg->reference_id)?->parent_id === $parentZoneId;
-
-                            if (!$isSubzoneOfSameParent) {
-                                break;
-                            }
-
-                            // Créer le RotationLeg en le marquant "sauté par zone mère"
-                            $occurredAt = Carbon::parse($coveringParentEvent['dt']);
-
-                            RotationLeg::create([
-                                'rotation_id'                     => $currentRotation->id,
-                                'circuit_leg_id'                  => $nextLeg->id,
-                                'occurred_at'                     => $occurredAt,
-                                'lat'                             => $coveringParentEvent['lat'] ?? null,
-                                'lng'                             => $coveringParentEvent['lng'] ?? null,
-                                'duration_since_previous_seconds' => null,
-                                'raw_event'                       => $coveringParentEvent['raw'] ?? $coveringParentEvent,
-                                'skipped_by_parent'               => true,
-                            ]);
-
-                            Log::info('Sous-zone notée comme couverte par zone mère.', [
-                                'rotation_id'   => $currentRotation->id,
-                                'skipped_leg'   => $nextLeg->label,
-                                'parent_zone_id'=> $parentZoneId,
-                            ]);
-
-                            $currentLegIdx++;
-                        }
-
-                        // Rejouer l'événement courant (peut être la prochaine étape obligatoire)
-                        if (!$replayOnce) {
-                            $replayOnce = true;
-                            continue;
-                        }
-
-                        $replayOnce = false;
-                        $i++;
-                        continue;
-                    }
-                    // ── FIN NOUVEAU ──────────────────────────────────────────────────
-
-                    // Comportement original : annulation
                     $currentRotation->update([
                         'status'              => 'cancelled',
                         'is_valid'            => false,
@@ -343,7 +281,7 @@ class RotationCalculatorService
 
                     if (!$replayOnce) {
                         $replayOnce = true;
-                        continue;
+                        continue; // Rejouer : cet event peut être T1
                     }
 
                     $replayOnce = false;
@@ -402,47 +340,6 @@ class RotationCalculatorService
         }
 
         return $rotations;
-    }
-
-    /**
-     * Retourne l'événement GPS de la zone mère si le leg manqué est
-     * une sous-zone dont le parent a déjà été validé dans cette rotation.
-     *
-     * Utilisé pour créer les RotationLeg skippés avec l'horodatage
-     * du passage par la zone mère.
-     *
-     * Règle applicable uniquement aux zones (jamais aux checkpoints).
-     *
-     * @param  CircuitLeg $missedLeg   Étape qui a été manquée
-     * @param  array      $legEvents   Événements GPS déjà validés dans la rotation
-     * @return array|null              Événement GPS du passage par la zone mère, ou null
-     */
-    private function getCoveringParentEvent(
-        CircuitLeg $missedLeg,
-        array      $legEvents
-    ): ?array {
-        // Checkpoints : jamais couverts par cette règle
-        if ($missedLeg->reference_type !== 'zone' || empty($missedLeg->reference_id)) {
-            return null;
-        }
-
-        $zone = \App\Models\Zone::find($missedLeg->reference_id);
-
-        if (!$zone || empty($zone->parent_id)) {
-            return null; // Pas de zone mère → règle inapplicable
-        }
-
-        // Chercher dans les événements déjà validés si la zone mère y figure
-        foreach ($legEvents as $pastEvent) {
-            if (
-                isset($pastEvent['zone_id'])
-                && (int) $pastEvent['zone_id'] === (int) $zone->parent_id
-            ) {
-                return $pastEvent; // On retourne l'événement mère pour horodater
-            }
-        }
-
-        return null;
     }
 
     /**
@@ -629,34 +526,15 @@ class RotationCalculatorService
 
             $inCircuit = in_array((int) $event['zone_id'], $allowedZoneIds, true);
 
-            if ($inCircuit) {
-                return false;
+            if (!$inCircuit) {
+                Log::warning('Déviation zone détectée.', [
+                    'zone_id'   => $event['zone_id'],
+                    'zone_name' => $event['reference_name'] ?? '?',
+                    'allowed'   => $allowedZoneIds,
+                ]);
             }
 
-            // ── NOUVEAU : zone hors-circuit mais sous-zone d'une zone du circuit ? ──
-            $zone = \App\Models\Zone::find((int) $event['zone_id']);
-
-            if ($zone && !empty($zone->parent_id)) {
-                $parentIsInCircuit = in_array((int) $zone->parent_id, $allowedZoneIds, true);
-
-                if ($parentIsInCircuit) {
-                    Log::debug('Zone hors-circuit tolérée : sous-zone d\'une zone du circuit.', [
-                        'zone_id'        => $event['zone_id'],
-                        'zone_name'      => $event['reference_name'] ?? '?',
-                        'parent_zone_id' => $zone->parent_id,
-                    ]);
-                    return false; // Pas de déviation
-                }
-            }
-            // ── FIN NOUVEAU ──────────────────────────────────────────────────────────
-
-            Log::warning('Déviation zone détectée.', [
-                'zone_id'   => $event['zone_id'],
-                'zone_name' => $event['reference_name'] ?? '?',
-                'allowed'   => $allowedZoneIds,
-            ]);
-
-            return true;
+            return !$inCircuit;
         }
 
         // ── Cas checkpoint : on vérifie les pass_checkpoint ─────────────────────
@@ -706,11 +584,11 @@ class RotationCalculatorService
     private function completeRotation(Rotation $rotation, array $lastEvent, Collection $legs): void
     {
         $completedAt = Carbon::parse($lastEvent['dt'] ?? now());
-        $duration    = Carbon::parse($rotation->started_at)->diffInSeconds($completedAt);
+        $duration    = Carbon::parse($rotation->started_at)->diffInMinutes($completedAt);
 
         $rotation->update([
             'completed_at'     => $completedAt,
-            'duration_seconds' => $duration,
+            'duration_minutes' => $duration,
             'status'           => 'completed',
             'is_valid'         => true,
         ]);

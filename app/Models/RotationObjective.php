@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class RotationObjective extends Model
 {
     protected $fillable = [
-        'circuit_id', 'target_rotations_per_month', 'target_duration_minutes',
+        'circuit_id', 'target_rotations_per_month', 'target_duration_seconds',
         'leg_objectives', 'effective_from', 'effective_until', 'notes',
     ];
  

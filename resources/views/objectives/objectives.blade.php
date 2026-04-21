@@ -28,8 +28,33 @@
 
                 {{-- Durée totale --}}
                 <div class="form-group">
-                    <label>Durée totale cible (minutes)</label>
-                    <input type="number" name="target_duration_minutes" min="1" placeholder="Ex: 2880 (= 48h)">
+                    <label>Durée totale cible</label>
+                    <div style="display:flex;align-items:center;gap:6px;">
+
+                        <div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
+                            <span style="font-size:10px;color:var(--muted);">H</span>
+                            <input type="number" id="total_dur_h" value="0" class="total-dur-part"
+                                style="width:70px;text-align:center;" min="0" placeholder="0">
+                        </div>
+
+                        <span style="color:var(--muted);margin-top:16px;">:</span>
+
+                        <div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
+                            <span style="font-size:10px;color:var(--muted);">min</span>
+                            <input type="number" id="total_dur_m" value="0" class="total-dur-part"
+                                style="width:70px;text-align:center;" min="0" max="59" placeholder="0">
+                        </div>
+
+                        <span style="color:var(--muted);margin-top:16px;">:</span>
+
+                        <div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
+                            <span style="font-size:10px;color:var(--muted);">sec</span>
+                            <input type="number" id="total_dur_s" value="0" class="total-dur-part"
+                                style="width:70px;text-align:center;" min="0" max="59" placeholder="0">
+                        </div>
+
+                    </div>
+                    <input type="hidden" name="target_duration_seconds" id="target_duration_seconds">
                 </div>
 
                 
@@ -100,6 +125,44 @@
                         @endif
 
                         {{-- Saisies de durée pour les zones --}}
+                        {{-- @foreach($durationInputs as $input)
+                            <div style="display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid var(--cream-d);">
+                                <div style="flex:1;">
+                                    <div style="font-size:13px;font-weight:600;color:var(--ink);">
+                                        {{ $input['label'] }}
+                                    </div>
+                                    @if($input['sublabel'])
+                                        <div style="font-size:11px;color:var(--muted);margin-top:2px;font-family:var(--mono);">
+                                            {{ $input['sublabel'] }}
+                                        </div>
+                                    @endif
+                                </div>
+
+                                <div style="display:flex;align-items:center;gap:6px;">
+                                    @foreach($input['leg_ids'] as $legId)
+                                        <input type="hidden" name="_zone_input_keys[]" value="{{ $input['key'] }}">
+                                    @endforeach
+
+                                    <input
+                                        type="number"
+                                        name="leg_objectives[{{ $input['leg_ids'][0] }}]"
+                                        @if(count($input['leg_ids']) > 1)
+                                            data-mirror-to="leg_objectives[{{ $input['leg_ids'][1] }}]"
+                                        @endif
+                                        style="width:100px;text-align:center;"
+                                        min="1"
+                                        placeholder="min"
+                                    >
+
+                                    @if(count($input['leg_ids']) > 1)
+                                        <input type="number" name="leg_objectives[{{ $input['leg_ids'][1] }}]"
+                                            id="mirror_{{ $input['leg_ids'][1] }}" style="display:none;" min="1">
+                                    @endif
+
+                                    <span style="font-size:11px;color:var(--muted);">min</span>
+                                </div>
+                            </div>
+                        @endforeach --}}
                         @foreach($durationInputs as $input)
                             <div style="display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid var(--cream-d);">
                                 <div style="flex:1;">
@@ -114,30 +177,59 @@
                                 </div>
 
                                 <div style="display:flex;align-items:center;gap:6px;">
-                                    {{-- Pour une paire, on stocke dans les deux leg_ids --}}
                                     @foreach($input['leg_ids'] as $legId)
                                         <input type="hidden" name="_zone_input_keys[]" value="{{ $input['key'] }}">
                                     @endforeach
 
-                                    <input
-                                        type="number"
+                                    {{-- Champ hidden qui recevra la valeur en secondes --}}
+                                    <input type="hidden"
                                         name="leg_objectives[{{ $input['leg_ids'][0] }}]"
-                                        {{-- Si paire, on copie la valeur dans le deuxième leg côté JS --}}
+                                        id="sec_{{ $input['leg_ids'][0] }}"
                                         @if(count($input['leg_ids']) > 1)
                                             data-mirror-to="leg_objectives[{{ $input['leg_ids'][1] }}]"
-                                        @endif
-                                        style="width:100px;text-align:center;"
-                                        min="1"
-                                        placeholder="min"
-                                    >
+                                        @endif>
 
-                                    {{-- Champ miroir caché pour le leg de sortie de la paire --}}
                                     @if(count($input['leg_ids']) > 1)
-                                        <input type="number" name="leg_objectives[{{ $input['leg_ids'][1] }}]"
-                                            id="mirror_{{ $input['leg_ids'][1] }}" style="display:none;" min="1">
+                                        <input type="hidden"
+                                            name="leg_objectives[{{ $input['leg_ids'][1] }}]"
+                                            id="mirror_{{ $input['leg_ids'][1] }}">
                                     @endif
 
-                                    <span style="font-size:11px;color:var(--muted);">min</span>
+                                    {{-- Saisie H : min : sec --}}
+                                    <div style="display:flex;align-items:center;gap:6px;">
+
+                                        <div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
+                                            <span style="font-size:10px;color:var(--muted);">H</span>
+                                            <input type="number"
+                                                class="dur-h"
+                                                value="0"
+                                                data-target="sec_{{ $input['leg_ids'][0] }}"
+                                                style="width:70px;text-align:center;" min="0" placeholder="0">
+                                        </div>
+
+                                        <span style="font-size:13px;color:var(--muted);margin-top:16px;">:</span>
+
+                                        <div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
+                                            <span style="font-size:10px;color:var(--muted);">min</span>
+                                            <input type="number"
+                                                class="dur-m"
+                                                value="0"
+                                                data-target="sec_{{ $input['leg_ids'][0] }}"
+                                                style="width:70px;text-align:center;" min="0" max="59" placeholder="0">
+                                        </div>
+
+                                        <span style="font-size:13px;color:var(--muted);margin-top:16px;">:</span>
+
+                                        <div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
+                                            <span style="font-size:10px;color:var(--muted);">sec</span>
+                                            <input type="number"
+                                                class="dur-s"
+                                                value="0"
+                                                data-target="sec_{{ $input['leg_ids'][0] }}"
+                                                style="width:70px;text-align:center;" min="0" max="59" placeholder="0">
+                                        </div>
+
+                                    </div>
                                 </div>
                             </div>
                         @endforeach
@@ -267,8 +359,8 @@
                         <div>
                             <div style="color:var(--muted);">Durée totale</div>
                             <div style="font-weight:600;">
-                                @if($obj->target_duration_minutes)
-                                    {{ intdiv($obj->target_duration_minutes, 60) }}h{{ str_pad($obj->target_duration_minutes % 60, 2, '0', STR_PAD_LEFT) }}m
+                                @if($obj->target_duration_seconds)
+                                    @durSec($obj->target_duration_seconds)
                                 @else — @endif
                             </div>
                         </div>
@@ -348,7 +440,7 @@
                                     
                                     <div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0;">
                                         <span style="color:var(--text-dim);">Durée dans la zone : <strong>{{ $zoneName }}</strong></span>
-                                        <span class="mono">{{ intdiv($val, 60) }}h{{ str_pad($val % 60, 2, '0', STR_PAD_LEFT) }}m</span>
+                                        @durSec($val)
                                     </div>
                                     
                                     @php 
@@ -376,4 +468,42 @@
     </div>
 
 </div>
+<script>
+document.querySelectorAll('.dur-h, .dur-m, .dur-s').forEach(input => {
+    input.addEventListener('input', function () {
+        const targetId = this.dataset.target;
+        const row = document.getElementById(targetId)
+                             .closest('div')
+                             .parentElement;
+
+        const h = parseInt(document.querySelector(`.dur-h[data-target="${targetId}"]`).value) || 0;
+        const m = parseInt(document.querySelector(`.dur-m[data-target="${targetId}"]`).value) || 0;
+        const s = parseInt(document.querySelector(`.dur-s[data-target="${targetId}"]`).value) || 0;
+
+        const totalSeconds = h * 3600 + m * 60 + s;
+
+        const hidden = document.getElementById(targetId);
+        if (hidden) {
+            hidden.value = totalSeconds > 0 ? totalSeconds : '';
+
+            // Propager au champ miroir si présent
+            const mirrorName = hidden.dataset.mirrorTo;
+            // if (mirrorName) {
+            //     const mirror = document.querySelector(`input[name="${mirrorName}"]`);
+            //     if (mirror) mirror.value = hidden.value;
+            // }
+        }
+    });
+});
+
+document.querySelectorAll('.total-dur-part').forEach(input => {
+    input.addEventListener('input', function () {
+        const h = parseInt(document.getElementById('total_dur_h').value) || 0;
+        const m = parseInt(document.getElementById('total_dur_m').value) || 0;
+        const s = parseInt(document.getElementById('total_dur_s').value) || 0;
+        const total = h * 3600 + m * 60 + s;
+        document.getElementById('target_duration_seconds').value = total > 0 ? total : '';
+    });
+});
+</script>
 @endsection
