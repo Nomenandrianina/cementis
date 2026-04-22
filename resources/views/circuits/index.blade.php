@@ -28,24 +28,23 @@
         </button>
     </div>
  
-    {{-- Stats --}}
     <div class="stats-row">
         <div class="stat">
             <div class="stat-lbl">Total circuits</div>
             <div class="stat-num">{{ $circuits->count() }}</div>
             <div class="stat-sub">configurés</div>
         </div>
-        <div class="stat">
+        <div class="stat stat-success">
             <div class="stat-lbl">Actifs</div>
             <div class="stat-num" style="color:#3B6D11;">{{ $circuits->where('active', true)->count() }}</div>
             <div class="stat-sub">en service</div>
         </div>
-        <div class="stat">
+        <div class="stat stat-info">
             <div class="stat-lbl">Étapes totales</div>
             <div class="stat-num">{{ $circuits->sum('legs_count') }}</div>
             <div class="stat-sub">sur tous circuits</div>
         </div>
-        <div class="stat">
+        <div class="stat stat-danger">
             <div class="stat-lbl">Camions assignés</div>
             <div class="stat-num">{{ $circuits->sum(fn($c) => $c->vehicles->count()) }}</div>
             <div class="stat-sub">véhicules</div>
@@ -54,7 +53,7 @@
  
     {{-- Table --}}
     <div class="card">
-      <div class="rot-card-header">
+        <div class="rot-card-header">
             <span class="rot-card-title">Liste des circuits</span>
             <span class="rot-badge rot-badge-muted">{{ $circuits->count() }} entrée(s)</span>
         </div>

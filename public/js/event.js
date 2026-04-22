@@ -94,74 +94,6 @@ function renderStats(data) {
     );
 }
 
-// function renderTable(events) {
-//     const tbody = document.getElementById('events-tbody');
-//     tbody.innerHTML = '';
-
-//     if (!events.length) {
-//         tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:32px;">Aucun événement.</td></tr>`;
-//         updateCount(0);
-//         return;
-//     }
-
-//     events.forEach((ev, idx) => {
-//         const typeClass = {
-//             'enter_zone':      'badge-enter',
-//             'leave_zone':      'badge-leave',
-//             'pass_checkpoint': 'badge-cp',
-//         }[ev.normalized_type] ?? '';
-
-//         const rawClass = {
-//             'zone_in':   'badge-enter',
-//             'zone_out':  'badge-leave',
-//             'marker_in': 'badge-cp',
-//         }[ev.raw_type] ?? 'badge-raw';
-
-//         const inDbHtml = ev.in_db
-//             ? '<span class="type-badge badge-indb">✓ BDD</span>'
-//             : '<span class="type-badge badge-notindb">⚠ Hors BDD</span>';
-
-//         const idHtml = ev.zone_id
-//             ? `<span class="mono" style="font-size:11px;color:var(--bordeaux);">zone #${ev.zone_id}</span>`
-//             : ev.checkpoint_id
-//                 ? `<span class="mono" style="font-size:11px;color:#2D7A4A;">cp #${ev.checkpoint_id}</span>`
-//                 : '<span style="color:var(--muted);">—</span>';
-
-//         const tr = document.createElement('tr');
-//         tr.className = 'ev-row';
-//         tr.dataset.type  = ev.normalized_type;
-//         tr.dataset.in_db = ev.in_db ? '1' : '0';
-//         let displayDate = '—';
-
-//         if (ev.dt) {
-//             let dateObj = new Date(ev.dt);
-//             dateObj.setHours(dateObj.getHours() + 3);
-
-//             const pad = (n) => String(n).padStart(2, '0');
-
-//             const day = pad(dateObj.getDate());
-//             const month = pad(dateObj.getMonth() + 1);
-//             const year = dateObj.getFullYear();
-//             const hours = pad(dateObj.getHours());
-//             const minutes = pad(dateObj.getMinutes());
-//             const seconds = pad(dateObj.getSeconds()); 
-
-//             displayDate = `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
-//         }
-
-//         tr.innerHTML = `
-//             <td class="mono" style="font-size:12px;white-space:nowrap;">${displayDate}</td>
-//             <td><span class="type-badge ${rawClass}">${ev.raw_type}</span></td>
-//             <td><span class="type-badge ${typeClass}">${ev.normalized_type}</span></td>
-//             <td style="font-weight:600;font-size:13px;">${ev.reference_name ?? '—'}</td>
-//             <td>${inDbHtml}</td>
-//             <td class="mono" style="font-size:11px;color:var(--muted);">${ev.lat + ',' + ev.lng ?? '—'}</td>
-//         `;
-//         tbody.appendChild(tr);
-//     });
-
-//     updateCount(events.length);
-// }
 
 function filterEvents(type) {
     // 1. Mise à jour visuelle des boutons
@@ -214,6 +146,7 @@ const rowsPerPage = 15; // Nombre d'éléments par page
 let filteredEvents = [];
 
 function renderTable(events) {
+    console.log('Rendering table with events:', events);
     filteredEvents = events;
     const tbody = document.getElementById('events-tbody');
 
@@ -245,7 +178,7 @@ function renderTable(events) {
         }
         const typeBadge = e.normalized_type === 'enter_zone'
         ? `<span class="badge badge-enter">↓ enter_zone</span>`
-        : e.type === 'leave_zone'
+        : e.normalized_type === 'leave_zone'
         ? `<span class="badge badge-leave">↑ leave_zone</span>`
         : `<span class="badge badge-check">● checkpoint</span>`;
         const normBadge = typeBadge;

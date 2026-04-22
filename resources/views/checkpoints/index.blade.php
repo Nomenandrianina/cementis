@@ -19,17 +19,17 @@
 
 {{-- ── Stats ─────────────────────────────────────────────────────────────── --}}
 <div class="stats-row">
-    <div class="stat">
+    <div class="stat stat-success">
         <div class="stat-lbl">Checkpoints</div>
         <div class="stat-num">{{ $checkpoints->count() }}</div>
         <div class="stat-sub">définis</div>
     </div>
-    <div class="stat">
+    <div class="stat stat-info">
         <div class="stat-lbl">Synchronisés</div>
         <div class="stat-num stat-num--green">{{ $checkpoints->whereNotNull('gps_marker_id')->count() }}</div>
         <div class="stat-sub">avec GPS</div>
     </div>
-    <div class="stat">
+    <div class="stat stat-danger">
         <div class="stat-lbl">En attente</div>
         <div class="stat-num stat-num--amber">{{ $checkpoints->whereNull('gps_marker_id')->count() }}</div>
         <div class="stat-sub">sans GPS ID</div>
@@ -121,7 +121,7 @@
                 <div class="card-dot"></div>
                 <span class="card-title">Checkpoints définis</span>
             </div>
-            <span class="count-pill">{{ $checkpoints->count() }}</span>
+             <span class="count-pill">{{ $checkpoints->count() }}</span> 
         </div>
 
         <div class="table-wrap">

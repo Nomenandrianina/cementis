@@ -9,7 +9,7 @@
   --bxp2:      #F0DDE5;
   --ink:       #1C1917;
   --muted:     #6B6560;
-  --hint:      #A8A29E;
+  --hint:      #000000;
   --surf:      #FFFFFF;
   --bg:        #F5F2EF;
   --line:      rgba(0,0,0,0.08);
@@ -21,10 +21,16 @@
   --red-tx:    #A32D2D;
   --amber-bg:  #FAEEDA;
   --amber-tx:  #854F0B;
+   --success:   #2A7A48;
+    --danger:    #B52929;
+    --warning:   #B07A10;
+    --info:      #1A5FA0;
   ---sans:  'DM Sans', system-ui, sans-serif;
     --mono:  'DM Mono', 'JetBrains Mono', monospace;
     --serif: 'Playfair Display', Georgia, serif;
 }
+
+
 
 /* ── Bouton Sync (topbar) ─────────────────── */
 .btn-sync {
@@ -47,12 +53,33 @@
 .stat {
   background: var(--surf); border: 0.5px solid var(--line);
   border-radius: 10px; padding: 14px 16px;
+  position: relative;
+  padding: 20px 16px 14px 16px; /* Augmenté le padding-top pour laisser de la place à la ligne */
+  position: relative; /* INDISPENSABLE pour le placement du ::before */
+  overflow: hidden;   /* Pour que la ligne suive l'arrondi du border-radius */
+  display: flex;
+  flex-direction: column;
 }
 .stat-lbl {
   font-size: 10px; font-weight: 600; color: var(--hint);
   text-transform: uppercase; letter-spacing: 0.13em;
   margin-bottom: 5px; font-family: var(--sans);
 }
+
+.stat::before {
+    content: '';
+    position: absolute;
+    top: 0; 
+    left: 0; 
+    right: 0;
+    height: 5px; /* Épaisseur de la ligne */
+    background: var(--hint); /* Couleur par défaut */
+}
+
+.stat.stat-success::before { background: var(--success); }
+.stat.stat-info::before    { background: var(--info); }
+.stat.stat-danger::before  { background: var(--danger); }
+
 .stat-num {
   font-family: var(--serif); font-size: 24px;
   color: var(--bx); line-height: 1;
@@ -60,6 +87,12 @@
 .stat-num--green { color: var(--green-tx); }
 .stat-num--amber { color: var(--amber-tx); }
 .stat-sub { font-size: 11px; color: var(--muted); margin-top: 3px; font-family: var(--mono); }
+
+
+.count-pill {
+    float: none; /* On n'utilise plus float: right */
+    margin-left: auto; /* Sécurité supplémentaire pour pousser à droite */
+}
 
 /* ── Layout ───────────────────────────────── */
 .cp-layout {

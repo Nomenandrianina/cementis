@@ -5,7 +5,7 @@
 <link rel="stylesheet" href="{{ asset('css/rotation_index.css') }}">
 @section('content')
 <div class="container-fluid pt-3">
-    <div class="card shadow-sm">
+    <div class="card shadow-sm rounded-lg overflow-hidden">
         <div class="card-header d-flex justify-content-between align-items-center bg-white py-3">
             <div class="rot-page-header mb-0">
                 <h3 class="card-title mb-0" style="font-size: 1.5rem; font-weight: 600;">

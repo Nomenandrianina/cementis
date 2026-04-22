@@ -95,7 +95,7 @@
 
 
 <li class="nav-item">
-    <a href="{{ route('driver.score') }}" class="nav-link {{ Request::is('admin/new/scoring*') ? 'active' : '' }}"
+    <a href="{{ route('driver.score') }}" class="nav-link {{ Request::is('admin/driver/score') ? 'active' : '' }}"
         onclick="submitForm()">
         <i class="nav-icon fas fa-bullseye"></i>
         <p>@lang('models/events.fields.scoring')</p>
@@ -260,7 +260,7 @@
 
 
 <li class="nav-item">
-    <a href="{{ route('rotations.index') }}" class="nav-link {{ request()->routeIs('rotations.*') ? 'active' : '' }}">
+    <a href="{{ route('rotations.index') }}" class="nav-link {{ request()->routeIs('rotations.index') ? 'active' : '' }}">
         <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
         </svg>
@@ -282,7 +282,7 @@
     $isCheckpointsActive = Request::is('admin/checkpoints*');
     $isZoneActive = Request::is('admin/zones*');
     $isVehiclesActive = Request::is('admin/vehicles*');
-    $isRotatationeventActive = Request::is('admin/rotations/events*');
+    $isRotatationeventActive = Request::is('admin/rotations/event*');
 @endphp
 <li class="nav-item has-treeview {{ $isCircuitsActive || $isCheckpointsActive || $isZoneActive || $isVehiclesActive || $isRotatationeventActive ? 'menu-open' : '' }}">
     <a href="#" class="nav-link">
