@@ -61,6 +61,9 @@
                     </div>
                 @endif
 
+
+
+
                 <div class="form-group">
                     <label class="form-label">Nom</label>
                     <input class="form-input @error('name') error @enderror"

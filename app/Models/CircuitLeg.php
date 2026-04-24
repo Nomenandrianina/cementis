@@ -13,7 +13,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 // ============================================================
 class CircuitLeg extends Model
 {
-    protected $fillable = ['circuit_id', 'order', 'label', 'event_type', 'reference_type', 'reference_id', 'direction'];
+    protected $fillable = ['circuit_id', 'order', 'label', 'event_type', 'reference_type', 'reference_id', 'direction', 'optional'];
+    protected $casts = [
+        'optional' => 'boolean',
+    ];
 
     public function circuit(): BelongsTo { return $this->belongsTo(Circuit::class); }
     public function rotationLegs(): HasMany { return $this->hasMany(RotationLeg::class); }
@@ -25,5 +28,24 @@ class CircuitLeg extends Model
             'checkpoint' => Checkpoint::find($this->reference_id),
             default      => null,
         };
+    }
+
+    /**
+     * Un leg est optionnel si :
+     * - Il est marqué optional = true dans le circuit
+     * - OU si le checkpoint associé est de type client/dépôt
+     */
+    public function isOptional(): bool
+    {
+        if ($this->optional) {
+            return true;
+        }
+
+        if ($this->reference_type === 'checkpoint') {
+            $cp = Checkpoint::find($this->reference_id);
+            return $cp && $cp->isOptional();
+        }
+
+        return false;
     }
 }

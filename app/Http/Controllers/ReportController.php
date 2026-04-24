@@ -584,7 +584,7 @@ class ReportController extends Controller
             ],
         ]);
         $sheet->setCellValue('D3', isset($report['objective'])
-            ? $fmt($report['objective']->target_duration_minutes ?? null) : '—'
+            ? $fmt($report['objective']->target_duration_seconds ?? null) : '—'
         );
         $sheet->getStyle('D3')->applyFromArray([
             'font'      => ['bold' => true, 'color' => $rgb($WHITE)],

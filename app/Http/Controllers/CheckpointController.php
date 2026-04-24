@@ -7,9 +7,6 @@ use App\Models\Zone;
 use App\Services\GpsApiService;
 use Illuminate\Http\Request;
 
-// ============================================================
-// CheckpointController
-// ============================================================
 class CheckpointController extends Controller
 {
     public function __construct(private readonly GpsApiService $gpsApi) {}
@@ -62,6 +59,7 @@ class CheckpointController extends Controller
     {
         $data = $request->validate([
             'name'        => 'required|string|max:255',
+            'type'        => 'required|in:control,client,depot',
             'description' => 'nullable|string',
             'lat'         => 'required|numeric',
             'lng'         => 'required|numeric',

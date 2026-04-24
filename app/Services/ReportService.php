@@ -70,15 +70,15 @@ class ReportService
 
         $rotationDetails = $rotations->map(fn($r) => $this->rotationDetail($r, $objective));
 
-        $avgDuration = $rotations->avg('duration_minutes');
+        $avgDuration = $rotations->avg('duration_seconds');
 
         return [
             'vehicle'           => $vehicle,
             'rotation_count'    => $rotations->count(),
             'target_rotations'  => $objective?->target_rotations_per_month,
-            'target_duration'   => $objective?->target_duration_minutes,
-            'avg_duration'      => $avgDuration ? round($avgDuration) : null,
-            'total_duration'    => $rotations->sum('duration_minutes'),
+            'target_duration'   => $this->formatSeconde($objective?->target_duration_seconds),
+            'avg_duration'      => $avgDuration ? $this->formatSeconde(round($avgDuration)) : null,
+            'total_duration'    => $this->formatSeconde($rotations->sum('duration_seconds')),
             'rotations'         => $rotationDetails,
             'cancelled_count'   => Rotation::where('rvehicule_id', $vehicle->id)
                                     ->where('circuit_id', $circuit->id)
@@ -326,13 +326,13 @@ class ReportService
             }
         }
 
-        $zoneActualMin = [];
+        $zoneActualSec = [];
         foreach ($zonePairs as $enterId => $exitId) {
             $enterRl = $completedLegs->get($enterId);
             $exitRl  = $completedLegs->get($exitId);
             if ($enterRl && $exitRl) {
-                $zoneActualMin[$enterId] = (int) $enterRl->occurred_at
-                    ->diffInMinutes($exitRl->occurred_at);
+                $zoneActualSec[$enterId] = (int) $enterRl->occurred_at
+                    ->diffInSeconds($exitRl->occurred_at);
             }
         }
 
@@ -364,7 +364,7 @@ class ReportService
                 [$block, $absorbed] = $this->buildZoneBlock(
                     $leg, $allLegs, $completedLegs,
                     $zonePairs, $pairedExitIds,
-                    $zoneActualMin, $legObjectives,
+                    $zoneActualSec, $legObjectives,
                     $skipIds
                 );
                 $blocks[]  = $block;
@@ -382,8 +382,8 @@ class ReportService
                     'label'       => $leg->label,
                     'enter_at'    => $rl?->occurred_at?->format('d/m H:i'),
                     'leave_at'    => null,
-                    'actual_min'  => null,
-                    'target_min'  => null,
+                    'actual_sec'  => null,
+                    'target_sec'  => null,
                     'ecart'       => null,
                     'is_done'     => $rl !== null,
                     'children'    => [],
@@ -392,8 +392,8 @@ class ReportService
             }
         }
 
-        $targetDuration = $objective?->target_duration_minutes;
-        $actualDuration = $rotation->duration_minutes;
+        $targetDuration = $objective?->target_duration_seconds;
+        $actualDuration = $rotation->duration_seconds;
 
         return [
             'id'              => $rotation->id,
@@ -401,10 +401,10 @@ class ReportService
             'completed_at'    => $rotation->completed_at
                                     ? \Carbon\Carbon::parse($rotation->completed_at)->format('d/m/Y H:i')
                                     : '—',
-            'duration_minutes'=> $actualDuration,
-            'duration_label'  => $this->formatDuration($actualDuration),
+            'duration_seconds'=> $actualDuration,
+            'duration_label'  => $this->formatSeconde($actualDuration),
             'target_duration' => $targetDuration,
-            'target_label'    => $this->formatDuration($targetDuration),
+            'target_label'    => $this->formatSeconde($targetDuration),
             'vs_target'       => ($targetDuration && $actualDuration)
                                     ? $actualDuration - $targetDuration : null,
             'blocks'          => $blocks,
@@ -414,18 +414,18 @@ class ReportService
     private function buildZoneBlock(
         $leg, $allLegs, $completedLegs,
         $zonePairs, $pairedExitIds,
-        $zoneActualMin, $legObjectives,
+        $zoneActualSec, $legObjectives,
         $currentSkipIds
     ): array {
         $leaveLegId = $zonePairs[$leg->id] ?? null;
         $leaveLeg   = $leaveLegId ? $allLegs->firstWhere('id', $leaveLegId) : null;
         $enterRl    = $completedLegs->get($leg->id);
         $leaveRl    = $leaveLegId ? $completedLegs->get($leaveLegId) : null;
-        $actualMin  = $zoneActualMin[$leg->id] ?? null;
+        $actualSec  = $zoneActualSec[$leg->id] ?? null;
         $rawTarget  = $legObjectives[$leg->id] ?? $legObjectives[(string)$leg->id] ?? null;
-        $targetMin  = ($rawTarget !== null && $rawTarget !== 'null') ? (int)$rawTarget : null;
-        $ecart      = ($actualMin !== null && $targetMin !== null)
-                        ? $actualMin - $targetMin : null;
+        $targetSec  = ($rawTarget !== null && $rawTarget !== 'null') ? (int)$rawTarget : null;
+        $ecart      = ($actualSec !== null && $targetSec !== null)
+                        ? $actualSec - $targetSec : null;
 
         $absorbedIds = [$leg->id];
         if ($leaveLegId) $absorbedIds[] = $leaveLegId;
@@ -460,8 +460,8 @@ class ReportService
                     'label'        => $innerLeg->label,
                     'enter_at'     => $innerEnterRl?->occurred_at?->format('d/m H:i'),
                     'leave_at'     => $innerLeaveRl?->occurred_at?->format('d/m H:i'),
-                    'actual_min'   => $innerActual,
-                    'target_min'   => $innerTarget,
+                    'actual_sec'   => $innerActual,
+                    'target_sec'   => $innerTarget,
                     'ecart'        => $innerEcart,
                     'is_done'      => $innerEnterRl !== null,
                 ];
@@ -479,8 +479,8 @@ class ReportService
             'label'        => $leg->label,
             'enter_at'     => $enterRl?->occurred_at?->format('d/m H:i'),
             'leave_at'     => $leaveRl?->occurred_at?->format('d/m H:i'),
-            'actual_min'   => $actualMin,
-            'target_min'   => $targetMin,
+            'actual_sec'   => $actualSec,
+            'target_sec'   => $targetSec,
             'ecart'        => $ecart,
             'is_done'      => $enterRl !== null,
             'children'     => $children,
@@ -492,6 +492,19 @@ class ReportService
     private function formatDuration(?int $minutes): string
     {
         if ($minutes === null) return '—';
-        return intdiv($minutes, 60) . 'h' . str_pad($minutes % 60, 2, '0', STR_PAD_LEFT) . 'm';
+        return intdiv($minutes, 60) . 'h' . str_pad($minutes % 60, 2, '0', STR_PAD_LEFT) . 'm'. str_pad($minutes % 60,2,'0',STR_PAD_LEFT).'s';
+    }
+
+    private function formatSeconde(?int $seconds): string
+    {
+        if ($seconds === null || $seconds < 0) return '—';
+
+        $hours = intdiv($seconds, 3600);
+        $minutes = intdiv($seconds % 3600, 60);
+        $remainingSeconds = $seconds % 60;
+
+        return $hours . 'h ' . 
+            str_pad($minutes, 2, '0', STR_PAD_LEFT) . 'm ' . 
+            str_pad($remainingSeconds, 2, '0', STR_PAD_LEFT) . 's';
     }
 }

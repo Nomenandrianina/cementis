@@ -90,9 +90,12 @@ function toggleDetail(id) {
             {{-- Résumé durées --}}
             <div style="display:flex;gap:0;border-bottom:1px solid var(--border);">
                 @foreach([
-                    ['Durée moy. rotation', $vr['avg_duration'] ? intdiv($vr['avg_duration'],60).'h'.($vr['avg_duration']%60).'m' : '—'],
-                    ['Objectif durée', $vr['target_duration'] ? intdiv($vr['target_duration'],60).'h'.($vr['target_duration']%60).'m' : '—'],
-                    ['Durée totale', $vr['total_duration'] ? intdiv($vr['total_duration'],60).'h'.($vr['total_duration']%60).'m' : '—'],
+                    // ['Durée moy. rotation', $vr['avg_duration'] ? intdiv($vr['avg_duration'],60).'h'.($vr['avg_duration']%60).'m' : '—'],
+                    // ['Objectif durée', $vr['target_duration'] ? intdiv($vr['target_duration'],60).'h'.($vr['target_duration']%60).'m' : '—'],
+                    // ['Durée totale', $vr['total_duration'] ? intdiv($vr['total_duration'],60).'h'.($vr['total_duration']%60).'m' : '—'],
+                    ['Durée moy. rotation', $vr['avg_duration']],
+                    ['Objectif durée', $vr['target_duration']],
+                    ['Durée totale', $vr['total_duration']],
                 ] as [$label, $val])
                 <div style="flex:1;padding:12px 18px;border-right:1px solid var(--border);">
                     <div style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:4px;">{{ $label }}</div>
@@ -209,15 +212,15 @@ function toggleDetail(id) {
                                                     <div style="text-align:right;flex-shrink:0;min-width:75px;">
                                                         <div style="font-family:var(--mono);font-size:14px;font-weight:800;
                                                                     color:{{ $zC }};line-height:1;">
-                                                            {{ $fmt($block['actual_min']) }}
+                                                            {{ $fmt($block['actual_sec']) }}
                                                         </div>
-                                                        @if($block['target_min'] !== null)
+                                                        @if($block['target_sec'] !== null)
                                                             <div style="font-size:10px;font-weight:600;margin-top:2px;
                                                                         color:{{ $zE > 0 ? 'var(--danger)' : 'var(--success)' }};">
                                                                 {{ $zE > 0 ? '+' : '' }}{{ $fmt($zE) }}
                                                             </div>
                                                             <div style="font-size:9px;color:var(--muted);">
-                                                                obj: {{ $fmt($block['target_min']) }}
+                                                                obj: {{ $fmt($block['target_sec']) }}
                                                             </div>
                                                         @endif
                                                     </div>
@@ -276,15 +279,15 @@ function toggleDetail(id) {
                                                                 <div style="text-align:right;flex-shrink:0;min-width:65px;">
                                                                     <div style="font-family:var(--mono);font-size:13px;font-weight:700;
                                                                                 color:{{ $cC }};line-height:1;">
-                                                                        {{ $fmt($child['actual_min']) }}
+                                                                        {{ $fmt($child['actual_sec']) }}
                                                                     </div>
-                                                                    @if($child['target_min'] !== null)
+                                                                    @if($child['target_sec'] !== null)
                                                                         <div style="font-size:10px;font-weight:600;margin-top:1px;
                                                                                     color:{{ $cE > 0 ? 'var(--danger)' : 'var(--success)' }};">
                                                                             {{ $cE > 0 ? '+' : '' }}{{ $fmt($cE) }}
                                                                         </div>
                                                                         <div style="font-size:9px;color:var(--muted);">
-                                                                            obj: {{ $fmt($child['target_min']) }}
+                                                                            obj: {{ $fmt($child['target_sec']) }}
                                                                         </div>
                                                                     @endif
                                                                 </div>

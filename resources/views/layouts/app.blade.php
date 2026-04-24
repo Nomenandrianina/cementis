@@ -141,7 +141,7 @@
 
                 <div id="loader"  class="lds-roller"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
                 <div id="overlay"></div>
-                @if(Route::is([ 'rotations.show', 'reports.*', 'circuits.edit', 'circuits.objectives.*', 'checkpoints.*', 'zones.*', 'vehicles.*']))
+                @if(Route::is([ 'rotations.show', 'reports.monthly', 'circuits.edit', 'circuits.objectives.*', 'checkpoints.*', 'zones.*', 'vehicles.*']))
                     <div class="topbar">
                         <div class="topbar-title">@yield('page-title')</div>
                         <div class="topbar-actions">@yield('topbar-actions')</div>
@@ -152,11 +152,16 @@
         </div>
 
 
-        <footer class="main-footer">
-            <div class="float-right d-none d-sm-inline-block">
-                <b>Version</b> 2.0.0
+        <footer class="main-footer alpha-footer-glass">
+            <div class="float-right d-none d-sm-inline-block alpha-powered-wrapper">
+                <b>Powered by</b> 
+                <a href="https://www.m-tec.mg/" class="alpha-footer-logo-link">
+                    <img src="{{ asset('images/mtec.png') }}" alt="M-Tec Logo" class="alpha-footer-logo">
+                </a>
             </div>
-            <strong>Droits d'auteur &copy; 2023 - {{ date('Y') }} <a href="https://www.m-tec.mg/">M-Tec</a>.</strong> Tous droits réservés.
+            <strong>Droits d'auteur &copy; 2023 - {{ date('Y') }} 
+                <a href="https://www.m-tec.mg/" class="alpha-link-neutral"> M-TEC</a>.
+            </strong> Tous droits réservés.
         </footer>
     </div>
 
@@ -512,6 +517,23 @@
 
 
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600&family=Sora:wght@300;400;500;600&display=swap');
+
+    :root {
+        /* iOS 26 Liquid Glass tokens */
+        --ios-glass-bg:       rgba(255, 255, 255, 0.10);
+        --ios-glass-bg-h:     rgba(255, 255, 255, 0.16);
+        --ios-glass-active:   rgba(255, 255, 255, 0.20);
+        --ios-border:         rgba(255, 255, 255, 0.18);
+        --ios-border-h:       rgba(255, 255, 255, 0.32);
+        --ios-specular:       rgba(255, 255, 255, 0.55);
+        --ios-ink:            rgba(255, 255, 255, 0.92);
+        --ios-ink-60:         rgba(255, 255, 255, 0.55);
+        --ios-ink-30:         rgba(255, 255, 255, 0.30);
+        --ios-ink-15:         rgba(255, 255, 255, 0.12);
+        --ios-accent:         rgba(255, 255, 255, 0.85);
+        --ios-separator:      rgba(255, 255, 255, 0.10);
+    }
     .topbar {
             background: #fff;
             border-radius: 8px;
@@ -714,6 +736,130 @@
         overflow-y: auto;  
         width: 646px;      
     }
+
+    /* ===== FOOTER GLASS THEME ===== */
+    .alpha-footer-glass {
+        font-family: 'Sora', sans-serif;
+        /* On utilise le même fond que la sidebar */
+            background: rgb(54 62 74) !important;
+        backdrop-filter: blur(20px) saturate(180%) !important;
+        -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+        
+        /* Bordures et ombres pour l'effet relief */
+        border-top: 1px solid var(--ios-border) !important;
+        color: var(--ios-ink-60) !important;
+        box-shadow: inset 0 1px 0 var(--ios-specular), 0 -4px 20px rgba(0,0,0,0.1) !important;
+        
+        padding: 15px 25px !important;
+        transition: all 0.3s ease;
+    }
+
+    /* Style du lien dans le footer */
+    .alpha-footer-link {
+        color: var(--ios-accent) !important;
+        font-weight: 600;
+        text-decoration: none;
+        transition: opacity 0.2s;
+    }
+
+    .alpha-footer-link:hover {
+        opacity: 0.7;
+        text-decoration: underline;
+    }
+
+    /* Adaptation du texte de version */
+    .alpha-footer-glass b {
+        color: var(--ios-ink);
+    }
+
+    .alpha-footer-glass::before {
+        content: '';
+        position: absolute;
+        height: 120px;
+        background: linear-gradient(180deg,
+            rgba(255,255,255,0.12) 0%,
+            rgba(255,255,255,0.04) 40%,
+            transparent 100%
+        );
+        pointer-events: none;
+        z-index: 0;
+        border-radius: 0 0 60% 60% / 0 0 30px 30px;
+    }
+
+    /* Texture de grain légère sur le footer pour matcher la sidebar */
+    .alpha-footer-glass::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.02'/%3E%3C/svg%3E");
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    /* Assurer que le contenu reste au dessus de la texture */
+    .alpha-footer-glass > * {
+        position: relative;
+        z-index: 1;
+    }
+    .alpha-footer-logo-link {
+        display: inline-flex;
+        align-items: center;
+        vertical-align: middle;
+        margin: 0 5px;
+        transition: transform 0.2s ease;
+    }
+
+    .alpha-footer-logo-link:hover {
+        transform: scale(1.05); /* Petit effet de zoom au survol */
+    }
+
+    .alpha-footer-logo {
+        height: 40px; /* Ajustez la hauteur selon vos besoins */
+        width: auto;
+        filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); /* Ombre légère pour le relief */
+        border-radius: 4px;
+    }
+    /* Rend le lien identique au texte normal */
+    .alpha-link-neutral {
+        color: inherit !important;
+        text-decoration: none !important;
+    }
+
+    .alpha-link-neutral:hover {
+        color: var(--ios-ink) !important; /* Devient juste un peu plus brillant au survol */
+        text-decoration: none !important;
+    }
+
+    .alpha-powered-wrapper {
+    display: flex !important;
+    align-items: center; /* Centre verticalement le texte et le logo */
+    gap: 8px;            /* Espace entre "Powered by" et le logo */
+    height: 100%;        /* Force l'alignement sur toute la hauteur */
+}
+
+/* 2. Ajuster le lien du logo */
+.alpha-footer-logo-link {
+    display: flex;
+    align-items: center;
+    line-height: 0;      /* Supprime l'espace résiduel sous l'image */
+}
+
+/* 3. Redimensionner le logo proprement */
+.alpha-footer-logo {
+    height: 28px !important; /* Réduit à 28px pour ne pas déborder d'un footer standard */
+    width: auto;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+    display: block;
+}
+
+/* 4. Ajustement du footer lui-même */
+.alpha-footer-glass {
+    display: flex;
+    align-items: center;    /* Centre tout le contenu du footer verticalement */
+    justify-content: space-between;
+    min-height: 57px;       /* Hauteur standard AdminLTE */
+    padding: 0 25px !important; /* Padding latéral uniquement, flex gère le vertical */
+}
 </style>
 
 
