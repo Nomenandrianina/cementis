@@ -158,10 +158,12 @@ class RotationController extends Controller
 
             // ── Checkpoint ───────────────────────────────────────────────────────
             if ($leg->event_type === 'pass_checkpoint') {
+                $rl = $completedLegs->get($leg->id);
                 $blocks[] = [
                     'type' => 'checkpoint',
                     'leg'  => $leg,
-                    'rl'   => $completedLegs->get($leg->id),
+                    'rl'   => ($rl && !$rl->wasSkippedByParent()) ? $rl : null,
+                    'skipped'   => $rl && $rl->wasSkippedByParent(),
                 ];
                 $skipIds[] = $leg->id;
                 continue;
@@ -177,9 +179,20 @@ class RotationController extends Controller
             if ($leg->event_type === 'enter_zone') {
                 $leaveLegId = $zonePairs[$leg->id] ?? null;
                 $leaveLeg   = $leaveLegId ? $allLegs->firstWhere('id', $leaveLegId) : null;
-                $enterRl    = $completedLegs->get($leg->id);
-                $leaveRl    = $leaveLegId ? $completedLegs->get($leaveLegId) : null;
+
+                $enterRlRaw = $completedLegs->get($leg->id);
+                $leaveRlRaw = $leaveLegId ? $completedLegs->get($leaveLegId) : null;
+
+                // Si skipped_by_parent → traiter comme non visité
+                $enterRl = ($enterRlRaw && !$enterRlRaw->wasSkippedByParent()) ? $enterRlRaw : null;
+                $leaveRl = ($leaveRlRaw && !$leaveRlRaw->wasSkippedByParent()) ? $leaveRlRaw : null;
+
                 $actualSec  = $zoneActualSec[$leg->id] ?? null;
+
+                if ($enterRlRaw?->wasSkippedByParent() || $leaveRlRaw?->wasSkippedByParent()) {
+                    $actualSec = null;
+                }
+
                 $rawTarget  = $legObjectives[$leg->id] ?? $legObjectives[(string)$leg->id] ?? null;
                 $targetSec  = ($rawTarget !== null && $rawTarget !== 'null') ? (int)$rawTarget : null;
                 $ecart      = ($actualSec !== null && $targetSec !== null) ? $actualSec - $targetSec : null;
@@ -214,9 +227,22 @@ class RotationController extends Controller
 
                         $innerLeaveId  = $zonePairs[$innerLeg->id] ?? null;
                         $innerLeaveLeg = $innerLeaveId ? $allLegs->firstWhere('id', $innerLeaveId) : null;
-                        $innerEnterRl  = $completedLegs->get($innerLeg->id);
-                        $innerLeaveRl  = $innerLeaveId ? $completedLegs->get($innerLeaveId) : null;
+
+                        $innerEnterRlRaw = $completedLegs->get($innerLeg->id);
+                        $innerLeaveRlRaw = $innerLeaveId ? $completedLegs->get($innerLeaveId) : null;
+
+                        // ── CLE DU FIX : si skipped_by_parent → null pour l'affichage ──
+                        $innerEnterRl = ($innerEnterRlRaw && !$innerEnterRlRaw->wasSkippedByParent())
+                        ? $innerEnterRlRaw : null;
+                        $innerLeaveRl = ($innerLeaveRlRaw && !$innerLeaveRlRaw->wasSkippedByParent())
+                        ? $innerLeaveRlRaw : null;
+
+
                         $innerActual   = $zoneActualSec[$innerLeg->id] ?? null;
+                        // Durée nulle si entrée ou sortie skippée
+                        if ($innerEnterRlRaw?->wasSkippedByParent() || $innerLeaveRlRaw?->wasSkippedByParent()) {
+                            $innerActual = null;
+                        }
                         $innerRawT     = $legObjectives[$innerLeg->id] ?? $legObjectives[(string)$innerLeg->id] ?? null;
                         $innerTarget   = ($innerRawT !== null && $innerRawT !== 'null') ? (int)$innerRawT : null;
                         $innerEcart    = ($innerActual !== null && $innerTarget !== null)
@@ -233,7 +259,8 @@ class RotationController extends Controller
                             'ecart'      => $innerEcart,
                             'children'   => [],
                             'is_subzone' => true,
-                        ];
+                            'was_skipped'=> $innerEnterRlRaw?->wasSkippedByParent() ?? false,
+                    ];
 
                         $skipIds[] = $innerLeg->id;
                         if ($innerLeaveId) $skipIds[] = $innerLeaveId;
@@ -251,6 +278,7 @@ class RotationController extends Controller
                     'ecart'      => $ecart,
                     'children'   => $children,
                     'is_subzone' => $isSubZone,
+                    'was_skipped'=> $enterRlRaw?->wasSkippedByParent() ?? false,
                 ];
 
                 $skipIds[] = $leg->id;
@@ -260,18 +288,19 @@ class RotationController extends Controller
 
             // leave_zone non pairé → affiché seul
             if ($leg->event_type === 'leave_zone') {
-                $enterRl   = $completedLegs->get($leg->id);
+                $rl = $completedLegs->get($leg->id);
                 $blocks[]  = [
                     'type'       => 'zone_block',
                     'enter_leg'  => $leg,
                     'leave_leg'  => null,
-                    'enter_rl'   => $enterRl,
+                    'enter_rl'   => ($rl && !$rl->wasSkippedByParent()) ? $rl : null,
                     'leave_rl'   => null,
                     'actual_sec' => null,
                     'target_sec' => null,
                     'ecart'      => null,
                     'children'   => [],
                     'is_subzone' => false,
+                    'was_skipped'=> $rl?->wasSkippedByParent() ?? false,
                 ];
                 $skipIds[] = $leg->id;
             }

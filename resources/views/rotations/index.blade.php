@@ -287,12 +287,6 @@
                 </thead>
                 <tbody>
                     @forelse($rotations as $rotation)
-                        {{-- @php
-                            $obj = $rotation->circuit->currentObjective()->target_duration_minutes ?? null;
-                            $dur = $rotation->duration_seconds;
-                            $pct = ($obj && $dur) ? min(round($dur / $obj * 100), 140) : 0;
-                            $barClass = $pct > 105 ? 'over' : ($pct >= 90 ? 'good' : '');
-                        @endphp --}}
                         @php
                             $objSeconds = $rotation->circuit->currentObjective()->target_duration_seconds ?? null;
                             // $objSeconds = $objMinutes ? $objMinutes * 60 : null;

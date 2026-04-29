@@ -64,6 +64,7 @@ class ZoneController extends Controller
         $data = $request->validate([
             'name'        => 'required|string|max:255',
             'type'        => 'in:zone,origin,destination',
+            'option'      => 'in:obligatoire,optionnel',
             'parent_id'   => 'nullable|exists:zones,id',
             'role'        => 'nullable|in:start,end,waypoint',
             'color'       => 'nullable|string',
@@ -79,6 +80,7 @@ class ZoneController extends Controller
         $data = $request->validate([
             'name'   => 'required|string|max:255',
             'type'   => 'in:zone,origin,destination',
+            'option' => 'in:obligatoire,optionnel',
             'parent_id' => [
                 'nullable',
                 'exists:zones,id',

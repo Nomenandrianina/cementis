@@ -23,4 +23,21 @@ class RotationLeg extends Model
  
     public function rotation(): BelongsTo   { return $this->belongsTo(Rotation::class); }
     public function circuitLeg(): BelongsTo { return $this->belongsTo(CircuitLeg::class); }
+
+    /**
+     * La sous-zone a été "notée" comme couverte par la zone parente
+     * mais le véhicule n'y est pas réellement entré/sorti.
+     */
+    public function wasSkippedByParent(): bool
+    {
+        return (bool) $this->skipped_by_parent;
+    }
+
+    /**
+     * Le véhicule est réellement passé par cette étape.
+     */
+    public function wasActuallyVisited(): bool
+    {
+        return !$this->skipped_by_parent;
+    }
 }

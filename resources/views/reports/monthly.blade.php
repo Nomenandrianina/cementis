@@ -146,8 +146,11 @@ function toggleDetail(id) {
                                     <div style="background:var(--cream);padding:14px 20px;border-top:2px solid var(--bordeaux);">
 
                                         @php
-                                            $fmt = fn(?int $m) => $m === null ? '—'
-                                                : intdiv($m, 60) . 'h' . str_pad($m % 60, 2, '0', STR_PAD_LEFT) . 'm';
+                                            $fmt = fn(?int $s) => $s === null
+                                                ? ''
+                                                : intdiv($s, 3600) . 'h '
+                                                    . str_pad(intdiv($s % 3600, 60), 2, '0', STR_PAD_LEFT) . 'm '
+                                                    . str_pad($s % 60, 2, '0', STR_PAD_LEFT) . 's';
                                         @endphp
 
                                         @foreach($rot['blocks'] as $block)

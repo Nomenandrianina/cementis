@@ -152,6 +152,9 @@ class TestRawEvents
             ['zone_out', 'Sortie zone (Andoharanofotsy)', $imei, $name,
             '2026-04-02 07:05:00', '-18.9650', '47.5320', '0', '45', '12', $params],
 
+            ['marker_in', 'Tanjombato', $imei, $name,
+            '2026-04-02 07:15:00', '-18.9500', '47.5200', '0', '50', '25', $params],
+
             // ── ALLER : Andoharanofotsy -> Andranomena ──────────────────────────────
             // CP Ankandimbahoaka
             ['marker_in', 'Passage Check point (Ankadimbahoaka)', $imei, $name,
@@ -198,6 +201,10 @@ class TestRawEvents
             // CP Ankandimbahoaka (Retour)
             ['marker_in', 'Passage Check point (Ankadimbahoaka)', $imei, $name,
             '2026-04-02 18:00:00', '-18.9500', '47.5200', '0', '55', '24', $params],
+
+            ['marker_in', 'Tanjombato', $imei, $name,
+            '2026-04-02 18:10:00', '-18.9500', '47.5200', '0', '50', '25', $params],
+
 
             // ── FIN DE ROTATION : Retour Andoharanofotsy ───────────────────────────
             ['zone_in', 'Entrée zone (Andoharanofotsy)', $imei, $name,

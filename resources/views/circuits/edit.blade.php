@@ -312,6 +312,16 @@
                                 </optgroup>
                             </select>
                         </div>
+                        <div class="form-group" style="margin:0;">
+                            <label>Obligatoire ?</label>
+                            <select name="optional">
+                                <option value="0">✓ Obligatoire</option>
+                                <option value="1">○ Optionnel</option>
+                            </select>
+                            <div style="font-size:10px;color:var(--muted);margin-top:3px;">
+                                Optionnel = passé si présent, n'invalide pas la rotation
+                            </div>
+                        </div>
                     </div>
                     <div style="margin-top:12px;">
                         <button type="submit" class="btn btn-primary">Ajouter l'étape</button>
@@ -392,7 +402,11 @@
 
                         {{-- Ordre --}}
                         <div style="font-size:9px;color:var(--bordeaux);font-family:var(--mono);font-weight:600;opacity:0.7;">
-                            T{{ $leg->order }}
+                            @if ($leg->optional == 0)
+                                Obligatoire
+                            @else
+                                Optionnel
+                            @endif
                         </div>
                     </div>
 
@@ -451,6 +465,14 @@
                                                     <option value="{{ $cp->id }}" {{ $leg->reference_type==='checkpoint' && $leg->reference_id==$cp->id ? 'selected' : '' }}>{{ $cp->name }}</option>
                                                 @endforeach
                                             </optgroup>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group" style="margin:0; grid-column: 1/-1;">
+                                        <label style="display:block; margin-bottom:4px; font-size:12px; font-weight:600;">Optionnel</label>
+                                        <select name="optional">
+                                            <option value="0" {{ $leg->optional == 0 ? 'selected' : '' }}>Obligatoire</option>
+                                            <option value="1" {{ $leg->optional == 1 ? 'selected' : '' }}>Optionnel</option>
                                         </select>
                                     </div>
                                 </div>

@@ -377,6 +377,12 @@
             <div class="zone-name-row">
                 <span class="zone-name">{{ $zone->name }}</span>
 
+                <span style="font-size:10px;background:var(--cream-d);
+                            color:{{ $zone->isOptional() ? 'var(--muted)' : 'var(--bordeaux)' }};
+                            padding:2px 7px;border-radius:10px;font-weight:600;">
+                    {{ $zone->getOptionLabel() }}
+                </span>
+
                 @if($zone->hasChildren())
                     <span class="z-pill z-pill-sub">
                         <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
@@ -437,14 +443,16 @@
                         </select>
                     </div>
                     <div class="ze-field">
-                        <label>Rôle</label>
-                        <select name="role">
-                            <option value=""         {{ !$zone->role ? 'selected' : '' }}>— Générique —</option>
-                            <option value="start"    {{ $zone->role==='start'    ? 'selected' : '' }}>Départ</option>
-                            <option value="end"      {{ $zone->role==='end'      ? 'selected' : '' }}>Arrivée</option>
-                            <option value="waypoint" {{ $zone->role==='waypoint' ? 'selected' : '' }}>Étape</option>
+                        <label>Type</label>
+                        <select name="option">
+                            @foreach(\App\Models\Zone::OPTIONS as $key => $label)
+                                <option value="{{ $key }}"  {{ $zone->option === $key ? 'selected' : '' }}>
+                                     {{ $label }}
+                                </option>
+                            @endforeach
                         </select>
                     </div>
+                
                     <div class="ze-field">
                         <label>Actif</label>
                         <select name="active">

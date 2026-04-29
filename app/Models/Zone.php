@@ -11,8 +11,19 @@ class Zone extends Model
 {
     use SoftDeletes;
 
-    protected $fillable = ['gps_zone_id', 'name', 'type','parent_id', 'color', 'vertices', 'role', 'active'];
+    protected $fillable = ['gps_zone_id', 'name','option', 'type','parent_id', 'color', 'vertices', 'role', 'active'];
     protected $casts    = ['active' => 'boolean'];
+
+    public const OPTIONS = [
+        'obligatoire' => 'Obligatoire',
+        'optionnel'   => 'Optionnel',
+    ];
+
+    public const OPTION_ICONS = [
+        'obligatoire' => '🚦',
+        'optionnel'   => '📍',
+    ];
+
 
     // ── Relations ─────────────────────────────────────────────────────────────
 
@@ -27,6 +38,21 @@ class Zone extends Model
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
+
+    public function isOptional(): bool
+    {
+        return $this->option === 'optionnel';
+    }
+
+    public function isObligatoire(): bool
+    {
+        return $this->option === 'obligatoire';
+    }
+
+    public function getOptionLabel(): string
+    {
+        return self::OPTIONS[$this->option] ?? $this->option;
+    }
 
     /** "Ilanivato › Garage" */
     public function getFullPath(): string

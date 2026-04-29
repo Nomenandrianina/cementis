@@ -71,9 +71,10 @@ class CircuitController extends Controller
     {
         $data = $request->validate([
             'label'          => 'required|string|max:255',
-            'event_type'     => 'required|in:enter_zone,leave_zone,pass_checkpoint,pass_depot,pass_garage,pass_parking',
+            'event_type'     => 'required|in:enter_zone,leave_zone,pass_checkpoint',
             'reference_type' => 'required|in:zone,checkpoint',
             'reference_id'   => 'required|integer',
+            'optional'       => 'boolean',
             'direction'      => 'in:inbound,outbound,any',
         ]);
 
@@ -88,9 +89,10 @@ class CircuitController extends Controller
     {
         $data = $request->validate([
             'label'      => 'required|string|max:255',
-            'event_type' => 'required|in:enter_zone,leave_zone,pass_checkpoint,pass_depot,pass_garage,pass_parking',
+            'event_type' => 'required|in:enter_zone,leave_zone,pass_checkpoint',
             'reference_type' => 'required|in:zone,checkpoint',
             'reference_id'   => 'required|integer',
+            'optional'       => 'boolean',
             'direction'      => 'in:inbound,outbound,any',
         ]);
 

@@ -17,6 +17,41 @@
 
 @section('content')
 
+
+
+<script>
+    function openEditModal(checkpoint) {
+        const modal = document.getElementById('editModal');
+        const form = document.getElementById('editForm');
+        
+        let url = "{{ route('checkpoints.update', ':id') }}";
+        // On remplace le placeholder par l'ID réel
+        url = url.replace(':id', checkpoint.id);
+        
+        form.action = url;
+        
+        // On remplit les champs
+        document.getElementById('edit_name').value = checkpoint.name;
+        document.getElementById('edit_type').value = checkpoint.type;
+        document.getElementById('edit_description').value = checkpoint.description || '';
+        document.getElementById('edit_lat').value = checkpoint.lat;
+        document.getElementById('edit_lng').value = checkpoint.lng;
+        document.getElementById('edit_radius').value = checkpoint.radius;
+        
+        modal.style.display = 'flex';
+    }
+
+    function closeEditModal() {
+        document.getElementById('editModal').style.display = 'none';
+    }
+
+    // Fermer si on clique en dehors du blanc
+    window.onclick = function(event) {
+        const modal = document.getElementById('editModal');
+        if (event.target == modal) closeEditModal();
+    }
+</script>
+
 {{-- ── Stats ─────────────────────────────────────────────────────────────── --}}
 <div class="stats-row">
     <div class="stat stat-success">
@@ -62,7 +97,21 @@
                 @endif
 
 
-
+                <div class="form-group">
+                    <label class="form-label">Type</label>
+                    <select name="type" class="form-select  shadow-none" style="border-radius: 8px 8px 8px 8px; height: 45px;" required>
+                        <option value="" selected>— Sélectionner —</option>
+                        @foreach(\App\Models\Checkpoint::TYPES as $key => $label)
+                            <option value="{{ $key }}">
+                                 {{ $label }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <div style="font-size:11px;color:var(--muted);margin-top:4px;">
+                        <strong>Obligatoire</strong> = obligatoire (rotation invalide si manqué) ·
+                        <strong>Optionnel</strong> = optionnel (juste enregistré si passé)
+                    </div>
+                </div>
 
                 <div class="form-group">
                     <label class="form-label">Nom</label>
@@ -134,7 +183,7 @@
                         <th>Nom</th>
                         <th>Coordonnées</th>
                         <th>Rayon</th>
-                        <th>GPS ID</th>
+                        <th>Type</th>
                         <th></th>
                     </tr>
                 </thead>
@@ -155,18 +204,34 @@
                                 <span class="radius-badge">{{ $cp->radius }} km</span>
                             </td>
                             <td>
-                                @if($cp->gps_marker_id)
-                                    <span class="gps-badge">{{ $cp->gps_marker_id }}</span>
+                                @if($cp->type === 'obligatoire')
+                                    <span class="gps-badge" style="background-color: #fee2e2; color: #991b1b; border: 1px solid #fecaca;">
+                                        Obligatoire
+                                    </span>
                                 @else
-                                    <span class="gps-none">—</span>
+                                    <span class="gps-badge" style="background-color: #f3f4f6; color: #374151; border: 1px solid #d1d5db;">
+                                        Optionnel
+                                    </span>
                                 @endif
                             </td>
                             <td>
-                                <form action="{{ route('checkpoints.destroy', $cp) }}" method="POST"
-                                      onsubmit="return confirm('Supprimer ce checkpoint ?')">
-                                    @csrf @method('DELETE')
-                                    <button type="submit" class="btn-del" title="Supprimer">✕</button>
-                                </form>
+                                <div style="display: flex; gap: 8px;">
+                                    <button type="button" 
+                                            class="btn-edit" 
+                                            title="Modifier"
+                                            onclick="openEditModal({{ $cp->toJson() }})">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;">
+                                            <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"></path>
+                                            <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                        </svg>
+                                    </button>
+
+                                    <form action="{{ route('checkpoints.destroy', $cp) }}" method="POST"
+                                        onsubmit="return confirm('Supprimer ce checkpoint ?')">
+                                        @csrf @method('DELETE')
+                                        <button type="submit" class="btn-del" title="Supprimer">✕</button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                     @empty
@@ -190,6 +255,64 @@
         </div>
     </div>
 
+</div>
+
+<div id="editModal" class="modal-overlay" style="display:none;">
+    <div class="modal-content card">
+        <div class="card-header">
+            <div class="card-title-row">
+                <div class="card-dot" style="background: var(--info);"></div>
+                <span class="card-title">Modifier le Checkpoint</span>
+            </div>
+            <button class="btn-close" onclick="closeEditModal()">&times;</button>
+        </div>
+        
+        <div class="card-body">
+            <form id="editForm" method="POST">
+                @csrf
+
+                <div class="form-group">
+                    <label class="form-label">Type</label>
+                    <select name="type" id="edit_type" class="form-select shadow-none" style="border-radius: 8px; height: 45px;" required>
+                        <option value="" selected>— Sélectionner —</option>
+                        @foreach(\App\Models\Checkpoint::TYPES as $key => $label)
+                            <option value="{{ $key }}">{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Nom</label>
+                    <input class="form-input" type="text" name="name" id="edit_name" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-textarea" name="description" id="edit_description" rows="2"></textarea>
+                </div>
+
+                <div class="coords-grid">
+                    <div>
+                        <label class="form-label">Lat</label>
+                        <input class="form-input" type="number" name="lat" id="edit_lat" step="0.0000001" required>
+                    </div>
+                    <div>
+                        <label class="form-label">Lng</label>
+                        <input class="form-input" type="number" name="lng" id="edit_lng" step="0.0000001" required>
+                    </div>
+                    <div>
+                        <label class="form-label">Rayon</label>
+                        <input class="form-input" type="number" name="radius" id="edit_radius" step="0.001" required>
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px; display: flex; gap: 10px;">
+                    <button type="submit" class="btn-submit">Enregistrer les modifications</button>
+                    <button type="button" onclick="closeEditModal()" class="btn-cancel" >Annuler</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 
 @endsection

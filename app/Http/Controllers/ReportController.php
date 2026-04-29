@@ -503,8 +503,11 @@ class ReportController extends Controller
         $circuit
     ): void {
         $rgb = fn(string $hex) => ['rgb' => ltrim($hex, '#')];
-        $fmt = fn(?int $m) => $m === null ? ''
-            : intdiv($m, 60) . 'h' . str_pad($m % 60, 2, '0', STR_PAD_LEFT) . 'm';
+        $fmt = fn(?int $s) => $s === null
+                ? ''
+                : intdiv($s, 3600) . 'h '
+                    . str_pad(intdiv($s % 3600, 60), 2, '0', STR_PAD_LEFT) . 'm '
+                    . str_pad($s % 60, 2, '0', STR_PAD_LEFT) . 's';
 
         $BORDEAUX  = '8B1A1A';
         $BORDEAUX2 = 'A52020';
@@ -916,14 +919,14 @@ class ReportController extends Controller
             'zone_leave',
             'zone_leave_unpaired' => [$block['leave_at'] ?? '—', $block && $block['is_done'] ? null : $MUTED, false],
             'zone_duration'    => [
-                $fmt($block['actual_min'] ?? null),
+                $fmt($block['actual_sec'] ?? null),
                 $block && $block['ecart'] !== null ? ($block['ecart'] > 0 ? $DANGER : $SUCCESS) : null,
-                $block && $block['actual_min'] !== null,
+                $block && $block['actual_sec'] !== null,
             ],
             'sub_enter'        => [$child['enter_at']   ?? '—', $child && $child['is_done'] ? null : $MUTED, false],
             'sub_leave'        => [$child['leave_at']   ?? '—', $child && $child['is_done'] ? null : $MUTED, false],
             'sub_duration'     => [
-                $fmt($child['actual_min'] ?? null),
+                $fmt($child['actual_sec'] ?? 0),
                 $child && $child['ecart'] !== null ? ($child['ecart'] > 0 ? $DANGER : $SUCCESS) : null,
                 false,
             ],

@@ -502,6 +502,8 @@
 
                                 @foreach($block['children'] as $child)
                                     @php
+                                        $skipped    = $child['was_skipped'] ?? false;
+                                        $isDone     = !$skipped && $child['enter_rl'] !== null; 
                                         $childDone   = $child['enter_rl'] !== null;
                                         $childEcart  = $child['ecart'];
                                         $childHasObj = $child['target_sec'] !== null;

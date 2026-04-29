@@ -14,7 +14,7 @@ class AddColumnToCheckpointTable extends Migration
     public function up()
     {
         Schema::table('checkpoints', function (Blueprint $table) {
-            $table->string('type')->default('control')->after('name');
+            $table->string('type')->default('obligatoire')->after('name');
         });
 
         Schema::table('circuit_legs', function (Blueprint $table) {

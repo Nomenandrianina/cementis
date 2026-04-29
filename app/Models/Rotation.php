@@ -44,4 +44,14 @@ class Rotation extends Model
         // On s'assure que c'est une instance Carbon, puis on change la timezone
         return $this->started_at->copy()->timezone('Africa/Nairobi'); 
     }
+
+    public function getCompletedAtLocalAttribute()
+    {
+        if (!$this->completed_at) {
+            return null;
+        }
+
+        // On s'assure que c'est une instance Carbon, puis on change la timezone
+        return $this->completed_at->copy()->timezone('Africa/Nairobi'); 
+    }
 }

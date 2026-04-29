@@ -253,7 +253,7 @@ Route::prefix('checkpoints')->name('checkpoints.')->group(function () {
     Route::get('/',                       [CheckpointController::class, 'index'])->name('index');
     Route::post('/sync',                  [CheckpointController::class, 'sync'])->name('sync');
     Route::post('/',                      [CheckpointController::class, 'store'])->name('store');
-    Route::put('/{checkpoint}',           [CheckpointController::class, 'update'])->name('update');
+    Route::post('/{id}',           [CheckpointController::class, 'update'])->name('update');
     Route::delete('/{checkpoint}',        [CheckpointController::class, 'destroy'])->name('destroy');
 });
  

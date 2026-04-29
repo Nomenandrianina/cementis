@@ -152,6 +152,16 @@
 }
 .form-textarea:focus { border-color: var(--bx); background: #fff; }
 
+.form-select {
+  width: 100%; border: 1px solid #E5E0DB; border-radius: 7px;
+  padding: 9px 11px; font-size: 13px;
+  font-family: var(--sans); color: var(--ink);
+  background: var(--bg); outline: none; resize: none;
+  transition: border .15s, background .15s; line-height: 1.5;
+}
+
+.form-select:focus { border-color: var(--bx); background: #fff; }
+
 .coords-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
 
 .form-hint  { font-size: 10px; color: var(--hint);   margin-top: 3px; font-family: var(--mono); }
@@ -217,6 +227,37 @@ tbody tr:hover td { background: #FBF7F9; }
 }
 .btn-del:hover { background: #f9d4d4; }
 
+.btn-edit {
+  width: 26px; height: 26px; border-radius: 6px;
+  border: 0.5px solid #2c9be6;
+  background: var(--blue-bg); color: var(--blue-tx);
+  font-size: 12px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .12s;
+}
+.btn-edit:hover { background: #e0f2fe; }
+
+
+.btn-cancel {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-top: 14px; padding: 0 18px; height: 36px;
+  background: #6b7280; color: #f0f0f0;
+  border: none; border-radius: 8px;
+  font-size: 13px; font-weight: 600;
+  font-family: var(--sans); cursor: pointer; transition: background .15s, transform .1s;
+}
+.btn-cancel:hover  { background: #6b7280; }
+.btn-cancel:active { transform: scale(.97); }
+
+.btn-close {
+  float: none;
+  margin-left: auto;
+  background: var(--bxp); color: var(--bx);
+  border: none;
+  border-radius: 20px; padding: 2px 9px;
+  font-size: 11px; font-weight: 700; font-family: var(--mono);
+}
+
 /* ── Empty state ──────────────────────────── */
 .empty-td { text-align: center; padding: 40px 16px; color: var(--muted); }
 .empty-icon {
@@ -227,3 +268,12 @@ tbody tr:hover td { background: #FBF7F9; }
 }
 .empty-title { font-weight: 600; font-size: 14px; color: var(--ink); margin-bottom: 4px; }
 .empty-sub   { font-size: 12px; color: var(--muted); }
+
+/* Style minimaliste pour le modal */
+.modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5); display: flex; align-items: center;
+    justify-content: center; z-index: 1000; backdrop-filter: blur(4px);
+}
+.modal-content { width: 100%; max-width: 500px; animation: slideUp 0.3s ease-out; }
+@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }

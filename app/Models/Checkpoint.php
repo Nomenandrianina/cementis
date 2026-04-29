@@ -16,25 +16,23 @@ class Checkpoint extends Model
     protected $casts    = ['active' => 'boolean', 'lat' => 'float', 'lng' => 'float', 'radius' => 'float'];
 
     public const TYPES = [
-        'control' => 'Checkpoint de contrôle',
-        'client'  => 'Dépôt client',
-        'depot'   => 'Dépôt intermédiaire',
+        'obligatoire' => 'Obligatoire',
+        'optionnel'  => 'Optionnel',
     ];
 
     public const TYPE_ICONS = [
-        'control' => '🚦',
-        'client'  => '🏭',
-        'depot'   => '📦',
+        'obligatoire' => '🚦', // Obligatoire
+        'optionnel'  => '🏭', // Optionnel
     ];
 
     public function isOptional(): bool
     {
-        return in_array($this->type, ['client', 'depot']);
+        return $this->type === 'optionnel';
     }
 
-    public function isControl(): bool
+    public function isObligatoire(): bool
     {
-        return $this->type === 'control';
+        return $this->type === 'obligatoire';
     }
 
     public function getTypeLabel(): string

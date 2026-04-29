@@ -37,13 +37,18 @@ class CircuitLeg extends Model
      */
     public function isOptional(): bool
     {
-        if ($this->optional) {
+        if (!empty($this->optional)) {
             return true;
         }
 
         if ($this->reference_type === 'checkpoint') {
             $cp = Checkpoint::find($this->reference_id);
             return $cp && $cp->isOptional();
+        }
+
+        if ($this->reference_type === 'zone' && !empty($this->reference_id)) {
+            $zone = Zone::find($this->reference_id);
+            return $zone && $zone->isOptional();
         }
 
         return false;

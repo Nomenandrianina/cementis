@@ -45,6 +45,7 @@ class CheckpointController extends Controller
     {
         $data = $request->validate([
             'name'        => 'required|string|max:255',
+            'type'        => 'required|in:obligatoire,optionnel',
             'description' => 'nullable|string',
             'lat'         => 'required|numeric',
             'lng'         => 'required|numeric',
@@ -55,18 +56,19 @@ class CheckpointController extends Controller
         return back()->with('success', 'Checkpoint créé.');
     }
 
-    public function update(Request $request, Checkpoint $checkpoint)
+    public function update(Request $request, $id)
     {
         $data = $request->validate([
             'name'        => 'required|string|max:255',
-            'type'        => 'required|in:control,client,depot',
+            'type'        => 'required|in:obligatoire,optionnel',
             'description' => 'nullable|string',
             'lat'         => 'required|numeric',
             'lng'         => 'required|numeric',
             'radius'      => 'required|numeric|min:0.01',
             'active'      => 'boolean',
         ]);
-
+        
+        $checkpoint = Checkpoint::findOrFail($id);
         $checkpoint->update($data);
         return back()->with('success', 'Checkpoint mis à jour.');
     }
