@@ -225,52 +225,30 @@
         if (!isOpen) el.style.display = 'block';
     }
 
-    // document.addEventListener('change', function (event) {
-    //     if (event.target && event.target.id === 'label-select') {
-    //         const selected = event.target.options[event.target.selectedIndex];
-
-    //         if (!selected.value) return;
-
-    //         const refType  = selected.dataset.refType; 
-    //         const refId    = selected.dataset.refId;
-    //         // Mettre à jour Type référence
-    //         document.getElementById('reference-type-select').value = refType;
-
-    //         // Mettre à jour Référence GPS
-    //         const refIdSelect = document.getElementById('reference-id-select');
-    //         for (const opt of refIdSelect.options) {
-    //             console.log(`value=${opt.value} | data-type=${opt.dataset.type} | text=${opt.text.trim()}`);
-    //             if (opt.value == refId && opt.dataset.type === refType) {
-    //                 refIdSelect.value = opt.value;
-    //                 break;
-    //             }
-    //         }
-    //     }
-    // });
     document.addEventListener('change', function (event) {
-    if (event.target && event.target.id === 'label-select') {
-        const selected = event.target.options[event.target.selectedIndex];
-        if (!selected.value) return;
+        if (event.target && event.target.id === 'label-select') {
+            const selected = event.target.options[event.target.selectedIndex];
+            if (!selected.value) return;
 
-        const refType = selected.dataset.refType;
-        const refId   = selected.dataset.refId;
+            const refType = selected.dataset.refType;
+            const refId   = selected.dataset.refId;
 
-        // Mettre à jour Type référence
-        document.getElementById('reference-type-select').value = refType;
+            // Mettre à jour Type référence
+            document.getElementById('reference-type-select').value = refType;
 
-        // Mettre à jour Référence GPS — querySelector au lieu de la boucle
-        const refIdSelect = document.getElementById('reference-id-select');
-        const target = refIdSelect.querySelector(`option[value="${refId}"][data-type="${refType}"]`);
-        
-        console.log('target trouvé:', target);
-        
-        if (target) {
-            refIdSelect.value = target.value;
-            // Si ça ne suffit pas, forcer :
-            target.selected = true;
+            // Mettre à jour Référence GPS — querySelector au lieu de la boucle
+            const refIdSelect = document.getElementById('reference-id-select');
+            const target = refIdSelect.querySelector(`option[value="${refId}"][data-type="${refType}"]`);
+            
+            console.log('target trouvé:', target);
+            
+            if (target) {
+                refIdSelect.value = target.value;
+                // Si ça ne suffit pas, forcer :
+                target.selected = true;
+            }
         }
-    }
-});
+    });
 </script>
 @section('content')
 <link rel="stylesheet" href="{{ asset('css/rotation.css') }}">
