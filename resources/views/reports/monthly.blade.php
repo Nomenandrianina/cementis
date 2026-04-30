@@ -38,11 +38,6 @@ function toggleDetail(id) {
     <div class="stat-card">
         <div class="stat-label">Rotations réalisées</div>
         <div class="stat-value">{{ $report['total_rotations'] }}</div>
-        <div class="stat-sub">
-            @if($report['target_rotations'])
-                Objectif : {{ $report['target_rotations'] }}
-            @endif
-        </div>
     </div>
     @if($report['achievement_rate'] !== null)
     <div class="stat-card" style="--stat-color:{{ $report['achievement_rate'] >= 100 ? 'var(--success)' : 'var(--danger)' }}">
@@ -90,9 +85,6 @@ function toggleDetail(id) {
             {{-- Résumé durées --}}
             <div style="display:flex;gap:0;border-bottom:1px solid var(--border);">
                 @foreach([
-                    // ['Durée moy. rotation', $vr['avg_duration'] ? intdiv($vr['avg_duration'],60).'h'.($vr['avg_duration']%60).'m' : '—'],
-                    // ['Objectif durée', $vr['target_duration'] ? intdiv($vr['target_duration'],60).'h'.($vr['target_duration']%60).'m' : '—'],
-                    // ['Durée totale', $vr['total_duration'] ? intdiv($vr['total_duration'],60).'h'.($vr['total_duration']%60).'m' : '—'],
                     ['Durée moy. rotation', $vr['avg_duration']],
                     ['Objectif durée', $vr['target_duration']],
                     ['Durée totale', $vr['total_duration']],
@@ -106,11 +98,17 @@ function toggleDetail(id) {
             
             {{-- Tableau des rotations --}}
             @if($vr['rotations']->count())
+            @php
+                $fmt = fn(?int $s) => $s === null
+                    ? ''
+                    : intdiv($s, 3600) . 'h '
+                        . str_pad(intdiv($s % 3600, 60), 2, '0', STR_PAD_LEFT) . 'm '
+                        . str_pad($s % 60, 2, '0', STR_PAD_LEFT) . 's';
+            @endphp
             <div class="table-wrap">
                 <table>
                     <thead>
                         <tr>
-                            <th>N°</th>
                             <th>Début (T1)</th>
                             <th>Fin (T5)</th>
                             <th>Durée réelle</th>
@@ -122,7 +120,6 @@ function toggleDetail(id) {
                     <tbody>
                         @foreach($vr['rotations'] as $idx => $rot)
                             <tr>
-                                <td class="mono" style="color:var(--muted);">{{ $idx + 1 }}</td>
                                 <td class="mono">{{ $rot['started_at'] }}</td>
                                 <td class="mono">{{ $rot['completed_at'] }}</td>
                                 <td class="mono" style="font-weight:600;">{{ $rot['duration_label'] }}</td>
@@ -130,7 +127,7 @@ function toggleDetail(id) {
                                 <td>
                                     @if($rot['vs_target'] !== null)
                                         <span class="{{ $rot['vs_target'] > 0 ? 'text-danger' : 'text-success' }}" style="font-family:var(--mono);font-size:12px;">
-                                            {{ $rot['vs_target'] > 0 ? '+' : '' }}{{ intdiv($rot['vs_target'], 60) }}h{{ abs($rot['vs_target'] % 60) }}m
+                                            {{ $rot['vs_target'] > 0 ? '+' : '' }}{{$fmt($rot['vs_target'])}}
                                         </span>
                                     @else
                                         <span style="color:var(--muted);">—</span>
@@ -144,15 +141,6 @@ function toggleDetail(id) {
                             <tr id="rot-{{ $rot['id'] }}" style="display:none;">
                                 <td colspan="7" style="padding:0;">
                                     <div style="background:var(--cream);padding:14px 20px;border-top:2px solid var(--bordeaux);">
-
-                                        @php
-                                            $fmt = fn(?int $s) => $s === null
-                                                ? ''
-                                                : intdiv($s, 3600) . 'h '
-                                                    . str_pad(intdiv($s % 3600, 60), 2, '0', STR_PAD_LEFT) . 'm '
-                                                    . str_pad($s % 60, 2, '0', STR_PAD_LEFT) . 's';
-                                        @endphp
-
                                         @foreach($rot['blocks'] as $block)
                                         
                                             @if($block['type'] === 'checkpoint')

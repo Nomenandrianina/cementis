@@ -16,21 +16,6 @@
     var dragSrcEl   = null;   // élément en cours de drag
     var dragSrcIdx  = null;   // index de départ
 
-    // function toggleEditLeg(id) {
-    //     const el = document.getElementById('edit-leg-' + id);
-        
-    //     if (!el) {
-    //         console.error("Élément introuvable : edit-leg-" + id);
-    //         return;
-    //     }
-
-        
-    //     if (window.getComputedStyle(el).display === 'none') {
-    //         el.style.display = 'block';
-    //     } else {
-    //         el.style.display = 'none';
-    //     }
-    // }
     function toggleEditLeg(id) {
         const el = document.getElementById('edit-leg-' + id);
         if (!el) return;
@@ -239,6 +224,53 @@
         document.querySelectorAll('[id^="edit-leg-"]').forEach(e => e.style.display = 'none');
         if (!isOpen) el.style.display = 'block';
     }
+
+    // document.addEventListener('change', function (event) {
+    //     if (event.target && event.target.id === 'label-select') {
+    //         const selected = event.target.options[event.target.selectedIndex];
+
+    //         if (!selected.value) return;
+
+    //         const refType  = selected.dataset.refType; 
+    //         const refId    = selected.dataset.refId;
+    //         // Mettre à jour Type référence
+    //         document.getElementById('reference-type-select').value = refType;
+
+    //         // Mettre à jour Référence GPS
+    //         const refIdSelect = document.getElementById('reference-id-select');
+    //         for (const opt of refIdSelect.options) {
+    //             console.log(`value=${opt.value} | data-type=${opt.dataset.type} | text=${opt.text.trim()}`);
+    //             if (opt.value == refId && opt.dataset.type === refType) {
+    //                 refIdSelect.value = opt.value;
+    //                 break;
+    //             }
+    //         }
+    //     }
+    // });
+    document.addEventListener('change', function (event) {
+    if (event.target && event.target.id === 'label-select') {
+        const selected = event.target.options[event.target.selectedIndex];
+        if (!selected.value) return;
+
+        const refType = selected.dataset.refType;
+        const refId   = selected.dataset.refId;
+
+        // Mettre à jour Type référence
+        document.getElementById('reference-type-select').value = refType;
+
+        // Mettre à jour Référence GPS — querySelector au lieu de la boucle
+        const refIdSelect = document.getElementById('reference-id-select');
+        const target = refIdSelect.querySelector(`option[value="${refId}"][data-type="${refType}"]`);
+        
+        console.log('target trouvé:', target);
+        
+        if (target) {
+            refIdSelect.value = target.value;
+            // Si ça ne suffit pas, forcer :
+            target.selected = true;
+        }
+    }
+});
 </script>
 @section('content')
 <link rel="stylesheet" href="{{ asset('css/rotation.css') }}">
@@ -276,38 +308,55 @@
                     @csrf
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
                         <div class="form-group" style="margin:0;">
-                            <label>Label (ex: T1 – Arrivée Tamatave)</label>
-                            <input type="text" name="label" required placeholder="T1 – Arrivée Tamatave">
+                            <label>Label (référence GPS)</label>
+                            <select name="label" id="label-select" required>
+                                <optgroup label="Zones">
+                                    @foreach($zones as $z)
+                                        <option value="{{ $z->name }}"
+                                            data-ref-type="zone"
+                                            data-ref-id="{{ $z->id }}">
+                                            {{ $z->name }}
+                                        </option>
+                                    @endforeach
+                                </optgroup>
+                                <optgroup label="Checkpoints">
+                                    @foreach($checkpoints as $cp)
+                                        <option value="{{ $cp->name }}"
+                                            data-ref-type="checkpoint"
+                                            data-ref-id="{{ $cp->id }}">
+                                            {{ $cp->name }}
+                                        </option>
+                                    @endforeach
+                                </optgroup>
+                            </select>
                         </div>
+
                         <div class="form-group" style="margin:0;">
                             <label>Type d'événement</label>
                             <select name="event_type" required>
                                 <option value="enter_zone">Entrée zone</option>
                                 <option value="leave_zone">Sortie zone</option>
                                 <option value="pass_checkpoint">Passage checkpoint</option>
-                                <option value="pass_depot">Dépôt</option>
-                                <option value="pass_garage">Garage</option>
-                                <option value="pass_parking">Parking</option>
                             </select>
                         </div>
                         <div class="form-group" style="margin:0;">
                             <label>Type référence</label>
-                            <select name="reference_type" required>
+                            <select name="reference_type" id="reference-type-select" required>
                                 <option value="zone">Zone</option>
                                 <option value="checkpoint">Checkpoint</option>
                             </select>
                         </div>
                         <div class="form-group" style="margin:0;">
                             <label>Référence GPS</label>
-                            <select name="reference_id" required>
+                            <select name="reference_id" id="reference-id-select" required>
                                 <optgroup label="Zones">
                                     @foreach($zones as $z)
-                                        <option value="{{ $z->id }}">{{ $z->name }}</option>
+                                        <option value="{{ $z->id }}" data-type="zone">{{ $z->name }}</option>
                                     @endforeach
                                 </optgroup>
                                 <optgroup label="Checkpoints">
                                     @foreach($checkpoints as $cp)
-                                        <option value="{{ $cp->id }}">{{ $cp->name }}</option>
+                                        <option value="{{ $cp->id }}" data-type="checkpoint">{{ $cp->name }}</option>
                                     @endforeach
                                 </optgroup>
                             </select>

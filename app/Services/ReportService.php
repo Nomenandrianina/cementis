@@ -348,7 +348,7 @@ class ReportService
                     'type'        => 'checkpoint',
                     'leg_id'      => $leg->id,          // ← ajouté
                     'label'       => $leg->label,
-                    'occurred_at' => $rl?->occurred_at?->format('d/m H:i:s'),
+                    'occurred_at' => $rl?->occurred_at?->timezone('GMT+3')->format('d/m H:i:s'),
                     'is_done'     => $rl !== null,
                 ];
                 $skipIds[] = $leg->id;
@@ -380,7 +380,7 @@ class ReportService
                     'enter_leg_id'=> $leg->id,          // ← ajouté
                     'leave_leg_id'=> null,              // ← ajouté
                     'label'       => $leg->label,
-                    'enter_at'    => $rl?->occurred_at?->format('d/m H:i'),
+                    'enter_at'    => $rl?->occurred_at?->timezone('GMT+3')->format('d/m H:i'),
                     'leave_at'    => null,
                     'actual_sec'  => null,
                     'target_sec'  => null,
@@ -480,8 +480,8 @@ class ReportService
                     'enter_leg_id' => $innerLeg->id,        // ← ajouté
                     'leave_leg_id' => $innerLeaveId,        // ← ajouté
                     'label'        => $innerLeg->label,
-                    'enter_at'     => $innerEnterRl?->occurred_at?->format('d/m H:i:s'),
-                    'leave_at'     => $innerLeaveRl?->occurred_at?->format('d/m H:i:s'),
+                    'enter_at'     => $innerEnterRl?->occurred_at?->timezone('GMT+3')->format('d/m H:i:s'),
+                    'leave_at'     => $innerLeaveRl?->occurred_at?->timezone('GMT+3')->format('d/m H:i:s'),
                     'actual_sec'   => $innerActual,
                     'target_sec'   => $innerTarget,
                     'ecart'        => $innerEcart,
@@ -500,8 +500,8 @@ class ReportService
             'enter_leg_id' => $leg->id,          // ← ajouté
             'leave_leg_id' => $leaveLegId,       // ← ajouté
             'label'        => $leg->label,
-            'enter_at'     => $enterRl?->occurred_at?->format('d/m H:i:s'),
-            'leave_at'     => $leaveRl?->occurred_at?->format('d/m H:i:s'),
+            'enter_at'     => $enterRl?->occurred_at?->timezone('GMT+3')->format('d/m H:i:s'),
+            'leave_at'     => $leaveRl?->occurred_at?->timezone('GMT+3')->format('d/m H:i:s'),
             'actual_sec'   => $actualSec,
             'target_sec'   => $targetSec,
             'ecart'        => $ecart,
