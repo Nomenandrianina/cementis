@@ -8,6 +8,7 @@
     <a href="{{ route('circuits.index') }}" class="btn btn-ghost btn-sm">← Circuits</a>
     <a href="{{ route('circuits.objectives.index', $circuit) }}" class="btn btn-blue btn-sm">Objectifs</a>
 @endsection
+
 <script>
     
     // ── Drag & Drop des étapes ─────────────────────────────────────────────────
@@ -250,6 +251,7 @@
         }
     });
 </script>
+
 @section('content')
 <link rel="stylesheet" href="{{ asset('css/rotation.css') }}">
 <div class="grid-2" style="gap:24px;">
