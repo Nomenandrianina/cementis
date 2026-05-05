@@ -221,6 +221,34 @@ class ScoreDriverService
             | Sous-requête 1 : infractions ≠ Temps de repos hebdomadaire
             |--------------------------------------------------------------------------
             */
+            // $subQuery1 = DB::table(DB::raw("
+            //     (
+            //         SELECT DISTINCT
+            //             badge_chauffeur,
+            //             imei,
+            //             camion,
+            //             rfid_chauffeur,
+            //             date_debut,
+            //             date_fin
+            //         FROM import_excel
+            //         WHERE import_calendar_id = $id_planning
+            //     ) as c
+            // "))
+            // ->leftJoin('infraction as i', function ($join) {
+            //     $join->on('i.imei', '=', 'c.imei')
+            //         ->where('i.event', '!=', 'Temps de repos hebdomadaire')
+            //         ->whereRaw("CONCAT(i.date_debut, ' ', i.heure_debut) >= c.date_debut")
+            //         ->whereRaw("CONCAT(i.date_fin, ' ', i.heure_fin) <= c.date_fin");
+            // })
+            // ->groupBy('c.badge_chauffeur', 'c.imei')
+            // ->selectRaw("
+            //     c.badge_chauffeur AS badge_calendar,
+            //     c.imei,
+            //     c.camion,
+            //     c.rfid_chauffeur AS rfid_calendar,
+            //     i.rfid AS rfid_conducteur,
+            //     COALESCE(SUM(i.point), 0) AS point
+            // ");
             $subQuery1 = DB::table(DB::raw("
                 (
                     SELECT DISTINCT
@@ -237,8 +265,8 @@ class ScoreDriverService
             ->leftJoin('infraction as i', function ($join) {
                 $join->on('i.imei', '=', 'c.imei')
                     ->where('i.event', '!=', 'Temps de repos hebdomadaire')
-                    ->whereRaw("CONCAT(i.date_debut, ' ', i.heure_debut) >= c.date_debut")
-                    ->whereRaw("CONCAT(i.date_fin, ' ', i.heure_fin) <= c.date_fin");
+                    ->whereRaw("i.date_debut >= DATE(c.date_debut)")
+                    ->whereRaw("i.date_fin <= DATE(c.date_fin)");
             })
             ->groupBy('c.badge_chauffeur', 'c.imei')
             ->selectRaw("
@@ -411,7 +439,81 @@ class ScoreDriverService
         return $vehicle?->id_transporteur;
     }
 
+// $results = DB::select("
+//                     SELECT 
+//                         final.badge_calendar,
+//                         final.imei,
+//                         final.camion,
+//                         final.rfid_calendar,
+//                         final.rfid_conducteur,
+//                         SUM(final.point) AS total_point
+//                     FROM (
+                        
+//                         SELECT 
+//                             c.badge_chauffeur AS badge_calendar,
+//                             c.imei,
+//                             c.camion,
+//                             c.rfid_chauffeur AS rfid_calendar,
+//                             i.rfid AS rfid_conducteur,
+//                             COALESCE(SUM(i.point), 0) AS point
+//                         FROM (
+//                             SELECT DISTINCT
+//                                 badge_chauffeur,
+//                                 imei,
+//                                 camion,
+//                                 rfid_chauffeur,
+//                                 date_debut,
+//                                 date_fin
+//                             FROM import_excel
+//                             WHERE import_calendar_id = $id_planning
+//                         ) c
+//                         LEFT JOIN infraction i 
+//                             ON i.imei = c.imei
+//                             AND i.event != 'Temps de repos hebdomadaire'
+//                             AND CONCAT(i.date_debut, ' ', i.heure_debut) >= c.date_debut
+//                             AND CONCAT(i.date_fin, ' ', i.heure_fin) <= c.date_fin
+//                         GROUP BY 
+//                             c.badge_chauffeur,
+//                             c.imei
+                        
+//                         UNION ALL
 
+                        
+//                         SELECT 
+//                             c.badge_chauffeur AS badge_calendar,
+//                             c.imei,
+//                             c.camion,
+//                             c.rfid_chauffeur AS rfid_calendar,
+//                             i.rfid AS rfid_conducteur,
+//                             COALESCE(SUM(i.point), 0) AS point
+//                         FROM (
+//                             SELECT DISTINCT
+//                                 badge_chauffeur,
+//                                 imei,
+//                                 camion,
+//                                 rfid_chauffeur
+//                             FROM import_excel
+//                             WHERE import_calendar_id = $id_planning
+//                         ) c
+//                         LEFT JOIN (
+//                             SELECT DISTINCT id, imei, rfid, point
+//                             FROM infraction
+//                             WHERE event = 'Temps de repos hebdomadaire' 
+//                             AND MONTH(date_debut) = $month AND MONTH(date_fin)= $month
+
+//                         ) i ON i.imei = c.imei
+//                         GROUP BY 
+//                             c.badge_chauffeur,
+//                             c.imei
+//                     ) AS final
+//                     WHERE
+//                         finaL.badge_calendar = $badge
+//                     GROUP BY 
+//                         final.badge_calendar,
+//                         final.imei
+//                     ORDER BY 
+//                         total_point DESC;
+//                 ");
     public function detail_score_drive_per_truck($id_planning, $badge){
         try {
             
@@ -450,8 +552,8 @@ class ScoreDriverService
                         LEFT JOIN infraction i 
                             ON i.imei = c.imei
                             AND i.event != 'Temps de repos hebdomadaire'
-                            AND CONCAT(i.date_debut, ' ', i.heure_debut) >= c.date_debut
-                            AND CONCAT(i.date_fin, ' ', i.heure_fin) <= c.date_fin
+                            AND i.date_debut >= DATE(c.date_debut)
+                            AND i.date_fin <= DATE(c.date_fin)
                         GROUP BY 
                             c.badge_chauffeur,
                             c.imei

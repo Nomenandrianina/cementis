@@ -105,7 +105,7 @@
 
 
 
-{{-- @canany(['importcalendars.index', 'importExcels.index'])
+@canany(['importcalendars.index', 'importExcels.index'])
     @php
         $isImportCalendarsActive = Request::is('admin/importcalendars*');
         $isImportExcelsActive = Request::is('admin/importExcels*');
@@ -141,7 +141,7 @@
             @endcan
         </ul>
     </li>
-@endcanany --}}
+@endcanany
 
 
 

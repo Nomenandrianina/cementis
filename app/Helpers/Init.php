@@ -373,11 +373,17 @@ if(!function_exists('scoring')){
                 WHERE import_calendar_id = $id_planning
             ) as c
         "))
+        // ->leftJoin('infraction as i', function ($join) {
+        //     $join->on('i.imei', '=', 'c.imei')
+        //         ->where('i.event', '!=', 'Temps de repos hebdomadaire')
+        //         ->whereRaw("CONCAT(i.date_debut, ' ', i.heure_debut) >= c.date_debut")
+        //         ->whereRaw("CONCAT(i.date_fin, ' ', i.heure_fin) <= c.date_fin");
+        // })
         ->leftJoin('infraction as i', function ($join) {
             $join->on('i.imei', '=', 'c.imei')
                 ->where('i.event', '!=', 'Temps de repos hebdomadaire')
-                ->whereRaw("CONCAT(i.date_debut, ' ', i.heure_debut) >= c.date_debut")
-                ->whereRaw("CONCAT(i.date_fin, ' ', i.heure_fin) <= c.date_fin");
+                ->whereRaw("i.date_debut >= DATE(c.date_debut)")
+                ->whereRaw("i.date_fin <= DATE(c.date_fin)");
         })
         ->groupBy('c.badge_chauffeur', 'c.imei')
         ->selectRaw("
@@ -477,11 +483,17 @@ if (!function_exists('driver_detail_scoring_card')) {
                 'i.insuffisance',
                 'i.point',
             ])
+            // ->join('infraction as i', function ($join) {
+            //     $join->on('i.imei', '=', 'c.imei')
+            //         ->where('i.event', '!=', 'Temps de repos hebdomadaire')
+            //         ->whereRaw("CONCAT(i.date_debut, ' ', i.heure_debut) >= c.date_debut")
+            //         ->whereRaw("CONCAT(i.date_fin, ' ', i.heure_fin) <= c.date_fin");
+            // })
             ->join('infraction as i', function ($join) {
                 $join->on('i.imei', '=', 'c.imei')
                     ->where('i.event', '!=', 'Temps de repos hebdomadaire')
-                    ->whereRaw("CONCAT(i.date_debut, ' ', i.heure_debut) >= c.date_debut")
-                    ->whereRaw("CONCAT(i.date_fin, ' ', i.heure_fin) <= c.date_fin");
+                    ->whereRaw("i.date_debut >= DATE(c.date_debut)")
+                    ->whereRaw("i.date_fin <= DATE(c.date_fin)");
             })
             ->where('c.import_calendar_id', $id_planning)
             ->where('c.badge_chauffeur', $badge)
@@ -592,11 +604,17 @@ if (!function_exists('truck_detail_scoring_card')) {
                 'i.insuffisance',
                 'i.point',
             ])
-            ->join('infraction as i', function ($join) {
+            // ->join('infraction as i', function ($join) {
+            //     $join->on('i.imei', '=', 'c.imei')
+            //         ->where('i.event', '!=', 'Temps de repos hebdomadaire')
+            //         ->whereRaw("CONCAT(i.date_debut, ' ', i.heure_debut) >= c.date_debut")
+            //         ->whereRaw("CONCAT(i.date_fin, ' ', i.heure_fin) <= c.date_fin");
+            // })
+            >join('infraction as i', function ($join) {
                 $join->on('i.imei', '=', 'c.imei')
                     ->where('i.event', '!=', 'Temps de repos hebdomadaire')
-                    ->whereRaw("CONCAT(i.date_debut, ' ', i.heure_debut) >= c.date_debut")
-                    ->whereRaw("CONCAT(i.date_fin, ' ', i.heure_fin) <= c.date_fin");
+                    ->whereRaw("i.date_debut >= DATE(c.date_debut)")
+                    ->whereRaw("i.date_fin <= DATE(c.date_fin)");
             })
             ->where('c.import_calendar_id', $id_planning)
             ->where('c.imei', $imei)
