@@ -14,7 +14,7 @@ class AddColumnTypeToZonesTable extends Migration
     public function up()
     {
         Schema::table('zones', function (Blueprint $table) {
-             $table->string('option')->default('obligatoire')->after('name');
+             $table->string('option')->default('optionnel')->after('name');
         });
     }
 

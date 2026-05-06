@@ -11,14 +11,24 @@ class CheckpointController extends Controller
 {
     public function __construct(private readonly GpsApiService $gpsApi) {}
 
-    public function index()
+    public function index(Request $request)
     {
-        $checkpoints = Checkpoint::orderBy('name')->get();
+        $query = Checkpoint::orderBy('name', 'asc');
+
+        // Recherche simple intégrée
+        if ($request->filled('search')) {
+            $query->where('name', 'like', '%' . $request->search . '%');
+        }
+
+        $checkpoints = $query->paginate(25)->withQueryString();
+
         return view('checkpoints.index', compact('checkpoints'));
     }
 
     public function sync()
     {
+        set_time_limit(120);
+
         $markers = $this->gpsApi->getMarkers();
         $synced  = 0;
 

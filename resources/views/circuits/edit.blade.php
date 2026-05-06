@@ -8,9 +8,40 @@
     <a href="{{ route('circuits.index') }}" class="btn btn-ghost btn-sm">← Circuits</a>
     <a href="{{ route('circuits.objectives.index', $circuit) }}" class="btn btn-blue btn-sm">Objectifs</a>
 @endsection
+<style>
+    .card-header:hover {
+        background-color: rgba(0,0,0,0.02);
+    }
+    
+    .card-body-hidden {
+        display: none !important;
+    }
 
+    .btn-toggle {
+        transition: transform 0.2s ease;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        line-height: 1;
+    }
+</style>
 <script>
     
+    function toggleCard(headerElement) {
+        const card = headerElement.closest('.card');
+        const body = card.querySelector('.card-body');
+        const btn = headerElement.querySelector('.btn-toggle');
+
+        if (body.classList.contains('card-body-hidden')) {
+            body.classList.remove('card-body-hidden');
+            btn.innerText = "−"; // Devient moins quand on ouvre
+        } else {
+            body.classList.add('card-body-hidden');
+            btn.innerText = "+"; // Devient plus quand on ferme
+        }
+    }
     // ── Drag & Drop des étapes ─────────────────────────────────────────────────
     var REORDER_URL = '{{ route('circuits.legs.reorder', $circuit) }}';
 
@@ -253,285 +284,293 @@
 </script>
 
 @section('content')
-<link rel="stylesheet" href="{{ asset('css/rotation.css') }}">
-<div class="grid-2" style="gap:24px;">
-
-    {{-- Infos du circuit --}}
-    <div>
-        <div class="card mb-16">
-            <div class="card-header"><span class="card-title">Informations</span></div>
-            <div class="card-body">
-                <form action="{{ route('circuits.update', $circuit) }}" method="POST">
-                    @csrf @method('PUT')
-                    <div class="form-group">
-                        <label>Nom du circuit</label>
-                        <input type="text" name="name" value="{{ $circuit->name }}" required>
+        <link rel="stylesheet" href="{{ asset('css/rotation.css') }}">
+        <div class="grid-2" style="gap:24px;">
+            {{-- Infos du circuit --}}
+            <div>
+                <div class="card shadow-sm">
+                    <div class="card-header" 
+                        style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;" 
+                        onclick="toggleCard(this)">
+                        <span class="card-title">Informations</span>
+                        <button type="button" class="btn-toggle" style="background: none; border: none; font-size: 18px; color: var(--muted); font-weight: bold;">+</button>
                     </div>
-                    <div class="form-group">
-                        <label>Code</label>
-                        <input type="text" name="code" value="{{ $circuit->code }}" required>
+                    <div class="card-body card-body-hidden">
+                        <form action="{{ route('circuits.update', $circuit) }}" method="POST">
+                            @csrf @method('PUT')
+                            <div class="form-group">
+                                <label>Nom du circuit</label>
+                                <input type="text" name="name" value="{{ $circuit->name }}" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Code</label>
+                                <input type="text" name="code" value="{{ $circuit->code }}" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Description</label>
+                                <textarea name="description" rows="3">{{ $circuit->description }}</textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-sm">Enregistrer</button>
+                        </form>
                     </div>
-                    <div class="form-group">
-                        <label>Description</label>
-                        <textarea name="description" rows="3">{{ $circuit->description }}</textarea>
-                    </div>
-                    <button type="submit" class="btn btn-primary btn-sm">Enregistrer</button>
-                </form>
+                </div>
             </div>
-        </div>
 
-        {{-- Ajout d'un étape du circuit --}}
-        <div class="card">
-            <div class="card-header"><span class="card-title">Ajout d'une étape du circuit</span></div>
-            <div class="card-body">
-                <form action="{{ route('circuits.legs.store', $circuit) }}" method="POST">
-                    @csrf
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-                        <div class="form-group" style="margin:0;">
-                            <label>Label (référence GPS)</label>
-                            <select name="label" id="label-select" required>
-                                <optgroup label="Zones">
-                                    @foreach($zones as $z)
-                                        <option value="{{ $z->name }}"
-                                            data-ref-type="zone"
-                                            data-ref-id="{{ $z->id }}">
-                                            {{ $z->name }}
-                                        </option>
-                                    @endforeach
-                                </optgroup>
-                                <optgroup label="Checkpoints">
-                                    @foreach($checkpoints as $cp)
-                                        <option value="{{ $cp->name }}"
-                                            data-ref-type="checkpoint"
-                                            data-ref-id="{{ $cp->id }}">
-                                            {{ $cp->name }}
-                                        </option>
-                                    @endforeach
-                                </optgroup>
-                            </select>
-                        </div>
+            {{-- Ajout d'un étape du circuit --}}
+            <div class="card shadow-sm">
+                <div class="card-header" 
+                     style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;" 
+                     onclick="toggleCard(this)">
+                    <span class="card-title">Ajout d'une étape du circuit</span>
+                    <button type="button" class="btn-toggle" style="background: none; border: none; font-size: 18px; color: var(--muted); font-weight: bold;">+</button>
+                </div>
+                <div class="card-body card-body-hidden">
+                    <form action="{{ route('circuits.legs.store', $circuit) }}" method="POST">
+                        @csrf
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                            <div class="form-group" style="margin:0;">
+                                <label>Label (référence GPS)</label>
+                                <select name="label" id="label-select" required>
+                                    <optgroup label="Zones">
+                                        @foreach($zones as $z)
+                                            <option value="{{ $z->name }}"
+                                                data-ref-type="zone"
+                                                data-ref-id="{{ $z->id }}">
+                                                {{ $z->name }}
+                                            </option>
+                                        @endforeach
+                                    </optgroup>
+                                    <optgroup label="Checkpoints">
+                                        @foreach($checkpoints as $cp)
+                                            <option value="{{ $cp->name }}"
+                                                data-ref-type="checkpoint"
+                                                data-ref-id="{{ $cp->id }}">
+                                                {{ $cp->name }}
+                                            </option>
+                                        @endforeach
+                                    </optgroup>
+                                </select>
+                            </div>
 
-                        <div class="form-group" style="margin:0;">
-                            <label>Type d'événement</label>
-                            <select name="event_type" required>
-                                <option value="enter_zone">Entrée zone</option>
-                                <option value="leave_zone">Sortie zone</option>
-                                <option value="pass_checkpoint">Passage checkpoint</option>
-                            </select>
-                        </div>
-                        <div class="form-group" style="margin:0;">
-                            <label>Type référence</label>
-                            <select name="reference_type" id="reference-type-select" required>
-                                <option value="zone">Zone</option>
-                                <option value="checkpoint">Checkpoint</option>
-                            </select>
-                        </div>
-                        <div class="form-group" style="margin:0;">
-                            <label>Référence GPS</label>
-                            <select name="reference_id" id="reference-id-select" required>
-                                <optgroup label="Zones">
-                                    @foreach($zones as $z)
-                                        <option value="{{ $z->id }}" data-type="zone">{{ $z->name }}</option>
-                                    @endforeach
-                                </optgroup>
-                                <optgroup label="Checkpoints">
-                                    @foreach($checkpoints as $cp)
-                                        <option value="{{ $cp->id }}" data-type="checkpoint">{{ $cp->name }}</option>
-                                    @endforeach
-                                </optgroup>
-                            </select>
-                        </div>
-                        <div class="form-group" style="margin:0;">
-                            <label>Obligatoire ?</label>
-                            <select name="optional">
-                                <option value="0">✓ Obligatoire</option>
-                                <option value="1">○ Optionnel</option>
-                            </select>
-                            <div style="font-size:10px;color:var(--muted);margin-top:3px;">
-                                Optionnel = passé si présent, n'invalide pas la rotation
+                            <div class="form-group" style="margin:0;">
+                                <label>Type d'événement</label>
+                                <select name="event_type" required>
+                                    <option value="enter_zone">Entrée zone</option>
+                                    <option value="leave_zone">Sortie zone</option>
+                                    <option value="pass_checkpoint">Passage checkpoint</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="margin:0;">
+                                <label>Type référence</label>
+                                <select name="reference_type" id="reference-type-select" required>
+                                    <option value="zone">Zone</option>
+                                    <option value="checkpoint">Checkpoint</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="margin:0;">
+                                <label>Référence GPS</label>
+                                <select name="reference_id" id="reference-id-select" required>
+                                    <optgroup label="Zones">
+                                        @foreach($zones as $z)
+                                            <option value="{{ $z->id }}" data-type="zone">{{ $z->name }}</option>
+                                        @endforeach
+                                    </optgroup>
+                                    <optgroup label="Checkpoints">
+                                        @foreach($checkpoints as $cp)
+                                            <option value="{{ $cp->id }}" data-type="checkpoint">{{ $cp->name }}</option>
+                                        @endforeach
+                                    </optgroup>
+                                </select>
+                            </div>
+                            <div class="form-group" style="margin:0;">
+                                <label>Obligatoire ?</label>
+                                <select name="optional">
+                                    <option value="0">✓ Obligatoire</option>
+                                    <option value="1">○ Optionnel</option>
+                                </select>
+                                <div style="font-size:10px;color:var(--muted);margin-top:3px;">
+                                    Optionnel = passé si présent, n'invalide pas la rotation
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div style="margin-top:12px;">
-                        <button type="submit" class="btn btn-primary">Ajouter l'étape</button>
-                    </div>
-                </form>
+                        <div style="margin-top:12px;">
+                            <button type="submit" class="btn btn-primary">Ajouter l'étape</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
-    </div>
+        
+       {{-- Étapes du circuit --}}
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">Étapes du circuit</span>
+                <span class="badge badge-muted">{{ $circuit->legs->count() }} étape(s)</span>
+            </div>
+            <div class="card-body">
+                {{-- Liste des étapes avec drag & drop horizontal --}}
+                <div id="legs-list" 
+                    style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start;min-height:60px;padding:4px;border-radius:6px;transition:background 0.2s;"
+                    ondragover="event.preventDefault()"
+                    ondrop="handleDrop(event)">
 
-    {{-- Étapes du circuit --}}
-    <div class="card">
-        <div class="card-header">
-            <span class="card-title">Étapes du circuit</span>
-            <span class="badge badge-muted">{{ $circuit->legs->count() }} étape(s)</span>
-        </div>
-        <div class="card-body">
-            {{-- Liste des étapes avec drag & drop horizontal --}}
-            <div id="legs-list" 
-                style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start;min-height:60px;padding:4px;border-radius:6px;transition:background 0.2s;"
-                ondragover="event.preventDefault()"
-                ondrop="handleDrop(event)">
+                    @forelse($circuit->legs as $leg)
+                    <div class="leg-item"
+                        draggable="true"
+                        data-id="{{ $leg->id }}"
+                        ondragstart="handleDragStart(event)"
+                        ondragover="handleDragOver(event)"
+                        ondragleave="handleDragLeave(event)"
+                        ondrop="handleDropOnItem(event)"
+                        ondragend="handleDragEnd(event)"
+                        style="background:var(--panel);border:1px solid var(--border);border-radius:6px;
+                                padding:8px 12px;min-width:180px;flex:0 1 auto;position:relative;
+                                cursor:grab;transition:all 0.2s ease;user-select:none;">
 
-                @forelse($circuit->legs as $leg)
-                <div class="leg-item"
-                    draggable="true"
-                    data-id="{{ $leg->id }}"
-                    ondragstart="handleDragStart(event)"
-                    ondragover="handleDragOver(event)"
-                    ondragleave="handleDragLeave(event)"
-                    ondrop="handleDropOnItem(event)"
-                    ondragend="handleDragEnd(event)"
-                    style="background:var(--panel);border:1px solid var(--border);border-radius:6px;
-                            padding:8px 12px;min-width:180px;flex:0 1 auto;position:relative;
-                            cursor:grab;transition:all 0.2s ease;user-select:none;">
+                        {{-- Indicateur de drag --}}
+                        <div style="position:absolute;top:4px;left:6px;color:var(--muted);font-size:11px;opacity:0.5;cursor:grab;">⠿</div>
 
-                    {{-- Indicateur de drag --}}
-                    <div style="position:absolute;top:4px;left:6px;color:var(--muted);font-size:11px;opacity:0.5;cursor:grab;">⠿</div>
+                        <div style="display:flex;flex-direction:column;gap:4px;margin-left:12px;">
 
-                    <div style="display:flex;flex-direction:column;gap:4px;margin-left:12px;">
+                            {{-- Badge type + actions --}}
+                            <div style="display:flex;justify-content:space-between;align-items:center;">
+                                <span style="font-size:9px;font-weight:800;text-transform:uppercase;
+                                            padding:2px 5px;border-radius:3px;
+                                            background:{{ str_contains($leg->event_type,'pass') ? 'rgba(139,26,26,0.12)' : 'var(--cream-d)' }};
+                                            color:{{ str_contains($leg->event_type,'pass') ? 'var(--bordeaux)' : 'var(--ink-light)' }};">
+                                    {{ str_replace(['pass_','_zone'], ['',''], $leg->event_type) }}
+                                </span>
+                                <div style="display:flex;gap:5px;">
+                                    <button onclick="toggleEditLeg({{ $leg->id }})"
+                                            style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:13px;padding:0 3px;"
+                                            title="Modifier">✎</button>
+                                    <form action="{{ route('circuits.legs.destroy', [$circuit, $leg]) }}" method="POST"
+                                        onsubmit="return confirm('Supprimer cette étape ?')" style="margin:0;">
+                                        @csrf @method('DELETE')
+                                        <button type="submit"
+                                                style="background:none;border:none;cursor:pointer;color:var(--danger);font-size:13px;padding:0 3px;"
+                                                title="Supprimer">✕</button>
+                                    </form>
+                                </div>
+                            </div>
 
-                        {{-- Badge type + actions --}}
-                        <div style="display:flex;justify-content:space-between;align-items:center;">
-                            <span style="font-size:9px;font-weight:800;text-transform:uppercase;
-                                        padding:2px 5px;border-radius:3px;
-                                        background:{{ str_contains($leg->event_type,'pass') ? 'rgba(139,26,26,0.12)' : 'var(--cream-d)' }};
-                                        color:{{ str_contains($leg->event_type,'pass') ? 'var(--bordeaux)' : 'var(--ink-light)' }};">
-                                {{ str_replace(['pass_','_zone'], ['',''], $leg->event_type) }}
-                            </span>
-                            <div style="display:flex;gap:5px;">
-                                <button onclick="toggleEditLeg({{ $leg->id }})"
-                                        style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:13px;padding:0 3px;"
-                                        title="Modifier">✎</button>
-                                <form action="{{ route('circuits.legs.destroy', [$circuit, $leg]) }}" method="POST"
-                                    onsubmit="return confirm('Supprimer cette étape ?')" style="margin:0;">
-                                    @csrf @method('DELETE')
-                                    <button type="submit"
-                                            style="background:none;border:none;cursor:pointer;color:var(--danger);font-size:13px;padding:0 3px;"
-                                            title="Supprimer">✕</button>
+                            {{-- Label --}}
+                            <div style="font-weight:600;font-size:12px;white-space:nowrap;overflow:hidden;
+                                        text-overflow:ellipsis;max-width:150px;color:var(--ink);"
+                                title="{{ $leg->label }}">
+                                {{ $leg->label }}
+                            </div>
+
+                            {{-- Référence --}}
+                            <div style="font-size:10px;color:var(--muted);">
+                                @if($leg->reference_type === 'zone')
+                                    {{ \App\Models\Zone::find($leg->reference_id)?->name ?? '?' }}
+                                @else
+                                    {{ \App\Models\Checkpoint::find($leg->reference_id)?->name ?? '?' }}
+                                @endif
+                            </div>
+
+                            {{-- Ordre --}}
+                            <div style="font-size:9px;color:var(--bordeaux);font-family:var(--mono);font-weight:600;opacity:0.7;">
+                                @if ($leg->optional == 0)
+                                    Obligatoire
+                                @else
+                                    Optionnel
+                                @endif
+                            </div>
+                        </div>
+
+                        {{-- Flèche --}}
+                        <div class="leg-arrow"
+                            style="position:absolute;right:-14px;top:50%;transform:translateY(-50%);
+                                    color:var(--bordeaux);font-size:14px;z-index:2;opacity:0.5;pointer-events:none;">→</div>
+
+                        {{-- Formulaire édition inline --}}
+                        
+                        <div id="edit-leg-{{ $leg->id }}" class="leg-edit-modal-container" style="display:none;">
+                            <div class="modal-backdrop" onclick="toggleEditLeg({{ $leg->id }})"></div>
+                            
+                            <div class="modal-content">
+                                <div style="margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
+                                    <h3 style="margin:0; font-size: 16px; color: var(--ink);">Modifier le trajet</h3>
+                                    <button type="button" onclick="toggleEditLeg({{ $leg->id }})" style="background:none; border:none; font-size:20px; cursor:pointer; color:var(--muted);">&times;</button>
+                                </div>
+
+                                <form action="{{ route('circuits.legs.update', [$circuit, $leg]) }}" method="POST">
+                                    @csrf @method('PUT')
+                                    
+                                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+                                        <div class="form-group" style="margin:0; grid-column: 1/-1;">
+                                            <label style="display:block; margin-bottom:4px; font-size:12px; font-weight:600;">Label</label>
+                                            <input type="text" name="label" value="{{ $leg->label }}" required style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">
+                                        </div>
+
+                                        <div class="form-group" style="margin:0;">
+                                            <label style="display:block; margin-bottom:4px; font-size:12px; font-weight:600;">Type d'événement</label>
+                                            <select name="event_type" required style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">
+                                                <option value="enter_zone" {{ $leg->event_type==='enter_zone' ? 'selected' : '' }}>Entrée zone</option>
+                                                <option value="leave_zone" {{ $leg->event_type==='leave_zone' ? 'selected' : '' }}>Sortie zone</option>
+                                                <option value="pass_checkpoint" {{ $leg->event_type==='pass_checkpoint' ? 'selected' : '' }}>Passage checkpoint</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="form-group" style="margin:0;">
+                                            <label style="display:block; margin-bottom:4px; font-size:12px; font-weight:600;">Type référence</label>
+                                            <select name="reference_type" required style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">
+                                                <option value="zone" {{ $leg->reference_type==='zone' ? 'selected' : '' }}>Zone</option>
+                                                <option value="checkpoint" {{ $leg->reference_type==='checkpoint' ? 'selected' : '' }}>Checkpoint</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="form-group" style="margin:0; grid-column: 1/-1;">
+                                            <label style="display:block; margin-bottom:4px; font-size:12px; font-weight:600;">Référence</label>
+                                            <select name="reference_id" required style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">
+                                                <optgroup label="Zones">
+                                                    @foreach($zones as $z)
+                                                        <option value="{{ $z->id }}" {{ $leg->reference_type==='zone' && $leg->reference_id==$z->id ? 'selected' : '' }}>{{ $z->name }}</option>
+                                                    @endforeach
+                                                </optgroup>
+                                                <optgroup label="Checkpoints">
+                                                    @foreach($checkpoints as $cp)
+                                                        <option value="{{ $cp->id }}" {{ $leg->reference_type==='checkpoint' && $leg->reference_id==$cp->id ? 'selected' : '' }}>{{ $cp->name }}</option>
+                                                    @endforeach
+                                                </optgroup>
+                                            </select>
+                                        </div>
+
+                                        <div class="form-group" style="margin:0; grid-column: 1/-1;">
+                                            <label style="display:block; margin-bottom:4px; font-size:12px; font-weight:600;">Optionnel</label>
+                                            <select name="optional">
+                                                <option value="0" {{ $leg->optional == 0 ? 'selected' : '' }}>Obligatoire</option>
+                                                <option value="1" {{ $leg->optional == 1 ? 'selected' : '' }}>Optionnel</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div style="margin-top:20px; display:flex; gap:10px; justify-content: flex-end;">
+                                        <button type="button" onclick="toggleEditLeg({{ $leg->id }})" class="btn btn-ghost btn-sm" style="padding: 8px 16px;">Annuler</button>
+                                        <button type="submit" class="btn btn-primary btn-sm" style="padding: 8px 16px; background: var(--bordeaux); color: white; border: none; border-radius: 6px;">Enregistrer les modifications</button>
+                                    </div>
                                 </form>
                             </div>
                         </div>
-
-                        {{-- Label --}}
-                        <div style="font-weight:600;font-size:12px;white-space:nowrap;overflow:hidden;
-                                    text-overflow:ellipsis;max-width:150px;color:var(--ink);"
-                            title="{{ $leg->label }}">
-                            {{ $leg->label }}
-                        </div>
-
-                        {{-- Référence --}}
-                        <div style="font-size:10px;color:var(--muted);">
-                            @if($leg->reference_type === 'zone')
-                                {{ \App\Models\Zone::find($leg->reference_id)?->name ?? '?' }}
-                            @else
-                                {{ \App\Models\Checkpoint::find($leg->reference_id)?->name ?? '?' }}
-                            @endif
-                        </div>
-
-                        {{-- Ordre --}}
-                        <div style="font-size:9px;color:var(--bordeaux);font-family:var(--mono);font-weight:600;opacity:0.7;">
-                            @if ($leg->optional == 0)
-                                Obligatoire
-                            @else
-                                Optionnel
-                            @endif
-                        </div>
                     </div>
-
-                    {{-- Flèche --}}
-                    <div class="leg-arrow"
-                        style="position:absolute;right:-14px;top:50%;transform:translateY(-50%);
-                                color:var(--bordeaux);font-size:14px;z-index:2;opacity:0.5;pointer-events:none;">→</div>
-
-                    {{-- Formulaire édition inline --}}
-                    
-                    <div id="edit-leg-{{ $leg->id }}" class="leg-edit-modal-container" style="display:none;">
-                        <div class="modal-backdrop" onclick="toggleEditLeg({{ $leg->id }})"></div>
-                        
-                        <div class="modal-content">
-                            <div style="margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
-                                <h3 style="margin:0; font-size: 16px; color: var(--ink);">Modifier le trajet</h3>
-                                <button type="button" onclick="toggleEditLeg({{ $leg->id }})" style="background:none; border:none; font-size:20px; cursor:pointer; color:var(--muted);">&times;</button>
-                            </div>
-
-                            <form action="{{ route('circuits.legs.update', [$circuit, $leg]) }}" method="POST">
-                                @csrf @method('PUT')
-                                
-                                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
-                                    <div class="form-group" style="margin:0; grid-column: 1/-1;">
-                                        <label style="display:block; margin-bottom:4px; font-size:12px; font-weight:600;">Label</label>
-                                        <input type="text" name="label" value="{{ $leg->label }}" required style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">
-                                    </div>
-
-                                    <div class="form-group" style="margin:0;">
-                                        <label style="display:block; margin-bottom:4px; font-size:12px; font-weight:600;">Type d'événement</label>
-                                        <select name="event_type" required style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">
-                                            <option value="enter_zone" {{ $leg->event_type==='enter_zone' ? 'selected' : '' }}>Entrée zone</option>
-                                            <option value="leave_zone" {{ $leg->event_type==='leave_zone' ? 'selected' : '' }}>Sortie zone</option>
-                                            <option value="pass_checkpoint" {{ $leg->event_type==='pass_checkpoint' ? 'selected' : '' }}>Passage checkpoint</option>
-                                        </select>
-                                    </div>
-
-                                    <div class="form-group" style="margin:0;">
-                                        <label style="display:block; margin-bottom:4px; font-size:12px; font-weight:600;">Type référence</label>
-                                        <select name="reference_type" required style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">
-                                            <option value="zone" {{ $leg->reference_type==='zone' ? 'selected' : '' }}>Zone</option>
-                                            <option value="checkpoint" {{ $leg->reference_type==='checkpoint' ? 'selected' : '' }}>Checkpoint</option>
-                                        </select>
-                                    </div>
-
-                                    <div class="form-group" style="margin:0; grid-column: 1/-1;">
-                                        <label style="display:block; margin-bottom:4px; font-size:12px; font-weight:600;">Référence</label>
-                                        <select name="reference_id" required style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">
-                                            <optgroup label="Zones">
-                                                @foreach($zones as $z)
-                                                    <option value="{{ $z->id }}" {{ $leg->reference_type==='zone' && $leg->reference_id==$z->id ? 'selected' : '' }}>{{ $z->name }}</option>
-                                                @endforeach
-                                            </optgroup>
-                                            <optgroup label="Checkpoints">
-                                                @foreach($checkpoints as $cp)
-                                                    <option value="{{ $cp->id }}" {{ $leg->reference_type==='checkpoint' && $leg->reference_id==$cp->id ? 'selected' : '' }}>{{ $cp->name }}</option>
-                                                @endforeach
-                                            </optgroup>
-                                        </select>
-                                    </div>
-
-                                    <div class="form-group" style="margin:0; grid-column: 1/-1;">
-                                        <label style="display:block; margin-bottom:4px; font-size:12px; font-weight:600;">Optionnel</label>
-                                        <select name="optional">
-                                            <option value="0" {{ $leg->optional == 0 ? 'selected' : '' }}>Obligatoire</option>
-                                            <option value="1" {{ $leg->optional == 1 ? 'selected' : '' }}>Optionnel</option>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div style="margin-top:20px; display:flex; gap:10px; justify-content: flex-end;">
-                                    <button type="button" onclick="toggleEditLeg({{ $leg->id }})" class="btn btn-ghost btn-sm" style="padding: 8px 16px;">Annuler</button>
-                                    <button type="submit" class="btn btn-primary btn-sm" style="padding: 8px 16px; background: var(--bordeaux); color: white; border: none; border-radius: 6px;">Enregistrer les modifications</button>
-                                </div>
-                            </form>
+                    @empty
+                        <div style="color:var(--muted);font-size:12px;padding:20px;border:2px dashed var(--cream-dd);
+                                    border-radius:6px;width:100%;text-align:center;">
+                            Aucune étape définie. Ajoutez-en une ci-dessous.
                         </div>
-                    </div>
+                    @endforelse
                 </div>
-                @empty
-                    <div style="color:var(--muted);font-size:12px;padding:20px;border:2px dashed var(--cream-dd);
-                                border-radius:6px;width:100%;text-align:center;">
-                        Aucune étape définie. Ajoutez-en une ci-dessous.
-                    </div>
-                @endforelse
-            </div>
 
-            {{-- Badge compteur mis à jour dynamiquement --}}
-            <div id="legs-order-status"
-                style="font-size:11px;color:var(--success);margin-top:6px;display:none;font-family:var(--mono);">
-                ✓ Ordre sauvegardé
-            </div>
+                {{-- Badge compteur mis à jour dynamiquement --}}
+                <div id="legs-order-status"
+                    style="font-size:11px;color:var(--success);margin-top:6px;display:none;font-family:var(--mono);">
+                    ✓ Ordre sauvegardé
+                </div>
 
+            </div>
         </div>
-    </div>
-
-</div>
 @endsection
 
 @push('scripts')

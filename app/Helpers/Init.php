@@ -2731,10 +2731,15 @@ if(!function_exists('getDriverInfractionWithmaximumPoint')){
         ->value('mois');
 
         $query1 = DB::table('infraction as i')
+            // ->leftJoin('import_excel as ie', function ($join) {
+            //     $join->on('i.imei', '=', 'ie.imei')
+            //         ->whereRaw("CONCAT(i.date_debut, ' ', i.heure_debut) >= ie.date_debut")
+            //         ->whereRaw("CONCAT(i.date_fin, ' ', i.heure_fin) <= ie.date_fin");
+            // })
             ->leftJoin('import_excel as ie', function ($join) {
                 $join->on('i.imei', '=', 'ie.imei')
-                    ->whereRaw("CONCAT(i.date_debut, ' ', i.heure_debut) >= ie.date_debut")
-                    ->whereRaw("CONCAT(i.date_fin, ' ', i.heure_fin) <= ie.date_fin");
+                    ->whereRaw("i.date_debut >= DATE(ie.date_debut)")
+                    ->whereRaw("i.date_fin <= DATE(ie.date_fin)");
             })
             ->join('chauffeur as ch', 'i.rfid', '=', 'ch.rfid')
             ->join('transporteur as t', 'ch.transporteur_id', '=', 't.id')
@@ -2799,10 +2804,15 @@ if(!function_exists('getTruckInfractionWithmaximumPoint')){
         ->value('mois');
             
         $query1 = DB::table('infraction as i')
+            // ->leftJoin('import_excel as ie', function ($join) {
+            //     $join->on('i.imei', '=', 'ie.imei')
+            //         ->whereRaw("CONCAT(i.date_debut, ' ', i.heure_debut) >= ie.date_debut")
+            //         ->whereRaw("CONCAT(i.date_fin, ' ', i.heure_fin) <= ie.date_fin");
+            // })
             ->leftJoin('import_excel as ie', function ($join) {
                 $join->on('i.imei', '=', 'ie.imei')
-                    ->whereRaw("CONCAT(i.date_debut, ' ', i.heure_debut) >= ie.date_debut")
-                    ->whereRaw("CONCAT(i.date_fin, ' ', i.heure_fin) <= ie.date_fin");
+                    ->whereRaw("i.date_debut >= DATE(ie.date_debut)")
+                    ->whereRaw("i.date_fin <= DATE(ie.date_fin)");
             })
             ->join('vehicule as v', 'i.imei', '=', 'v.imei')
             ->join('transporteur as t', 'v.id_transporteur', '=', 't.id')
@@ -3032,6 +3042,7 @@ if (!function_exists('SaveVehiculeFromCalendar()')) {
             $apiCollection = collect($apiData)
             ->map(function ($item) {
                 $item['plate_number'] = trim($item['plate_number']);
+                $item['name'] = trim($item['name']);
                 return $item;
             })
             ->keyBy('plate_number');

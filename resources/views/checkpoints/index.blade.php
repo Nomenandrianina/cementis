@@ -4,7 +4,7 @@
 @section('page-title', 'Points de contrôle')
 
 @section('topbar-actions')
-    <form action="{{ route('checkpoints.sync') }}" method="POST" style="display:inline;">
+    <form action="{{ route('checkpoints.sync') }}" method="POST" style="display:inline;margin-top: 17px;">
         @csrf
         <button type="submit" class="btn-sync">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;">
@@ -13,11 +13,15 @@
             Sync GPS
         </button>
     </form>
+    <button type="button" class="btn-create" onclick="toggleCheckpointModal(true)">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px;margin-right:5px;">
+            <path d="M12 4v16m8-8H4"/>
+        </svg>
+        Nouveau Checkpoint
+    </button>
 @endsection
 
 @section('content')
-
-
 
 <script>
     function openEditModal(checkpoint) {
@@ -50,6 +54,20 @@
         const modal = document.getElementById('editModal');
         if (event.target == modal) closeEditModal();
     }
+
+    function toggleCheckpointModal(show) {
+        const modal = document.getElementById('checkpointModal');
+        modal.style.display = show ? 'flex' : 'none';
+    }
+
+    // Fermer si on clique sur l'overlay noir (à l'extérieur de la carte)
+    window.onclick = function(event) {
+        const modalCreate = document.getElementById('checkpointModal');
+        if (event.target == modalCreate) {
+            toggleCheckpointModal(false);
+        }
+    }
+    
 </script>
 
 {{-- ── Stats ─────────────────────────────────────────────────────────────── --}}
@@ -71,192 +89,83 @@
     </div>
 </div>
 
-{{-- ── Layout 2 colonnes ────────────────────────────────────────────────── --}}
-<div class="cp-layout">
-
-    {{-- Formulaire création --}}
-    <div class="card">
-        <div class="card-header">
-            <div class="card-title-row">
-                <div class="card-dot"></div>
-                <span class="card-title">Ajouter un checkpoint</span>
+{{-- ── Liste ─────────────────────────────────────────────────────────────── --}}
+<div class="card-modern">
+    <div class="card-header-pro">
+        <div class="header-main">
+            <div class="title-section">
+                <span class="icon-bg"><i class="fas fa-map-marked-alt"></i></span>
+                <div>
+                    <h3>Checkpoints</h3>
+                    <p>{{ $checkpoints->total() }} points enregistrés</p>
+                </div>
             </div>
-        </div>
-        <div class="card-body">
-            <form action="{{ route('checkpoints.store') }}" method="POST">
-                @csrf
-
-                @if ($errors->any())
-                    <div class="alert-error">
-                        <ul>
-                            @foreach ($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                @endif
-
-
-                <div class="form-group">
-                    <label class="form-label">Type</label>
-                    <select name="type" class="form-select  shadow-none" style="border-radius: 8px 8px 8px 8px; height: 45px;" required>
-                        <option value="" selected>— Sélectionner —</option>
-                        @foreach(\App\Models\Checkpoint::TYPES as $key => $label)
-                            <option value="{{ $key }}">
-                                 {{ $label }}
-                            </option>
-                        @endforeach
-                    </select>
-                    <div style="font-size:11px;color:var(--muted);margin-top:4px;">
-                        <strong>Obligatoire</strong> = obligatoire (rotation invalide si manqué) ·
-                        <strong>Optionnel</strong> = optionnel (juste enregistré si passé)
-                    </div>
+            <div class="header-actions">
+                <div class="search-wrapper">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Filtrer par nom..." id="searchInput">
                 </div>
-
-                <div class="form-group">
-                    <label class="form-label">Nom</label>
-                    <input class="form-input @error('name') error @enderror"
-                           type="text" name="name"
-                           value="{{ old('name') }}"
-                           placeholder="Ex : Checkpoint Ambodimita" required>
-                    @error('name')<div class="form-error">{{ $message }}</div>@enderror
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Description</label>
-                    <textarea class="form-textarea" name="description"
-                              rows="2" placeholder="Description optionnelle…">{{ old('description') }}</textarea>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Coordonnées & rayon</label>
-                    <div class="coords-grid">
-                        <div>
-                            <input class="form-input @error('lat') error @enderror"
-                                   type="number" name="lat" step="0.0000001"
-                                   value="{{ old('lat') }}" placeholder="Latitude" required>
-                            <div class="form-hint">ex : -18.865963</div>
-                            @error('lat')<div class="form-error">{{ $message }}</div>@enderror
-                        </div>
-                        <div>
-                            <input class="form-input @error('lng') error @enderror"
-                                   type="number" name="lng" step="0.0000001"
-                                   value="{{ old('lng') }}" placeholder="Longitude" required>
-                            <div class="form-hint">ex : 47.486343</div>
-                            @error('lng')<div class="form-error">{{ $message }}</div>@enderror
-                        </div>
-                        <div>
-                            <input class="form-input @error('radius') error @enderror"
-                                   type="number" name="radius" step="0.001"
-                                   value="{{ old('radius', '0.1') }}" placeholder="Rayon (km)" required>
-                            <div class="form-hint">défaut : 0.1 km</div>
-                            @error('radius')<div class="form-error">{{ $message }}</div>@enderror
-                        </div>
-                    </div>
-                </div>
-
-                <button type="submit" class="btn-submit">
-                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"
-                         stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;">
-                        <path d="M12 4v16m8-8H4"/>
-                    </svg>
-                    Créer le checkpoint
-                </button>
-            </form>
+            </div>
         </div>
     </div>
 
-    {{-- Liste --}}
-    <div class="card">
-        <div class="card-header">
-            <div class="card-title-row">
-                <div class="card-dot"></div>
-                <span class="card-title">Checkpoints définis</span>
-            </div>
-             <span class="count-pill">{{ $checkpoints->count() }}</span> 
-        </div>
-
-        <div class="table-wrap">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Nom</th>
-                        <th>Coordonnées</th>
-                        <th>Rayon</th>
-                        <th>Type</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($checkpoints as $cp)
-                        <tr>
-                            <td>
-                                <div class="cp-name">{{ $cp->name }}</div>
-                                @if($cp->description)
-                                    <div class="cp-desc">{{ $cp->description }}</div>
-                                @endif
-                            </td>
-                            <td>
-                                <div class="mono-sm">{{ $cp->lat }}</div>
-                                <div class="mono-sm">{{ $cp->lng }}</div>
-                            </td>
-                            <td>
-                                <span class="radius-badge">{{ $cp->radius }} km</span>
-                            </td>
-                            <td>
-                                @if($cp->type === 'obligatoire')
-                                    <span class="gps-badge" style="background-color: #fee2e2; color: #991b1b; border: 1px solid #fecaca;">
-                                        Obligatoire
-                                    </span>
-                                @else
-                                    <span class="gps-badge" style="background-color: #f3f4f6; color: #374151; border: 1px solid #d1d5db;">
-                                        Optionnel
-                                    </span>
-                                @endif
-                            </td>
-                            <td>
-                                <div style="display: flex; gap: 8px;">
-                                    <button type="button" 
-                                            class="btn-edit" 
-                                            title="Modifier"
-                                            onclick="openEditModal({{ $cp->toJson() }})">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;">
-                                            <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"></path>
-                                            <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                                        </svg>
-                                    </button>
-
-                                    <form action="{{ route('checkpoints.destroy', $cp) }}" method="POST"
-                                        onsubmit="return confirm('Supprimer ce checkpoint ?')">
-                                        @csrf @method('DELETE')
-                                        <button type="submit" class="btn-del" title="Supprimer">✕</button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="5" class="empty-td">
-                                <div class="empty-icon">
-                                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                                         stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"
-                                         style="width:20px;height:20px;">
-                                        <path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                                        <path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                    </svg>
-                                </div>
-                                <div class="empty-title">Aucun checkpoint</div>
-                                <div class="empty-sub">Créez-en un ou synchronisez depuis l'API GPS.</div>
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+    <div class="table-container custom-scroll">
+        <table class="table-clean">
+            <thead>
+                <tr>
+                    <th>Checkpoint</th>
+                    <th>Localisation</th>
+                    <th>Rayon</th>
+                    <th>Type</th>
+                    <th class="text-right">Gestion</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($checkpoints as $cp)
+                <tr>
+                    <td>
+                        <div class="cp-info-box">
+                            <div class="cp-avatar">{{ substr($cp->name, 0, 1) }}</div>
+                            <span class="cp-name">{{ $cp->name }}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="coord-pill">
+                            <i class="fas fa-location-arrow"></i>
+                            {{ number_format($cp->lat, 4) }}, {{ number_format($cp->lng, 4) }}
+                        </div>
+                    </td>
+                    <td><span class="radius-text">{{ $cp->radius }} km</span></td>
+                    <td>
+                        <span class="status-badge {{ $cp->type === 'obligatoire' ? 'type-req' : 'type-opt' }}">
+                            {{ $cp->type }}
+                        </span>
+                    </td>
+                    <td class="text-right">
+                        <div class="action-flex">
+                            <button class="btn-table edit" onclick='openEditModal(@json($cp))'>
+                                <i class="fas fa-pencil-alt"></i>
+                            </button>
+                            <form action="{{ route('checkpoints.destroy', $cp) }}" method="POST">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="btn-table delete" onclick="return confirm('Supprimer ?')">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
     </div>
-
+    
+    <div class="card-footer-pro">
+        {{ $checkpoints->links() }}
+    </div>
 </div>
 
+<!-- Modal de modification (initialement cachée) -->
 <div id="editModal" class="modal-overlay" style="display:none;">
     <div class="modal-content card">
         <div class="card-header">
@@ -309,6 +218,59 @@
                 <div style="margin-top: 20px; display: flex; gap: 10px;">
                     <button type="submit" class="btn-submit">Enregistrer les modifications</button>
                     <button type="button" onclick="closeEditModal()" class="btn-cancel" >Annuler</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de création -->
+<div id="checkpointModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content card">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <div class="card-title-row">
+                <div class="card-dot"></div>
+                <span class="card-title">Ajouter un checkpoint</span>
+            </div>
+            <button type="button" class="btn-close" onclick="toggleCheckpointModal(false)" >&times;</button>
+        </div>
+        
+        <div class="card-body">
+            <form action="{{ route('checkpoints.store') }}" method="POST">
+                @csrf
+                {{-- Votre formulaire actuel reste ici --}}
+                <div class="form-group">
+                    <label class="form-label">Type</label>
+                    <select name="type" class="form-select shadow-none" required>
+                        <option value="" selected>— Sélectionner —</option>
+                        @foreach(\App\Models\Checkpoint::TYPES as $key => $label)
+                            <option value="{{ $key }}">{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Nom</label>
+                    <input class="form-input" type="text" name="name" placeholder="Ex : Checkpoint Ambodimita" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-textarea" name="description" rows="2" placeholder="Description..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Coordonnées & rayon</label>
+                    <div class="coords-grid" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+                        <input class="form-input" type="number" name="lat" step="0.0000001" placeholder="Lat" required>
+                        <input class="form-input" type="number" name="lng" step="0.0000001" placeholder="Lng" required>
+                        <input class="form-input" type="number" name="radius" step="0.001" value="0.1" placeholder="Rayon" required>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="submit" class="btn-submit">Créer le checkpoint</button>
+                    <button type="button" class="btn-cancel" onclick="toggleCheckpointModal(false)">Annuler</button>
                 </div>
             </form>
         </div>
