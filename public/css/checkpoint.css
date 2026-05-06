@@ -389,11 +389,15 @@ tbody tr:hover td { background: #FBF7F9; } */
   /* Coordonnées et Rayon */
   .cp-details {
       display: flex;
+      font-size: 9px;
       justify-content: space-between;
       align-items: center;
       margin-top: 10px;
       padding-top: 8px;
       border-top: 1px dashed #e2e8f0;
+  }
+  .radius-text{
+    font-size: 11px;
   }
 
   .cp-coord { font-family: monospace; font-size: 11px; color: #64748b; display: flex; align-items: center; gap: 4px; }
@@ -483,7 +487,7 @@ tbody tr:hover td { background: #FBF7F9; } */
 }
 
 .status-badge {
-    padding: 4px 10px; border-radius: 16px; font-size: 11px; font-weight: 600; text-transform: uppercase;
+    padding: 4px 10px; border-radius: 16px; font-size: 10px; font-weight: 600; text-transform: uppercase;
 }
 .type-req { background: #fef3f2; color: #b42318; border: 1px solid #fee4e2; }
 .type-opt { background: #f0f9ff; color: #026aa2; border: 1px solid #e0f2fe; }
