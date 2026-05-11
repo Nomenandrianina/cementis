@@ -13,14 +13,15 @@ class CheckpointController extends Controller
 
     public function index(Request $request)
     {
-        $query = Checkpoint::orderBy('name', 'asc');
+        $search = $request->query('search');
 
-        // Recherche simple intégrée
-        if ($request->filled('search')) {
-            $query->where('name', 'like', '%' . $request->search . '%');
+        $checkpoints = Checkpoint::when($search, function ($query, $search) {
+            return $query->where('name', 'like', "%{$search}%");
+        })->paginate(25)->withQueryString();
+
+        if ($request->ajax()) {
+            return view('checkpoints.table', compact('checkpoints'))->render();
         }
-
-        $checkpoints = $query->paginate(25)->withQueryString();
 
         return view('checkpoints.index', compact('checkpoints'));
     }

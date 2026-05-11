@@ -19,7 +19,11 @@ class EventDataTable extends DataTable
     {
         $dataTable = new EloquentDataTable($query);
 
-        return $dataTable->addColumn('action', 'events.datatables_actions');
+        return $dataTable
+                ->addColumn('action', 'events.datatables_actions')
+                ->editColumn('latitude', function ($event) {
+                    return $event->latitude . ', ' . $event->longitude;
+                });
     }
 
     /**
@@ -77,11 +81,19 @@ class EventDataTable extends DataTable
                 }',
             ]),
             'gps' => new Column([
-                'title' => __('models/events.fields.gps'), 'data' => 'latitude',
+                'title' => __('models/events.fields.gps'), 
+                'data' => 'latitude', // Cette donnée contient maintenant "lat, long" grâce à editColumn
                 'render' => 'function() {
-                    return "<a href=\"#\" onclick=\"showMapModal(" + full.latitude + ", " + full.longitude + ", \'" + full.type + "\')\">" + full.latitude + ", " + full.longitude + "</a>";
+                    var coords = full.latitude; 
+                    return "<a href=\"#\" onclick=\"showMapModal(" + full.latitude_original + ", " + full.longitude + ", \'" + full.type + "\')\">" + coords + "</a>";
                 }',
             ]),
+            // 'gps' => new Column([
+            //     'title' => __('models/events.fields.gps'), 'data' => 'latitude',
+            //     'render' => 'function() {
+            //         return "<a href=\"#\" onclick=\"showMapModal(" + full.latitude + ", " + full.longitude + ", \'" + full.type + "\')\">" + full.latitude + ", " + full.longitude + "</a>";
+            //     }',
+            // ]),
             'date' => new Column([
                 'title' => __('models/events.fields.date'), 'data' => 'date',
                 'render' => 'function() {

@@ -367,7 +367,6 @@
             </form>
 
             <div class="ac-info-row">
-                <span class="ac-info-chip">PDF</span>
                 <span class="ac-info-chip">Excel</span>
                 <span class="ac-info-chip">CSV</span>
             </div>

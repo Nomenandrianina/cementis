@@ -495,7 +495,7 @@ tbody tr:hover td { background: #FBF7F9; } */
 /* Boutons d'action */
 .action-flex { display: flex; gap: 8px; justify-content: flex-end; }
 .btn-table {
-    width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+    width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;
     border-radius: 8px; border: 1px solid #d0d5dd; background: white; cursor: pointer; transition: all 0.2s;
 }
 .btn-table.edit:hover { color: var(--accent); border-color: var(--accent); background: #f5f8ff; }
