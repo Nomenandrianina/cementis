@@ -50,5 +50,5 @@
     </div>
     
     <div class="card-footer-pro">
-        {{ $checkpoints->appends(['search' => request('search')])->links() }}
+        {{ $checkpoints->links() }}
     </div>

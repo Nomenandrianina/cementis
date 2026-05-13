@@ -535,95 +535,95 @@
         --ios-separator:      rgba(255, 255, 255, 0.10);
     }
     .topbar {
-            background: #fff;
-            border-radius: 8px;
-            padding: 0 28px;
-            height: 56px;
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            margin-top: 10px;
-            margin-bottom: 10px;
-        }
+        background: #fff;
+        border-radius: 8px;
+        padding: 0 28px;
+        height: 56px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        margin-top: 10px;
+        margin-bottom: 10px;
+    }
 
-        .topbar-title {
-            font-size: 18px;
-            font-weight: 700;
-            letter-spacing: 0.01em;
-            flex: 1;
-        }
+    .topbar-title {
+        font-size: 18px;
+        font-weight: 700;
+        letter-spacing: 0.01em;
+        flex: 1;
+    }
 
-        .topbar-actions { display: flex; gap: 8px; align-items: center; }
-
-
-        .dataTables_wrapper {
-            margin: 20px;
-        },
+    .topbar-actions { display: flex; gap: 8px; align-items: center; }
 
 
-        .transporteur-icon {
-            color: rgb(61, 134, 203);
-        }
+    .dataTables_wrapper {
+        margin: 20px;
+    },
 
-        .top-icon {
-            color: #eded35;
-        }
 
-        .worst-icon {
-            color: red;
-        }
+    .transporteur-icon {
+        color: rgb(61, 134, 203);
+    }
 
-        .required:after {
-            content: '(*)';
-            color: red;
-            padding-left: 5px;
-        },
+    .top-icon {
+        color: #eded35;
+    }
 
-        .nav-child{
-            padding-left: 8px;
-        },
+    .worst-icon {
+        color: red;
+    }
 
-        .card-list{
-            padding:8px
-        }
+    .required:after {
+        content: '(*)';
+        color: red;
+        padding-left: 5px;
+    },
 
-        .number-circle {
-            width: 30px;
-            height: 30px;
-            background-color: #28a745;
-            color: #fff;
-            border-radius: 50%;
-            display: inline-flex;
-            justify-content: center;
-            align-items: center;
-            font-weight: bold;
-            margin-right: 10px;
-        }
+    .nav-child{
+        padding-left: 8px;
+    },
 
-        .number-circle-worst {
-            width: 30px;
-            height: 30px;
-            background-color: #dc3545;
-            color: #fff;
-            border-radius: 50%;
-            display: inline-flex;
-            justify-content: center;
-            align-items: center;
-            font-weight: bold;
-            margin-right: 10px;
-        }
+    .card-list{
+        padding:8px
+    }
 
-        .rounded-card{
-            border-radius: 36px !important;
-        }
+    .number-circle {
+        width: 30px;
+        height: 30px;
+        background-color: #28a745;
+        color: #fff;
+        border-radius: 50%;
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        font-weight: bold;
+        margin-right: 10px;
+    }
 
-        .title-scoring{
-            padding-left: 12px;
-            padding-bottom: 12px;
-        }
+    .number-circle-worst {
+        width: 30px;
+        height: 30px;
+        background-color: #dc3545;
+        color: #fff;
+        border-radius: 50%;
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        font-weight: bold;
+        margin-right: 10px;
+    }
+
+    .rounded-card{
+        border-radius: 36px !important;
+    }
+
+    .title-scoring{
+        padding-left: 12px;
+        padding-bottom: 12px;
+    }
 
      #overlay {
         display: none;
@@ -739,9 +739,9 @@
 
     /* ===== FOOTER GLASS THEME ===== */
     .alpha-footer-glass {
-        font-family: 'Sora', sans-serif;
+        /* font-family: 'Sora', sans-serif; */
         /* On utilise le même fond que la sidebar */
-            background: rgb(54 62 74) !important;
+        background: rgb(54 62 74) !important;
         backdrop-filter: blur(20px) saturate(180%) !important;
         -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
         

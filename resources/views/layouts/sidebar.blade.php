@@ -393,7 +393,7 @@
 
     .alpha-footer-text {
         font-size: 10px;
-        font-family: 'Sora', sans-serif;
+        /* font-family: 'Sora', sans-serif; */
         color: var(--ios-ink-30);
         letter-spacing: 0.06em;
     }

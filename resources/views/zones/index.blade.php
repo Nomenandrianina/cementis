@@ -75,19 +75,13 @@
     }
 
     /* ---------- Recherche live ---------- */
-    function filterZones() {
-        const q = document.getElementById('zone-search').value.toLowerCase().trim();
-        const rows = document.querySelectorAll('.zone-row');
+    let _searchTimer = null;
 
-        if (!q) {
-            rows.forEach(r => r.style.display = '');
-            return;
-        }
-
-        rows.forEach(row => {
-            const name = row.querySelector('.zone-name')?.textContent.toLowerCase() || '';
-            row.style.display = name.includes(q) ? '' : 'none';
-        });
+    function debounceSearch() {
+        clearTimeout(_searchTimer);
+        _searchTimer = setTimeout(() => {
+            document.getElementById('zone-search-form').submit();
+        }, 400); // attend 400ms après la dernière frappe
     }
 </script>
 
@@ -175,31 +169,44 @@
             </div>
             <div class="z-header-right">
                 <span class="z-badge-count">{{ $totalCount }}</span>
-                <div class="z-searchbar">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                    <input id="zone-search" type="text" placeholder="Rechercher une zone…" oninput="filterZones()">
-                </div>
+                <form method="GET" action="{{ route('zones.index') }}" class="z-searchbar" id="zone-search-form">
+                    {{-- Conserver les autres paramètres actifs --}}
+                    @if(request('filter'))
+                        <input type="hidden" name="filter" value="{{ request('filter') }}">
+                    @endif
+
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+
+                    <input
+                        id="zone-search"
+                        type="text"
+                        name="search"
+                        placeholder="Rechercher une zone…"
+                        value="{{ $search }}"
+                        autocomplete="off"
+                        oninput="debounceSearch()"
+                    >
+
+                    {{-- Croix pour effacer --}}
+                    @if($search)
+                        <a href="{{ request()->fullUrlWithQuery(['search' => null, 'page' => null]) }}"
+                        class="z-search-clear" title="Effacer">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        </a>
+                    @endif
+                </form>
             </div>
         </div>
 
         {{-- Onglets filtres --}}
         <div class="z-filter-tabs">
-            <a href="{{ request()->fullUrlWithQuery(['filter' => null]) }}"
-               class="z-tab {{ !request('filter') ? 'active' : '' }}">
-                Toutes
-            </a>
-            <a href="{{ request()->fullUrlWithQuery(['filter' => 'roots']) }}"
-               class="z-tab {{ request('filter') === 'roots' ? 'active' : '' }}">
-                Racines <span class="z-tab-count">{{ $rootZones->total() }}</span>
-            </a>
-            <a href="{{ request()->fullUrlWithQuery(['filter' => 'obligatoire']) }}"
-               class="z-tab {{ request('filter') === 'obligatoire' ? 'active' : '' }}">
-                Obligatoires
-            </a>
-            <a href="{{ request()->fullUrlWithQuery(['filter' => 'optionnel']) }}"
-               class="z-tab {{ request('filter') === 'optionnel' ? 'active' : '' }}">
-                Optionnelles
-            </a>
+            <a href="{{ request()->fullUrlWithQuery(['filter' => null,          'page' => null]) }}" class="z-tab {{ !request('filter') ? 'active' : '' }}">Toutes</a>
+            <a href="{{ request()->fullUrlWithQuery(['filter' => 'roots',       'page' => null]) }}" class="z-tab {{ request('filter') === 'roots'       ? 'active' : '' }}">Racines …</a>
+            <a href="{{ request()->fullUrlWithQuery(['filter' => 'obligatoire', 'page' => null]) }}" class="z-tab {{ request('filter') === 'obligatoire' ? 'active' : '' }}">Obligatoires</a>
+            <a href="{{ request()->fullUrlWithQuery(['filter' => 'optionnel',   'page' => null]) }}" class="z-tab {{ request('filter') === 'optionnel'   ? 'active' : '' }}">Optionnelles</a>
         </div>
 
         {{-- Bandeau info si >200 zones --}}

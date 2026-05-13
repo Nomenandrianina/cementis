@@ -40,39 +40,33 @@ class ZoneController extends Controller
 
     public function index(Request $request)
     {
-        $filter = $request->get('filter');
-    
-        // ── Requête racines avec pagination ──────────────────────────
-        $query = Zone::whereNull('parent_id')
-                    ->with(['children.children']); // eager load 2 niveaux
-        
+        $search = $request->input('search', '');
+        $filter = $request->input('filter');
 
-        // Filtres par onglet
-        if ($filter === 'optionnel') {
-            $query->where('option', 'optionnel');
-        } elseif ($filter === 'obligatoire') {
-            // Adapte la valeur selon ta constante OPTIONS (ex: 'required', 'mandatory'…)
-            $query->where('option', 'obligatoire');
+        $query = Zone::whereNull('parent_id')
+            ->with('children');
+
+        // Filtre par type
+        if ($filter === 'roots') {
+            // déjà filtré par whereNull
+        } elseif (in_array($filter, ['obligatoire', 'optionnel'])) {
+            $query->where('option', $filter);
         }
-        // 'roots' = pas de filtre supplémentaire, déjà whereNull('parent_id')
-    
-        // Recherche textuelle (si JS désactivé, fallback server-side)
-        if ($q = $request->get('q')) {
-            $query->where('name', 'like', '%' . $q . '%');
+
+        // Recherche : zones racines dont le nom correspond,
+        // OU racines qui ont un enfant dont le nom correspond
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                ->orWhereHas('children', fn($c) => $c->where('name', 'like', "%{$search}%"));
+            });
         }
-    
-        // Pagination : 25 zones racines par page
-        $rootZones = $query->orderBy('name')->paginate(25)->withQueryString();
-    
-        // ── Toutes les zones pour les selects (parent_id) ────────────
-        // On charge uniquement id + name + parent_id pour être léger même à 1000+
-        $parentZones = Zone::select('id', 'name', 'parent_id')
-                        ->orderBy('name')
-                        ->get();
-    
+
+        $rootZones  = $query->orderBy('name')->paginate(25)->withQueryString();
         $totalCount = Zone::count();
-    
-        return view('zones.index', compact('rootZones', 'parentZones', 'totalCount'));
+        $parentZones = Zone::orderBy('name')->get();
+
+        return view('zones.index', compact('rootZones', 'totalCount', 'parentZones', 'search'));
     }
 
     public function children(Zone $zone)

@@ -84,41 +84,14 @@
     }
 
     
-
-    document.addEventListener('DOMContentLoaded', function() {
-        let searchTimer;
-        const searchInput = document.getElementById('checkpoint-search');
-        const tableContainer = document.getElementById('table-container');
-
-        if (searchInput) {
-            searchInput.addEventListener('keyup', function() {
-                clearTimeout(searchTimer);
-                const query = this.value;
-
-                // On attend 300ms après la fin de la frappe pour ne pas surcharger le serveur (Debounce)
-                searchTimer = setTimeout(() => {
-                    fetchCheckpoints(query);
-                }, 300);
-            });
-        }
-    });
-    
-
-    function fetchCheckpoints(query) {
-        // On construit l'URL avec le paramètre de recherche
-        const url = `/checkpoints?search=${encodeURIComponent(query)}`;
-
-        fetch(url, {
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-        .then(response => response.text())
-        .then(html => {
-            tableContainer.innerHTML = html;
-        })
-        .catch(error => console.error('Erreur:', error));
+    let _cpTimer = null;
+    function debounceSearch() {
+        clearTimeout(_cpTimer);
+        _cpTimer = setTimeout(() => {
+            document.getElementById('cp-search-form').submit();
+        }, 400);
     }
+   
         
 </script>
 
@@ -153,10 +126,24 @@
                 </div>
             </div>
             <div class="header-actions">
-                <div class="search-wrapper">
+                <form method="GET" action="{{ route('checkpoints.index') }}" 
+                    class="search-wrapper" id="cp-search-form">
                     <i class="fas fa-search"></i>
-                    <input type="text" placeholder="Filtrer par nom..." id="checkpoint-search">
-                </div>
+                    <input 
+                        type="text" 
+                        name="search"
+                        id="checkpoint-search"
+                        placeholder="Filtrer par nom..." 
+                        value="{{ $search }}"
+                        autocomplete="off"
+                        oninput="debounceSearch()"
+                    >
+                    @if($search)
+                        <a href="{{ route('checkpoints.index') }}" class="z-search-clear" title="Effacer">
+                            <i class="fas fa-times"></i>
+                        </a>
+                    @endif
+                </form>
             </div>
         </div>
     </div>
