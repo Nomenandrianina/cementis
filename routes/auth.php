@@ -300,3 +300,4 @@ Route::prefix('reports')->name('reports.')->group(function () {
     Route::get('/export-csv',[ReportController::class, 'exportCsv'])->name('export_csv');
     Route::get('/export-excel', [ReportController::class, 'exportExcel'])->name('export_excel');
 });
+

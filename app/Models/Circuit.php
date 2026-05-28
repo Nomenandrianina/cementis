@@ -50,4 +50,9 @@ class Circuit extends Model
                     ->latest('effective_from')
                     ->first();
     }
+
+    public function completionRules(): HasMany
+    {
+        return $this->hasMany(CircuitCompletionRule::class)->orderBy('order');
+    }
 }

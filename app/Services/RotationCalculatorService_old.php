@@ -121,8 +121,92 @@ class RotationCalculatorService
     }
 
     /**
-     * Extrait les rotations depuis la séquence d'événements GPS.
-     * Utilise un automate à états basé sur l'ordre des étapes du circuit.
+     * Résout la séquence effective des legs en tenant compte des groupes OU.
+     *
+     * Les legs d'un même group_or sont regroupés en un seul "slot" :
+     * le slot est validé dès que l'un des membres matche.
+     *
+     * Retourne une Collection de slots, chaque slot étant :
+     *   ['legs' => Collection<CircuitLeg>, 'is_or' => bool, 'group_or' => string|null]
+     *
+     * Exemple pour un circuit T1(OU)→T2→CP→T5(OU) :
+     *   slot 0 : is_or=true,  legs=[Andranomena, Ilanivato]
+     *   slot 1 : is_or=false, legs=[leave_zone Andranomena]
+     *   slot 2 : is_or=false, legs=[pass_checkpoint MBS]
+     *   slot 3 : is_or=true,  legs=[enter_zone Andranomena, enter_zone Ilanivato]
+     */
+    private function resolveLegsSequence(\Illuminate\Support\Collection $legs): array
+    {
+        $slots    = [];
+        $seenGroups = [];
+
+        foreach ($legs as $leg) {
+            if ($leg->hasOrGroup()) {
+                $group = $leg->group_or;
+
+                if (isset($seenGroups[$group])) {
+                    // Ajouter au slot existant
+                    $slots[$seenGroups[$group]]['legs']->push($leg);
+                } else {
+                    // Créer un nouveau slot OU
+                    $slotIdx = count($slots);
+                    $slots[] = [
+                        'legs'     => collect([$leg]),
+                        'is_or'    => true,
+                        'group_or' => $group,
+                    ];
+                    $seenGroups[$group] = $slotIdx;
+                }
+            } else {
+                // Slot simple (un seul leg)
+                $slots[] = [
+                    'legs'     => collect([$leg]),
+                    'is_or'    => false,
+                    'group_or' => null,
+                ];
+            }
+        }
+
+        return $slots;
+    }
+
+    /**
+     * Vérifie si un événement correspond à AU MOINS UN leg du slot.
+     * Pour les slots simples (is_or=false), identique à eventMatchesLeg.
+     * Pour les slots OU (is_or=true), matche si l'un des legs matche.
+     *
+     * Retourne le CircuitLeg qui a matché, ou null.
+     */
+    private function slotMatchesEvent(array $slot, array $event): ?CircuitLeg
+    {
+        foreach ($slot['legs'] as $leg) {
+            if ($this->eventMatchesLeg($event, $leg)) {
+                return $leg;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Un slot est optionnel si TOUS ses legs sont optionnels.
+     * (Pour un slot OU : si n'importe lequel est obligatoire → slot obligatoire)
+     */
+    private function slotIsOptional(array $slot): bool
+    {
+        foreach ($slot['legs'] as $leg) {
+            if (!$leg->isOptional()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * extractRotations — version finale intégrant :
+     * - Saut d'étapes optionnelles (checkpoint 'autre' ou leg->optional)
+     * - Sous-zones couvertes par zone mère
+     * - Replay T5 = T1
+     * - Anti-boucle $replayOnce
      */
     private function extractRotations(
         array      $events,
@@ -138,7 +222,7 @@ class RotationCalculatorService
 
         $i          = 0;
         $totalEvts  = count($events);
-        $replayOnce = false; // garde-fou anti-boucle infinie
+        $replayOnce = false;
 
         while ($i < $totalEvts) {
             $event       = $events[$i];
@@ -150,11 +234,11 @@ class RotationCalculatorService
                 continue;
             }
 
-            // ── MATCH : événement correspond à l'étape attendue ───────────────
+            // ── MATCH ─────────────────────────────────────────────────────────────
             if ($this->eventMatchesLeg($event, $expectedLeg)) {
                 $replayOnce = false;
 
-                // Démarrage rotation sur T1
+                // Début de rotation (T1)
                 if ($currentLegIdx === 0) {
                     $currentRotation = Rotation::create([
                         'rvehicule_id'  => $vehicle->id,
@@ -166,11 +250,9 @@ class RotationCalculatorService
                         'raw_events'    => [],
                     ]);
                     $legEvents = [];
-                    
                     Log::info('Rotation démarrée.', [
                         'rotation_id' => $currentRotation->id,
                         'dt'          => $event['dt'],
-                        'leg'         => $expectedLeg->label,
                     ]);
                 }
 
@@ -180,7 +262,7 @@ class RotationCalculatorService
                         ? Carbon::parse(end($legEvents)['dt'])
                         : null;
                     $durationSincePrev = $prevOccurredAt
-                        ? (int) $prevOccurredAt->diffInMinutes($occurredAt)
+                        ? (int) $prevOccurredAt->diffInSeconds($occurredAt)
                         : null;
 
                     RotationLeg::create([
@@ -189,7 +271,7 @@ class RotationCalculatorService
                         'occurred_at'                     => $occurredAt,
                         'lat'                             => $event['lat'] ?? null,
                         'lng'                             => $event['lng'] ?? null,
-                        'duration_since_previous_minutes' => $durationSincePrev,
+                        'duration_since_previous_seconds' => $durationSincePrev,
                         'raw_event'                       => $event['raw'] ?? $event,
                     ]);
 
@@ -203,22 +285,22 @@ class RotationCalculatorService
                         'dt'    => $event['dt'],
                     ]);
 
-                    // ── Rotation complète ──────────────────────────────────────
+                    // ── Rotation complète ──────────────────────────────────────────
                     if ($currentLegIdx >= $legs->count()) {
                         $completedAt = Carbon::parse($event['dt']);
                         $duration    = (int) Carbon::parse($currentRotation->started_at)
-                                                ->diffInMinutes($completedAt);
+                                                ->diffInSeconds($completedAt);
 
                         $currentRotation->update([
                             'completed_at'     => $completedAt,
-                            'duration_minutes' => $duration,
+                            'duration_seconds' => $duration,
                             'status'           => 'completed',
                             'is_valid'         => true,
                         ]);
 
                         Log::info('Rotation complète.', [
-                            'rotation_id'  => $currentRotation->id,
-                            'duration_min' => $duration,
+                            'rotation_id'      => $currentRotation->id,
+                            'duration_seconds' => $duration,
                         ]);
 
                         $rotations[]     = $currentRotation;
@@ -226,16 +308,11 @@ class RotationCalculatorService
                         $currentLegIdx   = 0;
                         $legEvents       = [];
 
-                        // Rejouer cet événement : il peut être T1 de la rotation suivante
-                        // (ex: zone_in Andranomena = T5 et T1 en même temps)
-                        // $replayOnce empêche de rejouer plus d'une fois le même event
+                        // T5 peut être T1 de la rotation suivante → rejouer une fois
                         if (!$replayOnce) {
                             $replayOnce = true;
-                            // PAS de $i++ → on rejoue
                             continue;
                         }
-
-                        // Déjà rejoué et toujours pas T1 → on avance
                         $replayOnce = false;
                         $i++;
                         continue;
@@ -246,32 +323,80 @@ class RotationCalculatorService
                 continue;
             }
 
-            // ── PAS DE MATCH ──────────────────────────────────────────────────
+            // ── PAS DE MATCH ───────────────────────────────────────────────────────
 
             if ($currentRotation !== null) {
 
-                // Cas 1 : étape sautée → rotation annulée
-                $skippedLeg = $this->eventSkipsExpectedLeg(
+                // ── Cas 1 : saut d'étape ────────────────────────────────────────────
+                $skipResult = $this->eventSkipsExpectedLeg(
                     $event, $expectedLeg, $legs, $currentLegIdx
                 );
 
-                if ($skippedLeg !== null) {
+                if ($skipResult['leg'] !== null) {
+                    // ── Sous-zones couvertes par zone mère ? ─────────────────────────
+                    $coveringParentEvent = $this->getCoveringParentEvent(
+                        $skipResult['leg'], $legEvents
+                    );
+
+                    if ($coveringParentEvent !== null) {
+                        // Absorber toutes les sous-zones consécutives de la même zone mère
+                        $parentZoneId = \App\Models\Zone::find($skipResult['leg']->reference_id)?->parent_id;
+
+                        while ($currentLegIdx < $legs->count()) {
+                            $nextLeg = $legs->get($currentLegIdx);
+                            if ($nextLeg === null) break;
+
+                            $isSubzoneOfSameParent =
+                                $nextLeg->reference_type === 'zone'
+                                && !empty($nextLeg->reference_id)
+                                && \App\Models\Zone::find($nextLeg->reference_id)?->parent_id === $parentZoneId;
+
+                            if (!$isSubzoneOfSameParent) break;
+
+                            $occurredAt = Carbon::parse($coveringParentEvent['dt']);
+
+                            RotationLeg::create([
+                                'rotation_id'                     => $currentRotation->id,
+                                'circuit_leg_id'                  => $nextLeg->id,
+                                'occurred_at'                     => $occurredAt,
+                                'lat'                             => $coveringParentEvent['lat'] ?? null,
+                                'lng'                             => $coveringParentEvent['lng'] ?? null,
+                                'duration_since_previous_seconds' => null,
+                                'raw_event'                       => $coveringParentEvent['raw'] ?? $coveringParentEvent,
+                                'skipped_by_parent'               => true,
+                            ]);
+
+                            Log::info('Sous-zone couverte par zone mère.', [
+                                'rotation_id'    => $currentRotation->id,
+                                'skipped_leg'    => $nextLeg->label,
+                                'parent_zone_id' => $parentZoneId,
+                            ]);
+
+                            $currentLegIdx++;
+                        }
+
+                        if (!$replayOnce) { $replayOnce = true; continue; }
+                        $replayOnce = false;
+                        $i++;
+                        continue;
+                    }
+
+                    // Étape obligatoire manquée → annulation
                     $currentRotation->update([
                         'status'              => 'cancelled',
                         'is_valid'            => false,
                         'invalidation_reason' => sprintf(
                             'Étape manquée : "%s" (ordre %d) — non validée avant "%s" à %s',
-                            $skippedLeg->label,
-                            $skippedLeg->order,
+                            $skipResult['leg']->label,
+                            $skipResult['leg']->order,
                             $event['reference_name'] ?? '?',
                             $event['dt']             ?? '?'
                         ),
                     ]);
 
-                    Log::warning('Rotation annulée — étape manquée.', [
-                        'rotation_id'  => $currentRotation->id,
-                        'missed_leg'   => $skippedLeg->label,
-                        'missed_order' => $skippedLeg->order,
+                    Log::warning('Rotation annulée — étape obligatoire manquée.', [
+                        'rotation_id' => $currentRotation->id,
+                        'missed_leg'  => $skipResult['leg']->label,
                     ]);
 
                     $rotations[]     = $currentRotation;
@@ -279,17 +404,21 @@ class RotationCalculatorService
                     $currentLegIdx   = 0;
                     $legEvents       = [];
 
-                    if (!$replayOnce) {
-                        $replayOnce = true;
-                        continue; // Rejouer : cet event peut être T1
-                    }
-
+                    if (!$replayOnce) { $replayOnce = true; continue; }
                     $replayOnce = false;
                     $i++;
                     continue;
                 }
 
-                // Cas 2 : déviation hors circuit
+                // ── Saut d'étapes optionnelles → avancer l'index ────────────────────
+                if ($skipResult['advance_to'] !== null) {
+                    $currentLegIdx = $skipResult['advance_to'];
+                    // Ne pas avancer $i → rejouer l'événement avec le nouvel index
+                    $replayOnce = false;
+                    continue;
+                }
+
+                // ── Cas 2 : déviation hors circuit ──────────────────────────────────
                 if ($this->eventInvalidatesRotation($event, $circuit, $legs)) {
                     $currentRotation->update([
                         'status'              => 'cancelled',
@@ -311,81 +440,136 @@ class RotationCalculatorService
                     $currentLegIdx   = 0;
                     $legEvents       = [];
 
-                    if (!$replayOnce) {
-                        $replayOnce = true;
-                        continue; // Rejouer : cet event peut être T1
-                    }
-
+                    if (!$replayOnce) { $replayOnce = true; continue; }
                     $replayOnce = false;
                     $i++;
                     continue;
                 }
             }
 
-            // Événement non pertinent (stopped, marker_out, zone inconnue…)
+            // Événement non pertinent → ignorer
             $replayOnce = false;
             $i++;
         }
 
-        // Rotation ouverte en fin de période → in_progress
+        // Rotation non terminée en fin de période
         if ($currentRotation !== null) {
-            $currentRotation->update([
-                'status'   => 'in_progress',
-                'is_valid' => false,
-            ]);
-            Log::info('Rotation en cours (non terminée).', [
-                'rotation_id' => $currentRotation->id,
-            ]);
+            $currentRotation->update(['status' => 'in_progress', 'is_valid' => false]);
+            Log::info('Rotation en cours.', ['rotation_id' => $currentRotation->id]);
             $rotations[] = $currentRotation;
         }
 
         return $rotations;
     }
 
+    
+
     /**
-     * Détecte si un événement correspond à une étape ULTÉRIEURE dans le circuit,
-     * ce qui signifie que l'étape courante ($expectedLeg) a été sautée/manquée.
+     * Retourne l'événement GPS de la zone mère si le leg manqué est
+     * une sous-zone dont le parent a déjà été validé dans cette rotation.
      *
-     * Exemple :
-     *   Circuit : T1 → T2 → CP-Ambodimita → CP-Ambohitrimanjaka → ...
-     *   On attend CP-Ambodimita (index 2).
-     *   On reçoit CP-Ambohitrimanjaka (index 3).
-     *   → CP-Ambodimita a été manqué → retourne le leg manqué (CP-Ambodimita).
+     * Utilisé pour créer les RotationLeg skippés avec l'horodatage
+     * du passage par la zone mère.
      *
-     * @return CircuitLeg|null  Le leg manqué, ou null si pas de saut détecté.
+     * Règle applicable uniquement aux zones (jamais aux checkpoints).
+     *
+     * @param  CircuitLeg $missedLeg   Étape qui a été manquée
+     * @param  array      $legEvents   Événements GPS déjà validés dans la rotation
+     * @return array|null              Événement GPS du passage par la zone mère, ou null
+     */
+    private function getCoveringParentEvent(
+        CircuitLeg $missedLeg,
+        array      $legEvents
+    ): ?array {
+        // Checkpoints : jamais couverts par cette règle
+        if ($missedLeg->reference_type !== 'zone' || empty($missedLeg->reference_id)) {
+            return null;
+        }
+
+        $zone = \App\Models\Zone::find($missedLeg->reference_id);
+
+        if (!$zone || empty($zone->parent_id)) {
+            return null; // Pas de zone mère → règle inapplicable
+        }
+
+        // Chercher dans les événements déjà validés si la zone mère y figure
+        foreach ($legEvents as $pastEvent) {
+            if (
+                isset($pastEvent['zone_id'])
+                && (int) $pastEvent['zone_id'] === (int) $zone->parent_id
+            ) {
+                return $pastEvent; // On retourne l'événement mère pour horodater
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Détecte si un événement correspond à une étape ULTÉRIEURE dans le circuit.
+     * 
+     * NOUVEAU : si toutes les étapes sautées entre currentLegIdx et le match futur
+     * sont optionnelles → on ne retourne pas le leg manqué (pas d'annulation),
+     * mais on avance currentLegIdx jusqu'au match futur.
+     *
+     * @return array{leg: CircuitLeg|null, advance_to: int|null}
+     *   - leg = null → pas de saut, ou saut optionnel
+     *   - leg = CircuitLeg → étape OBLIGATOIRE manquée → annuler
+     *   - advance_to = index futur à atteindre (quand saut optionnel)
      */
     private function eventSkipsExpectedLeg(
         array      $event,
         CircuitLeg $expectedLeg,
         Collection $legs,
         int        $currentLegIdx
-    ): ?CircuitLeg {
-        // Chercher si cet événement correspond à une étape APRÈS l'étape courante
-        $matchingFutureLeg = null;
+    ): array {
+        // Chercher si cet événement correspond à une étape APRÈS la courante
         $matchingFutureIdx = null;
 
         foreach ($legs as $idx => $leg) {
-            // On ne regarde que les étapes après la courante
-            if ($idx <= $currentLegIdx) {
-                continue;
-            }
-
+            if ($idx <= $currentLegIdx) continue;
             if ($this->eventMatchesLeg($event, $leg)) {
-                $matchingFutureLeg = $leg;
                 $matchingFutureIdx = $idx;
-                break; // Premier match futur suffit
+                break;
             }
         }
 
-        // Pas de match futur → pas de saut
-        if ($matchingFutureLeg === null) {
-            return null;
+        // Pas de match futur → pas de saut détecté
+        if ($matchingFutureIdx === null) {
+            return ['leg' => null, 'advance_to' => null];
         }
 
-        // Un saut est confirmé : l'étape courante ($expectedLeg) a été manquée
-        // et l'événement correspond à une étape plus loin dans le circuit.
-        return $expectedLeg; // On retourne le leg qui a été manqué
+        // Il y a un saut : inspecter chaque étape sautée
+        for ($idx = $currentLegIdx; $idx < $matchingFutureIdx; $idx++) {
+            $skippedLeg = $legs->get($idx);
+            if ($skippedLeg === null) continue;
+
+            if (!$this->legIsOptional($skippedLeg)) {
+                // Étape obligatoire manquée → annulation
+                return ['leg' => $skippedLeg, 'advance_to' => null];
+            }
+
+            Log::info('Étape optionnelle sautée (ignorée).', [
+                'leg'   => $skippedLeg->label,
+                'order' => $skippedLeg->order,
+            ]);
+        }
+
+        // Toutes les étapes sautées sont optionnelles → avancer sans annuler
+        return ['leg' => null, 'advance_to' => $matchingFutureIdx];
     }
+
+    /**
+     * Un leg est optionnel si :
+     * 1. Son champ optional = true (configuré dans le circuit)
+     * 2. OU si le checkpoint associé est de type 'optionnel'
+     * 3. OU si le zone associé est d'option 'optionnel'  (couvre enter ET leave de la même zone).
+     */
+    private function legIsOptional(CircuitLeg $leg): bool
+    {
+        return $leg->isOptional();
+    }
+
 
 
     /**
@@ -526,15 +710,34 @@ class RotationCalculatorService
 
             $inCircuit = in_array((int) $event['zone_id'], $allowedZoneIds, true);
 
-            if (!$inCircuit) {
-                Log::warning('Déviation zone détectée.', [
-                    'zone_id'   => $event['zone_id'],
-                    'zone_name' => $event['reference_name'] ?? '?',
-                    'allowed'   => $allowedZoneIds,
-                ]);
+            if ($inCircuit) {
+                return false;
             }
 
-            return !$inCircuit;
+            // ── NOUVEAU : zone hors-circuit mais sous-zone d'une zone du circuit ? ──
+            $zone = \App\Models\Zone::find((int) $event['zone_id']);
+
+            if ($zone && !empty($zone->parent_id)) {
+                $parentIsInCircuit = in_array((int) $zone->parent_id, $allowedZoneIds, true);
+
+                if ($parentIsInCircuit) {
+                    Log::debug('Zone hors-circuit tolérée : sous-zone d\'une zone du circuit.', [
+                        'zone_id'        => $event['zone_id'],
+                        'zone_name'      => $event['reference_name'] ?? '?',
+                        'parent_zone_id' => $zone->parent_id,
+                    ]);
+                    return false; // Pas de déviation
+                }
+            }
+            // ── FIN NOUVEAU ──────────────────────────────────────────────────────────
+
+            Log::warning('Déviation zone détectée.', [
+                'zone_id'   => $event['zone_id'],
+                'zone_name' => $event['reference_name'] ?? '?',
+                'allowed'   => $allowedZoneIds,
+            ]);
+
+            return true;
         }
 
         // ── Cas checkpoint : on vérifie les pass_checkpoint ─────────────────────
@@ -584,11 +787,11 @@ class RotationCalculatorService
     private function completeRotation(Rotation $rotation, array $lastEvent, Collection $legs): void
     {
         $completedAt = Carbon::parse($lastEvent['dt'] ?? now());
-        $duration    = Carbon::parse($rotation->started_at)->diffInMinutes($completedAt);
+        $duration    = Carbon::parse($rotation->started_at)->diffInSeconds($completedAt);
 
         $rotation->update([
             'completed_at'     => $completedAt,
-            'duration_minutes' => $duration,
+            'duration_seconds' => $duration,
             'status'           => 'completed',
             'is_valid'         => true,
         ]);

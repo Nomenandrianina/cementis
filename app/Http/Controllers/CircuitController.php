@@ -37,13 +37,41 @@ class CircuitController extends Controller
         return redirect()->route('circuits.edit', $circuit)->with('success', 'Circuit créé avec succès.');
     }
 
+    // public function edit(Circuit $circuit)
+    // {
+    //     $circuit->load(['legs.circuit', 'vehicles', 'objectives']);
+    //     $zones       = Zone::where('active', true)->orderBy('name')->get();
+    //     $checkpoints = Checkpoint::where('active', true)->orderBy('name')->get();
+    //     $vehicles    = Rvehicule::orderBy('name')->get();
+    //     return view('circuits.edit', compact('circuit', 'zones', 'checkpoints', 'vehicles'));
+    // }
+
     public function edit(Circuit $circuit)
     {
-        $circuit->load(['legs.circuit', 'vehicles', 'objectives']);
+        $circuit->load(['legs' => fn($q) => $q->orderBy('order'), 'vehicles', 'objectives']);
+        
+        // Grouper les legs en slots pour l'affichage
+        $slots = collect();
+        $seenGroups = [];
+
+        foreach ($circuit->legs as $leg) {
+            if ($leg->group_or) {
+                if (isset($seenGroups[$leg->group_or])) {
+                    $slots[$seenGroups[$leg->group_or]]['legs']->push($leg);
+                } else {
+                    $idx = $slots->count();
+                    $slots->push(['is_or' => true, 'group_or' => $leg->group_or, 'legs' => collect([$leg])]);
+                    $seenGroups[$leg->group_or] = $idx;
+                }
+            } else {
+                $slots->push(['is_or' => false, 'group_or' => null, 'legs' => collect([$leg])]);
+            }
+        }
+
         $zones       = Zone::where('active', true)->orderBy('name')->get();
         $checkpoints = Checkpoint::where('active', true)->orderBy('name')->get();
         $vehicles    = Rvehicule::orderBy('name')->get();
-        return view('circuits.edit', compact('circuit', 'zones', 'checkpoints', 'vehicles'));
+        return view('circuits.edit', compact('circuit', 'slots', 'zones', 'checkpoints', 'vehicles'));
     }
 
     public function update(Request $request, Circuit $circuit)
@@ -76,6 +104,7 @@ class CircuitController extends Controller
             'reference_id'   => 'required|integer',
             'optional'       => 'boolean',
             'direction'      => 'in:inbound,outbound,any',
+            'group_or'       => 'nullable|string|max:50|regex:/^[a-z0-9_]+$/',
         ]);
 
         $maxOrder = $circuit->legs()->max('order') ?? 0;
@@ -94,6 +123,7 @@ class CircuitController extends Controller
             'reference_id'   => 'required|integer',
             'optional'       => 'boolean',
             'direction'      => 'in:inbound,outbound,any',
+            'group_or'       => 'nullable|string|max:50|regex:/^[a-z0-9_]+$/',
         ]);
 
         $leg->update($data);

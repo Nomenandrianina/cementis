@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 // ============================================================
 class CircuitLeg extends Model
 {
-    protected $fillable = ['circuit_id', 'order', 'label', 'event_type', 'reference_type', 'reference_id', 'direction', 'optional'];
+    protected $fillable = ['circuit_id', 'order', 'label', 'event_type', 'reference_type', 'reference_id', 'direction', 'group_or','optional', 'role'];
     protected $casts = [
         'optional' => 'boolean',
     ];
@@ -28,6 +28,12 @@ class CircuitLeg extends Model
             'checkpoint' => Checkpoint::find($this->reference_id),
             default      => null,
         };
+    }
+
+    /** Ce leg fait partie d'un groupe OU */
+    public function hasOrGroup(): bool
+    {
+        return !empty($this->group_or);
     }
 
     /**
@@ -53,4 +59,10 @@ class CircuitLeg extends Model
 
         return false;
     }
+
+    /** Ce leg peut déclencher le début d'une rotation */
+    public function isStartLeg(): bool { return $this->role === 'start'; }
+
+    /** Ce leg peut déclencher la fin d'une rotation */
+    public function isEndLeg(): bool { return $this->role === 'end'; }
 }
