@@ -27,7 +27,7 @@ class GpsEventController extends Controller
             'date_from' => 'required|date_format:Y-m-d',
             'date_to'   => 'required|date_format:Y-m-d|after_or_equal:date_from',
             'use_test'  => 'nullable|boolean',
-            'test_mode' => 'nullable|string|in:complete,incomplete,cancelled,real_sample,antonio',
+            'test_mode' => 'nullable|string|in:Tsiadino,complete,incomplete,cancelled,real_sample,antonio',
         ]);
 
         $vehicle = Rvehicule::where('imei', $data['imei'])->first();
@@ -91,7 +91,7 @@ class GpsEventController extends Controller
     private function getTestEvents(string $mode): array
     {
         return match($mode) {
-            'complete'    => \App\Services\TestRawEvents::completeRotation(),
+            'Tsiadino'    => \App\Services\TestRawEvents::completeRotationTsiadino(),
             'incomplete'  => \App\Services\TestRawEvents::incompleteRotation(),
             'cancelled'   => \App\Services\TestRawEvents::cancelledRotation(),
             'real_sample' => \App\Services\TestRawEvents::realApiSample(),

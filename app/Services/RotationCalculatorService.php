@@ -14,8 +14,8 @@ use Illuminate\Support\Facades\Log;
 
 class RotationCalculatorService
 {
-    // public const TEST_MODE = 'complete'; 
-    public const TEST_MODE = 'API'; 
+    public const TEST_MODE = 'Tsiadino'; // 'complete' | 'incomplete' | 'cancelled' | 'real_sample' | false
+    // public const TEST_MODE = 'API'; 
 
     public function __construct(
         private readonly GpsApiService $gpsApi,
@@ -41,7 +41,7 @@ class RotationCalculatorService
         $periodStart = Carbon::createFromDate($year, $month, 1)->startOfMonth();
         $periodEnd   = $periodStart->copy()->addMonth()->endOfMonth();
 
-        if(self::TEST_MODE === 'complete') {
+        if(self::TEST_MODE === 'Tsiadino') {
             $rawEvents = $this->getTestEvents();
             Log::info("[TEST_MODE='" . self::TEST_MODE . "'] Données GPS statiques utilisées.", [
                 'vehicle' => $vehicle->imei,
@@ -213,6 +213,262 @@ class RotationCalculatorService
      * Utilise resolveLegsSequence() pour regrouper les legs en slots.
      * Un slot OU est validé dès qu'UN de ses legs matche.
      */
+    // private function extractRotations(
+    //     array      $events,
+    //     Collection $legs,
+    //     $vehicle,
+    //     Circuit    $circuit,
+    //     string     $countedMonth
+    // ): array {
+    //     $rotations       = [];
+    //     $currentSlotIdx  = 0;
+    //     $currentRotation = null;
+    //     $legEvents       = [];
+
+    //     $slots      = $this->resolveLegsSequence($legs);
+    //     $totalSlots = count($slots);
+
+    //     $i          = 0;
+    //     $totalEvts  = count($events);
+    //     $replayOnce = false;
+
+    //     while ($i < $totalEvts) {
+    //         $event        = $events[$i];
+    //         $expectedSlot = $slots[$currentSlotIdx] ?? null;
+
+    //         if ($expectedSlot === null) {
+    //             $i++;
+    //             $replayOnce = false;
+    //             continue;
+    //         }
+
+    //         // ── MATCH ────────────────────────────────────────────────────────────
+    //         $matchedLeg = $this->slotMatchesEvent($expectedSlot, $event);
+
+    //         if ($matchedLeg !== null) {
+    //             $replayOnce = false;
+
+    //             // Début de rotation (slot 0)
+    //             if ($currentSlotIdx === 0) {
+    //                 $currentRotation = Rotation::create([
+    //                     'rvehicule_id'  => $vehicle->id,
+    //                     'circuit_id'    => $circuit->id,
+    //                     'started_at'    => $event['dt'],
+    //                     'status'        => 'in_progress',
+    //                     'counted_month' => $countedMonth,
+    //                     'is_valid'      => false,
+    //                     'raw_events'    => [],
+    //                 ]);
+    //                 $legEvents = [];
+    //                 Log::info('Rotation démarrée.', [
+    //                     'rotation_id' => $currentRotation->id,
+    //                     'dt'          => $event['dt'],
+    //                 ]);
+    //             }
+
+    //             if ($currentRotation) {
+    //                 $occurredAt        = Carbon::parse($event['dt']);
+    //                 $prevOccurredAt    = !empty($legEvents)
+    //                     ? Carbon::parse(end($legEvents)['dt'])
+    //                     : null;
+    //                 $durationSincePrev = $prevOccurredAt
+    //                     ? (int) $prevOccurredAt->diffInSeconds($occurredAt)
+    //                     : null;
+
+    //                 RotationLeg::create([
+    //                     'rotation_id'                     => $currentRotation->id,
+    //                     'circuit_leg_id'                  => $matchedLeg->id,
+    //                     'occurred_at'                     => $occurredAt,
+    //                     'lat'                             => $event['lat'] ?? null,
+    //                     'lng'                             => $event['lng'] ?? null,
+    //                     'duration_since_previous_seconds' => $durationSincePrev,
+    //                     'raw_event'                       => $event['raw'] ?? $event,
+    //                 ]);
+
+    //                 $legEvents[] = $event;
+    //                 $currentSlotIdx++;
+
+    //                 Log::debug('Slot validé.', [
+    //                     'leg'        => $matchedLeg->label,
+    //                     'slot_idx'   => $currentSlotIdx,
+    //                     'total_slots'=> $totalSlots,
+    //                     'is_or'      => $expectedSlot['is_or'],
+    //                     'dt'         => $event['dt'],
+    //                 ]);
+
+    //                 // ── Rotation complète ────────────────────────────────────────
+    //                 if ($currentSlotIdx >= $totalSlots) {
+    //                     $completedAt = Carbon::parse($event['dt']);
+    //                     $duration    = (int) Carbon::parse($currentRotation->started_at)
+    //                                             ->diffInSeconds($completedAt);
+
+    //                     $currentRotation->update([
+    //                         'completed_at'     => $completedAt,
+    //                         'duration_seconds' => $duration,
+    //                         'status'           => 'completed',
+    //                         'is_valid'         => true,
+    //                     ]);
+
+    //                     Log::info('Rotation complète.', [
+    //                         'rotation_id'      => $currentRotation->id,
+    //                         'duration_seconds' => $duration,
+    //                     ]);
+
+    //                     $rotations[]     = $currentRotation;
+    //                     $currentRotation = null;
+    //                     $currentSlotIdx  = 0;
+    //                     $legEvents       = [];
+
+    //                     if (!$replayOnce) {
+    //                         $replayOnce = true;
+    //                         continue;
+    //                     }
+    //                     $replayOnce = false;
+    //                     $i++;
+    //                     continue;
+    //                 }
+    //             }
+
+    //             $i++;
+    //             continue;
+    //         }
+
+    //         // ── PAS DE MATCH ─────────────────────────────────────────────────────
+
+    //         if ($currentRotation !== null) {
+
+    //             // Cas 1 : saut d'étape (slot)
+    //             $skipResult = $this->slotSkipsExpectedSlot(
+    //                 $event, $expectedSlot, $slots, $currentSlotIdx
+    //             );
+
+    //             if ($skipResult['leg'] !== null) {
+    //                 // Sous-zones couvertes par zone mère ?
+    //                 $coveringParentEvent = $this->getCoveringParentEventForSlot(
+    //                     $skipResult['leg'], $legEvents
+    //                 );
+
+    //                 if ($coveringParentEvent !== null) {
+    //                     $parentZoneId = \App\Models\Zone::find($skipResult['leg']->reference_id)?->parent_id;
+
+    //                     while ($currentSlotIdx < $totalSlots) {
+    //                         $nextSlot = $slots[$currentSlotIdx] ?? null;
+    //                         if ($nextSlot === null) break;
+
+    //                         // On ne couvre que les slots simples avec une zone fille
+    //                         $nextLeg = $nextSlot['legs']->first();
+    //                         $isSubzoneOfSameParent =
+    //                             !$nextSlot['is_or']
+    //                             && $nextLeg !== null
+    //                             && $nextLeg->reference_type === 'zone'
+    //                             && !empty($nextLeg->reference_id)
+    //                             && \App\Models\Zone::find($nextLeg->reference_id)?->parent_id === $parentZoneId;
+
+    //                         if (!$isSubzoneOfSameParent) break;
+
+    //                         RotationLeg::create([
+    //                             'rotation_id'                     => $currentRotation->id,
+    //                             'circuit_leg_id'                  => $nextLeg->id,
+    //                             'occurred_at'                     => Carbon::parse($coveringParentEvent['dt']),
+    //                             'lat'                             => $coveringParentEvent['lat'] ?? null,
+    //                             'lng'                             => $coveringParentEvent['lng'] ?? null,
+    //                             'duration_since_previous_seconds' => null,
+    //                             'raw_event'                       => $coveringParentEvent['raw'] ?? $coveringParentEvent,
+    //                             'skipped_by_parent'               => true,
+    //                         ]);
+
+    //                         Log::info('Sous-zone couverte par zone mère.', [
+    //                             'rotation_id'    => $currentRotation->id,
+    //                             'skipped_leg'    => $nextLeg->label,
+    //                             'parent_zone_id' => $parentZoneId,
+    //                         ]);
+
+    //                         $currentSlotIdx++;
+    //                     }
+
+    //                     if (!$replayOnce) { $replayOnce = true; continue; }
+    //                     $replayOnce = false;
+    //                     $i++;
+    //                     continue;
+    //                 }
+
+    //                 // Étape obligatoire manquée → annulation
+    //                 $currentRotation->update([
+    //                     'status'              => 'cancelled',
+    //                     'is_valid'            => false,
+    //                     'invalidation_reason' => sprintf(
+    //                         'Étape manquée : "%s" (ordre %d) — non validée avant "%s" à %s',
+    //                         $skipResult['leg']->label,
+    //                         $skipResult['leg']->order,
+    //                         $event['reference_name'] ?? '?',
+    //                         $event['dt']             ?? '?'
+    //                     ),
+    //                 ]);
+
+    //                 Log::warning('Rotation annulée — étape obligatoire manquée.', [
+    //                     'rotation_id' => $currentRotation->id,
+    //                     'missed_leg'  => $skipResult['leg']->label,
+    //                 ]);
+
+    //                 $rotations[]     = $currentRotation;
+    //                 $currentRotation = null;
+    //                 $currentSlotIdx  = 0;
+    //                 $legEvents       = [];
+
+    //                 if (!$replayOnce) { $replayOnce = true; continue; }
+    //                 $replayOnce = false;
+    //                 $i++;
+    //                 continue;
+    //             }
+
+    //             // Saut d'étapes optionnelles → avancer l'index de slot
+    //             if ($skipResult['advance_to'] !== null) {
+    //                 $currentSlotIdx = $skipResult['advance_to'];
+    //                 $replayOnce = false;
+    //                 continue;
+    //             }
+
+    //             // Cas 2 : déviation hors circuit
+    //             if ($this->eventInvalidatesRotation($event, $circuit, $legs)) {
+    //                 $currentRotation->update([
+    //                     'status'              => 'cancelled',
+    //                     'is_valid'            => false,
+    //                     'invalidation_reason' => sprintf(
+    //                         'Déviation hors circuit : "%s" à %s',
+    //                         $event['reference_name'] ?? '?',
+    //                         $event['dt']             ?? '?'
+    //                     ),
+    //                 ]);
+
+    //                 Log::warning('Rotation annulée — déviation.', [
+    //                     'rotation_id' => $currentRotation->id,
+    //                     'zone'        => $event['reference_name'] ?? '?',
+    //                 ]);
+
+    //                 $rotations[]     = $currentRotation;
+    //                 $currentRotation = null;
+    //                 $currentSlotIdx  = 0;
+    //                 $legEvents       = [];
+
+    //                 if (!$replayOnce) { $replayOnce = true; continue; }
+    //                 $replayOnce = false;
+    //                 $i++;
+    //                 continue;
+    //             }
+    //         }
+
+    //         $replayOnce = false;
+    //         $i++;
+    //     }
+
+    //     if ($currentRotation !== null) {
+    //         $currentRotation->update(['status' => 'in_progress', 'is_valid' => false]);
+    //         Log::info('Rotation en cours.', ['rotation_id' => $currentRotation->id]);
+    //         $rotations[] = $currentRotation;
+    //     }
+
+    //     return $rotations;
+    // }
     private function extractRotations(
         array      $events,
         Collection $legs,
@@ -246,6 +502,69 @@ class RotationCalculatorService
             $matchedLeg = $this->slotMatchesEvent($expectedSlot, $event);
 
             if ($matchedLeg !== null) {
+
+                // ── Vérification 24h pour le dernier slot ────────────────────────
+                if ($currentSlotIdx === $totalSlots - 1 && $currentRotation !== null) {
+                    $parentEnteredAt = null;
+
+                    foreach ($legEvents as $pastEvent) {
+                        foreach ($expectedSlot['legs'] as $slotLeg) {
+                            if ($slotLeg->reference_type !== 'zone') continue;
+                            $zone = \App\Models\Zone::find($slotLeg->reference_id);
+                            if (!$zone || empty($zone->parent_id)) continue;
+
+                            if (
+                                $pastEvent['normalized_type'] === GpsEventMapper::TYPE_ENTER_ZONE &&
+                                !empty($pastEvent['zone_id']) &&
+                                (int) $pastEvent['zone_id'] === (int) $zone->parent_id
+                            ) {
+                                $parentEnteredAt = Carbon::parse($pastEvent['dt']);
+                                break 2;
+                            }
+                        }
+                    }
+
+                    if ($parentEnteredAt !== null) {
+                        $eventTime   = Carbon::parse($event['dt']);
+                        $diffSeconds = $parentEnteredAt->diffInSeconds($eventTime, false);
+
+                        if ($diffSeconds > 86400) {
+                            $completedAt = $parentEnteredAt;
+                            $duration    = (int) Carbon::parse($currentRotation->started_at)
+                                                    ->diffInSeconds($completedAt);
+
+                            $currentRotation->update([
+                                'completed_at'        => $completedAt,
+                                'duration_seconds'    => $duration,
+                                'status'              => 'acceptable',
+                                'is_valid'            => true,
+                                'invalidation_reason' => sprintf(
+                                    'Fin acceptée via zone parent — sous-zone atteinte après 24h (%s)',
+                                    $event['dt'] ?? '?'
+                                ),
+                            ]);
+
+                            Log::info('Rotation acceptable — sous-zone après 24h, fin via zone parent.', [
+                                'rotation_id'    => $currentRotation->id,
+                                'parent_entered' => $parentEnteredAt->toDateTimeString(),
+                                'subzone_at'     => $event['dt'],
+                                'diff_seconds'   => $diffSeconds,
+                            ]);
+
+                            $rotations[]     = $currentRotation;
+                            $currentRotation = null;
+                            $currentSlotIdx  = 0;
+                            $legEvents       = [];
+
+                            if (!$replayOnce) { $replayOnce = true; continue; }
+                            $replayOnce = false;
+                            $i++;
+                            continue;
+                        }
+                    }
+                }
+                // ── Fin vérification 24h ─────────────────────────────────────────
+
                 $replayOnce = false;
 
                 // Début de rotation (slot 0)
@@ -289,11 +608,11 @@ class RotationCalculatorService
                     $currentSlotIdx++;
 
                     Log::debug('Slot validé.', [
-                        'leg'        => $matchedLeg->label,
-                        'slot_idx'   => $currentSlotIdx,
-                        'total_slots'=> $totalSlots,
-                        'is_or'      => $expectedSlot['is_or'],
-                        'dt'         => $event['dt'],
+                        'leg'         => $matchedLeg->label,
+                        'slot_idx'    => $currentSlotIdx,
+                        'total_slots' => $totalSlots,
+                        'is_or'       => $expectedSlot['is_or'],
+                        'dt'          => $event['dt'],
                     ]);
 
                     // ── Rotation complète ────────────────────────────────────────
@@ -337,13 +656,86 @@ class RotationCalculatorService
 
             if ($currentRotation !== null) {
 
-                // Cas 1 : saut d'étape (slot)
+                // ── Cas spécial : dernier slot (end) non matché mais zone parent entrée ──
+                if ($currentSlotIdx === $totalSlots - 1) {
+                    $lastSlot      = $slots[$currentSlotIdx];
+                    $parentMatched = false;
+
+                    foreach ($lastSlot['legs'] as $slotLeg) {
+                        if ($slotLeg->reference_type !== 'zone') continue;
+                        $zone = \App\Models\Zone::find($slotLeg->reference_id);
+                        if (!$zone || empty($zone->parent_id)) continue;
+
+                        if (
+                            $event['normalized_type'] === GpsEventMapper::TYPE_ENTER_ZONE &&
+                            !empty($event['zone_id']) &&
+                            (int) $event['zone_id'] === (int) $zone->parent_id
+                        ) {
+                            $parentMatched = true;
+                            break;
+                        }
+                    }
+
+                    if ($parentMatched) {
+                        $found     = false;
+                        $eventTime = Carbon::parse($event['dt']);
+
+                        for ($j = $i + 1; $j < $totalEvts; $j++) {
+                            $futureEvent = $events[$j];
+                            $futureTime  = Carbon::parse($futureEvent['dt']);
+
+                            if ($futureTime->diffInSeconds($eventTime, false) > 86400) break;
+
+                            if ($this->slotMatchesEvent($lastSlot, $futureEvent) !== null) {
+                                $found = true;
+                                break;
+                            }
+                        }
+
+                        if (!$found) {
+                            $completedAt = Carbon::parse($event['dt']);
+                            $duration    = (int) Carbon::parse($currentRotation->started_at)
+                                                    ->diffInSeconds($completedAt);
+
+                            $currentRotation->update([
+                                'completed_at'        => $completedAt,
+                                'duration_seconds'    => $duration,
+                                'status'              => 'acceptable',
+                                'is_valid'            => true,
+                                'invalidation_reason' => sprintf(
+                                    'Fin acceptée via zone parent "%s" — sous-zone non atteinte dans les 24h',
+                                    $event['reference_name'] ?? '?'
+                                ),
+                            ]);
+
+                            Log::info('Rotation acceptable — fin via zone parent.', [
+                                'rotation_id' => $currentRotation->id,
+                                'zone_parent' => $event['reference_name'] ?? '?',
+                            ]);
+
+                            $rotations[]     = $currentRotation;
+                            $currentRotation = null;
+                            $currentSlotIdx  = 0;
+                            $legEvents       = [];
+
+                            if (!$replayOnce) { $replayOnce = true; continue; }
+                            $replayOnce = false;
+                            $i++;
+                            continue;
+                        }
+                        // Sous-zone trouvée dans les 24h → laisser le flux normal continuer
+                        $replayOnce = false;
+                        $i++;
+                        continue;
+                    }
+                }
+
+                // ── Cas 1 : saut d'étape (slot) ──────────────────────────────────
                 $skipResult = $this->slotSkipsExpectedSlot(
                     $event, $expectedSlot, $slots, $currentSlotIdx
                 );
 
                 if ($skipResult['leg'] !== null) {
-                    // Sous-zones couvertes par zone mère ?
                     $coveringParentEvent = $this->getCoveringParentEventForSlot(
                         $skipResult['leg'], $legEvents
                     );
@@ -355,7 +747,6 @@ class RotationCalculatorService
                             $nextSlot = $slots[$currentSlotIdx] ?? null;
                             if ($nextSlot === null) break;
 
-                            // On ne couvre que les slots simples avec une zone fille
                             $nextLeg = $nextSlot['legs']->first();
                             $isSubzoneOfSameParent =
                                 !$nextSlot['is_or']
@@ -424,11 +815,11 @@ class RotationCalculatorService
                 // Saut d'étapes optionnelles → avancer l'index de slot
                 if ($skipResult['advance_to'] !== null) {
                     $currentSlotIdx = $skipResult['advance_to'];
-                    $replayOnce = false;
+                    $replayOnce     = false;
                     continue;
                 }
 
-                // Cas 2 : déviation hors circuit
+                // ── Cas 2 : déviation hors circuit ───────────────────────────────
                 if ($this->eventInvalidatesRotation($event, $circuit, $legs)) {
                     $currentRotation->update([
                         'status'              => 'cancelled',
@@ -461,6 +852,7 @@ class RotationCalculatorService
             $i++;
         }
 
+        // Rotation non terminée en fin de période
         if ($currentRotation !== null) {
             $currentRotation->update(['status' => 'in_progress', 'is_valid' => false]);
             Log::info('Rotation en cours.', ['rotation_id' => $currentRotation->id]);
@@ -823,6 +1215,7 @@ class RotationCalculatorService
     {
         return match (self::TEST_MODE) {
             'complete'    => TestRawEvents::completeRotationAntonio(),
+            'Tsiadino'    => TestRawEvents::completeRotationTsiadino(),
             'incomplete'  => TestRawEvents::incompleteRotation(),
             'cancelled'   => TestRawEvents::cancelledRotation(),
             'real_sample' => TestRawEvents::realApiSample(),

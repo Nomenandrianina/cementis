@@ -26,7 +26,8 @@ async function fetchEvents() {
     const dateTo   = document.getElementById('date-to').value;
     const useTest  = document.getElementById('chk-test').checked;
     const testMode = document.querySelector('input[name="test-mode"]:checked')?.value ?? 'complete';
-
+    console.log(testMode, "TEST MODE");
+    console.log(routeUrl, "URL ROUTE");
     if (!useTest && !imei) {
         showError('Sélectionnez un véhicule ou activez le mode test.');
         return;

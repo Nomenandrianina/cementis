@@ -68,6 +68,7 @@
                             <td>
                                 @switch($rotation->status)
                                     @case('completed') <span class="badge badge-success">Complète</span> @break
+                                    @case('acceptable') <span class="badge badge-info">Acceptable</span> @break
                                     @case('in_progress') <span class="badge badge-blue">En cours</span> @break
                                     @case('cancelled') <span class="badge badge-danger">Annulée</span> @break
                                 @endswitch

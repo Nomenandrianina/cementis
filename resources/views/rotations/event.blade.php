@@ -68,7 +68,7 @@
             </label>
             <div id="test-options" class="test-options" style="display:none;">
                 @foreach([
-                    'complete'    => 'Rotation complète (Tsihadino)',
+                    'Tsiadino'    => 'Rotation complète (Tsihadino)',
                     'antonio'     => 'Rotation Antonio (2 rotations)',
                     'incomplete'  => 'Rotation incomplète',
                     'cancelled'   => 'Rotation annulée',

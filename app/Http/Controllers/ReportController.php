@@ -344,21 +344,12 @@ class ReportController extends Controller
 
                 // ── Colonnes fixes ───────────────────────────────────────────────
 
-                // // Immatriculation — seulement sur la 1ère ligne du véhicule
-                // $sheet->setCellValue("A{$row}", $isFirstRot ? ($vr['vehicle']->plate_number ?? '—') : '');
-                // // Nom véhicule — seulement sur la 1ère ligne
-                // $sheet->setCellValue("B{$row}", $isFirstRot ? $vr['vehicle']->name : '');
-                // // Nb rotations total — seulement sur la 1ère ligne
-                // $sheet->setCellValue("C{$row}", $isFirstRot ? $vr['rotation_count'] : '');
-                // // Durée de CETTE rotation
-                // $sheet->setCellValue("D{$row}", $rot['duration_label'] ?? '—');
-
                 // Immatriculation — seulement sur la 1ère ligne du véhicule
                 $sheet->setCellValue("A{$row}", $vr['vehicle']->plate_number ?? '—');
                 // Nom véhicule — seulement sur la 1ère ligne
                 $sheet->setCellValue("B{$row}", $vr['vehicle']->name ?? '—');
                 // Nb rotations total — seulement sur la 1ère ligne
-                $sheet->setCellValue("C{$row}", 1);
+                $sheet->setCellValue("C{$row}", $rot['status'] === 'completed' ? 1 : 0);
                 // Durée de CETTE rotation
                 $sheet->setCellValue("D{$row}", $rot['duration_label'] ?? '—');
 
@@ -378,11 +369,6 @@ class ReportController extends Controller
 
                 // Colonne C : colorée selon objectif (seulement 1ère ligne)
                 if ($isFirstRot && $vr['target_rotations']) {
-                    $cColor = $vr['rotation_count'] >= $vr['target_rotations'] ? $SUCCESS : $DANGER;
-                    // $sheet->getStyle("C{$row}")->applyFromArray([
-                    //     'font'      => ['bold' => true, 'color' => $rgb($cColor)],
-                    //     'alignment' => ['horizontal' => 'center'],
-                    // ]);
                 }
 
                 // Bordure gauche marquant le début d'un véhicule (1ère rotation seulement)
@@ -424,20 +410,6 @@ class ReportController extends Controller
                 $row++;
             }
 
-            // Fusionner A, B, C sur les lignes du même véhicule (si >1 rotation)
-            // if ($rotCount > 1) {
-            //     $vehicleEnd = $row - 1;
-            //     foreach (['A', 'B', 'C'] as $mergeCol) {
-            //         $sheet->mergeCells("{$mergeCol}{$vehicleStart}:{$mergeCol}{$vehicleEnd}");
-            //         $sheet->getStyle("{$mergeCol}{$vehicleStart}")->applyFromArray([
-            //             'alignment' => [
-            //                 'horizontal' => 'center',
-            //                 'vertical'   => 'center',
-            //                 'wrapText'   => true,
-            //             ],
-            //         ]);
-            //     }
-            // }
         }
 
         // ── Largeurs colonnes ─────────────────────────────────────────────────────

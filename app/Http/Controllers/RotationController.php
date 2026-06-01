@@ -107,7 +107,6 @@ class RotationController extends Controller
             }
         }
 
-
         // ── Construction de l'arbre pour l'affichage ──────────────────────────────
         // Un "bloc zone" = zone parente avec ses sous-zones imbriquées.
         // On groupe les legs en blocs : chaque enter_zone principale ouvre un bloc,
@@ -145,13 +144,177 @@ class RotationController extends Controller
      *   'is_subzone' => bool,
      * ]
      */
+    // private function buildDisplayBlocks(
+    //     $allLegs, $completedLegs, $zonePairs,
+    //     $pairedEnterIds, $pairedExitIds,
+    //     $zoneActualSec, $legObjectives
+    // ): array {
+    //     $blocks     = [];
+    //     $skipIds    = []; // IDs de legs déjà traités (sub-zones absorbées dans leur parent)
+
+    //     foreach ($allLegs as $leg) {
+    //         if (in_array($leg->id, $skipIds)) continue;
+
+    //         // ── Checkpoint ───────────────────────────────────────────────────────
+    //         if ($leg->event_type === 'pass_checkpoint') {
+    //             $rl = $completedLegs->get($leg->id);
+    //             $blocks[] = [
+    //                 'type' => 'checkpoint',
+    //                 'leg'  => $leg,
+    //                 'rl'   => ($rl && !$rl->wasSkippedByParent()) ? $rl : null,
+    //                 'skipped'   => $rl && $rl->wasSkippedByParent(),
+    //             ];
+    //             $skipIds[] = $leg->id;
+    //             continue;
+    //         }
+
+    //         // ── leave_zone seul (non pairé) → skip silencieux ───────────────────
+    //         if ($leg->event_type === 'leave_zone' && in_array($leg->id, $pairedExitIds)) {
+    //             $skipIds[] = $leg->id;
+    //             continue;
+    //         }
+
+    //         // ── enter_zone ───────────────────────────────────────────────────────
+    //         if ($leg->event_type === 'enter_zone') {
+    //             $leaveLegId = $zonePairs[$leg->id] ?? null;
+    //             $leaveLeg   = $leaveLegId ? $allLegs->firstWhere('id', $leaveLegId) : null;
+
+    //             $enterRlRaw = $completedLegs->get($leg->id);
+    //             $leaveRlRaw = $leaveLegId ? $completedLegs->get($leaveLegId) : null;
+
+    //             // Si skipped_by_parent → traiter comme non visité
+    //             $enterRl = ($enterRlRaw && !$enterRlRaw->wasSkippedByParent()) ? $enterRlRaw : null;
+    //             $leaveRl = ($leaveRlRaw && !$leaveRlRaw->wasSkippedByParent()) ? $leaveRlRaw : null;
+
+    //             $actualSec  = $zoneActualSec[$leg->id] ?? null;
+
+    //             if ($enterRlRaw?->wasSkippedByParent() || $leaveRlRaw?->wasSkippedByParent()) {
+    //                 $actualSec = null;
+    //             }
+
+    //             $rawTarget  = $legObjectives[$leg->id] ?? $legObjectives[(string)$leg->id] ?? null;
+    //             $targetSec  = ($rawTarget !== null && $rawTarget !== 'null') ? (int)$rawTarget : null;
+    //             $ecart      = ($actualSec !== null && $targetSec !== null) ? $actualSec - $targetSec : null;
+
+    //             // Charger la zone BDD pour vérifier si elle a un parent
+    //             $zone      = \App\Models\Zone::find($leg->reference_id);
+    //             $isSubZone = $zone && $zone->parent_id !== null;
+
+    //             // Chercher les sous-zones entre enter et leave de cette zone
+    //             // = enter/leave dont la zone BDD a pour parent cette zone
+    //             $children  = [];
+
+    //             if ($leaveLeg) {
+    //                 $innerLegs = $allLegs->filter(fn($l) =>
+    //                     $l->order > $leg->order &&
+    //                     $l->order < $leaveLeg->order &&
+    //                     $l->event_type === 'enter_zone' &&
+    //                     !in_array($l->id, $skipIds)
+    //                 );
+
+    //                 foreach ($innerLegs as $innerLeg) {
+    //                     $innerZone = \App\Models\Zone::find($innerLeg->reference_id);
+
+    //                     // C'est une sous-zone si sa zone parente = la zone du bloc courant
+    //                     $isChild = $innerZone && (
+    //                         $innerZone->parent_id === $leg->reference_id ||
+    //                         // Ou si elle est entre enter et leave et a un parent quelconque
+    //                         $innerZone->parent_id !== null
+    //                     );
+
+    //                     if (!$isChild) continue;
+
+    //                     $innerLeaveId  = $zonePairs[$innerLeg->id] ?? null;
+    //                     $innerLeaveLeg = $innerLeaveId ? $allLegs->firstWhere('id', $innerLeaveId) : null;
+
+    //                     $innerEnterRlRaw = $completedLegs->get($innerLeg->id);
+    //                     $innerLeaveRlRaw = $innerLeaveId ? $completedLegs->get($innerLeaveId) : null;
+
+    //                     // ── CLE DU FIX : si skipped_by_parent → null pour l'affichage ──
+    //                     $innerEnterRl = ($innerEnterRlRaw && !$innerEnterRlRaw->wasSkippedByParent())
+    //                     ? $innerEnterRlRaw : null;
+    //                     $innerLeaveRl = ($innerLeaveRlRaw && !$innerLeaveRlRaw->wasSkippedByParent())
+    //                     ? $innerLeaveRlRaw : null;
+
+
+    //                     $innerActual   = $zoneActualSec[$innerLeg->id] ?? null;
+    //                     // Durée nulle si entrée ou sortie skippée
+    //                     if ($innerEnterRlRaw?->wasSkippedByParent() || $innerLeaveRlRaw?->wasSkippedByParent()) {
+    //                         $innerActual = null;
+    //                     }
+    //                     $innerRawT     = $legObjectives[$innerLeg->id] ?? $legObjectives[(string)$innerLeg->id] ?? null;
+    //                     $innerTarget   = ($innerRawT !== null && $innerRawT !== 'null') ? (int)$innerRawT : null;
+    //                     $innerEcart    = ($innerActual !== null && $innerTarget !== null)
+    //                                     ? $innerActual - $innerTarget : null;
+
+    //                     $children[] = [
+    //                         'type'       => 'zone_block',
+    //                         'enter_leg'  => $innerLeg,
+    //                         'leave_leg'  => $innerLeaveLeg,
+    //                         'enter_rl'   => $innerEnterRl,
+    //                         'leave_rl'   => $innerLeaveRl,
+    //                         'actual_sec' => $innerActual,
+    //                         'target_sec' => $innerTarget,
+    //                         'ecart'      => $innerEcart,
+    //                         'children'   => [],
+    //                         'is_subzone' => true,
+    //                         'was_skipped'=> $innerEnterRlRaw?->wasSkippedByParent() ?? false,
+    //                 ];
+
+    //                     $skipIds[] = $innerLeg->id;
+    //                     if ($innerLeaveId) $skipIds[] = $innerLeaveId;
+    //                 }
+    //             }
+
+    //             $blocks[] = [
+    //                 'type'       => 'zone_block',
+    //                 'enter_leg'  => $leg,
+    //                 'leave_leg'  => $leaveLeg,
+    //                 'enter_rl'   => $enterRl,
+    //                 'leave_rl'   => $leaveRl,
+    //                 'actual_sec' => $actualSec,
+    //                 'target_sec' => $targetSec,
+    //                 'ecart'      => $ecart,
+    //                 'children'   => $children,
+    //                 'is_subzone' => $isSubZone,
+    //                 'was_skipped'=> $enterRlRaw?->wasSkippedByParent() ?? false,
+    //             ];
+
+    //             $skipIds[] = $leg->id;
+    //             if ($leaveLegId) $skipIds[] = $leaveLegId;
+    //             continue;
+    //         }
+
+    //         // leave_zone non pairé → affiché seul
+    //         if ($leg->event_type === 'leave_zone') {
+    //             $rl = $completedLegs->get($leg->id);
+    //             $blocks[]  = [
+    //                 'type'       => 'zone_block',
+    //                 'enter_leg'  => $leg,
+    //                 'leave_leg'  => null,
+    //                 'enter_rl'   => ($rl && !$rl->wasSkippedByParent()) ? $rl : null,
+    //                 'leave_rl'   => null,
+    //                 'actual_sec' => null,
+    //                 'target_sec' => null,
+    //                 'ecart'      => null,
+    //                 'children'   => [],
+    //                 'is_subzone' => false,
+    //                 'was_skipped'=> $rl?->wasSkippedByParent() ?? false,
+    //             ];
+    //             $skipIds[] = $leg->id;
+    //         }
+    //     }
+
+    //     return $blocks;
+    // }
     private function buildDisplayBlocks(
         $allLegs, $completedLegs, $zonePairs,
         $pairedEnterIds, $pairedExitIds,
         $zoneActualSec, $legObjectives
     ): array {
-        $blocks     = [];
-        $skipIds    = []; // IDs de legs déjà traités (sub-zones absorbées dans leur parent)
+        $blocks          = [];
+        $skipIds         = [];
+        $processedGroups = []; // group_or déjà traités
 
         foreach ($allLegs as $leg) {
             if (in_array($leg->id, $skipIds)) continue;
@@ -160,16 +323,16 @@ class RotationController extends Controller
             if ($leg->event_type === 'pass_checkpoint') {
                 $rl = $completedLegs->get($leg->id);
                 $blocks[] = [
-                    'type' => 'checkpoint',
-                    'leg'  => $leg,
-                    'rl'   => ($rl && !$rl->wasSkippedByParent()) ? $rl : null,
-                    'skipped'   => $rl && $rl->wasSkippedByParent(),
+                    'type'    => 'checkpoint',
+                    'leg'     => $leg,
+                    'rl'      => ($rl && !$rl->wasSkippedByParent()) ? $rl : null,
+                    'skipped' => $rl && $rl->wasSkippedByParent(),
                 ];
                 $skipIds[] = $leg->id;
                 continue;
             }
 
-            // ── leave_zone seul (non pairé) → skip silencieux ───────────────────
+            // ── leave_zone pairée → skip silencieux ──────────────────────────────
             if ($leg->event_type === 'leave_zone' && in_array($leg->id, $pairedExitIds)) {
                 $skipIds[] = $leg->id;
                 continue;
@@ -177,37 +340,83 @@ class RotationController extends Controller
 
             // ── enter_zone ───────────────────────────────────────────────────────
             if ($leg->event_type === 'enter_zone') {
-                $leaveLegId = $zonePairs[$leg->id] ?? null;
+
+                // Groupe OU déjà traité → skip
+                if ($leg->group_or && isset($processedGroups[$leg->group_or])) {
+                    $skipIds[] = $leg->id;
+                    continue;
+                }
+
+                // Si ce leg fait partie d'un groupe OU, trouver celui qui a été validé
+                $activeLeg = $leg;
+                if ($leg->group_or) {
+                    $slotLegs = $allLegs->where('group_or', $leg->group_or)
+                                        ->where('event_type', 'enter_zone')
+                                        ->values();
+
+                    // Chercher le leg du slot qui a un RotationLeg réel (non skippé)
+                    foreach ($slotLegs as $slotLeg) {
+                        $rl = $completedLegs->get($slotLeg->id);
+                        if ($rl && !$rl->wasSkippedByParent()) {
+                            $activeLeg = $slotLeg;
+                            break;
+                        }
+                    }
+
+                    // Marquer tous les legs du slot comme traités
+                    foreach ($slotLegs as $slotLeg) {
+                        $skipIds[] = $slotLeg->id;
+                        // Marquer aussi leurs leave
+                        $leaveId = $zonePairs[$slotLeg->id] ?? null;
+                        if ($leaveId) $skipIds[] = $leaveId;
+                    }
+
+                    $processedGroups[$leg->group_or] = true;
+                }
+
+                // Construire le bloc avec le leg actif (validé ou premier du slot si aucun)
+                $leaveLegId = $zonePairs[$activeLeg->id] ?? null;
                 $leaveLeg   = $leaveLegId ? $allLegs->firstWhere('id', $leaveLegId) : null;
 
-                $enterRlRaw = $completedLegs->get($leg->id);
+                $enterRlRaw = $completedLegs->get($activeLeg->id);
                 $leaveRlRaw = $leaveLegId ? $completedLegs->get($leaveLegId) : null;
 
-                // Si skipped_by_parent → traiter comme non visité
                 $enterRl = ($enterRlRaw && !$enterRlRaw->wasSkippedByParent()) ? $enterRlRaw : null;
                 $leaveRl = ($leaveRlRaw && !$leaveRlRaw->wasSkippedByParent()) ? $leaveRlRaw : null;
 
-                $actualSec  = $zoneActualSec[$leg->id] ?? null;
-
+                $actualSec = $zoneActualSec[$activeLeg->id] ?? null;
                 if ($enterRlRaw?->wasSkippedByParent() || $leaveRlRaw?->wasSkippedByParent()) {
                     $actualSec = null;
                 }
 
-                $rawTarget  = $legObjectives[$leg->id] ?? $legObjectives[(string)$leg->id] ?? null;
-                $targetSec  = ($rawTarget !== null && $rawTarget !== 'null') ? (int)$rawTarget : null;
-                $ecart      = ($actualSec !== null && $targetSec !== null) ? $actualSec - $targetSec : null;
+                $rawTarget = $legObjectives[$activeLeg->id]
+                    ?? $legObjectives[(string)$activeLeg->id]
+                    ?? null;
 
-                // Charger la zone BDD pour vérifier si elle a un parent
-                $zone      = \App\Models\Zone::find($leg->reference_id);
+                // Pour un slot OU, chercher la valeur sur n'importe quel leg du slot
+                if ($rawTarget === null && $leg->group_or) {
+                    $slotLegs = $allLegs->where('group_or', $leg->group_or)
+                                        ->where('event_type', 'enter_zone')
+                                        ->values();
+                    foreach ($slotLegs as $slotLeg) {
+                        $rawTarget = $legObjectives[$slotLeg->id]
+                            ?? $legObjectives[(string)$slotLeg->id]
+                            ?? null;
+                        if ($rawTarget !== null) break;
+                    }
+                }
+
+                $targetSec = ($rawTarget !== null && $rawTarget !== 'null') ? (int)$rawTarget : null;
+                $ecart     = ($actualSec !== null && $targetSec !== null) ? $actualSec - $targetSec : null;
+
+                $zone      = \App\Models\Zone::find($activeLeg->reference_id);
                 $isSubZone = $zone && $zone->parent_id !== null;
 
-                // Chercher les sous-zones entre enter et leave de cette zone
-                // = enter/leave dont la zone BDD a pour parent cette zone
-                $children  = [];
-
+                // ── Sous-zones ───────────────────────────────────────────────────
+                $children = [];
                 if ($leaveLeg) {
                     $innerLegs = $allLegs->filter(fn($l) =>
-                        $l->order > $leg->order &&
+                        $l->order > $activeLeg->order &&
                         $l->order < $leaveLeg->order &&
                         $l->event_type === 'enter_zone' &&
                         !in_array($l->id, $skipIds)
@@ -215,14 +424,10 @@ class RotationController extends Controller
 
                     foreach ($innerLegs as $innerLeg) {
                         $innerZone = \App\Models\Zone::find($innerLeg->reference_id);
-
-                        // C'est une sous-zone si sa zone parente = la zone du bloc courant
-                        $isChild = $innerZone && (
-                            $innerZone->parent_id === $leg->reference_id ||
-                            // Ou si elle est entre enter et leave et a un parent quelconque
+                        $isChild   = $innerZone && (
+                            $innerZone->parent_id === $activeLeg->reference_id ||
                             $innerZone->parent_id !== null
                         );
-
                         if (!$isChild) continue;
 
                         $innerLeaveId  = $zonePairs[$innerLeg->id] ?? null;
@@ -231,36 +436,34 @@ class RotationController extends Controller
                         $innerEnterRlRaw = $completedLegs->get($innerLeg->id);
                         $innerLeaveRlRaw = $innerLeaveId ? $completedLegs->get($innerLeaveId) : null;
 
-                        // ── CLE DU FIX : si skipped_by_parent → null pour l'affichage ──
                         $innerEnterRl = ($innerEnterRlRaw && !$innerEnterRlRaw->wasSkippedByParent())
-                        ? $innerEnterRlRaw : null;
+                            ? $innerEnterRlRaw : null;
                         $innerLeaveRl = ($innerLeaveRlRaw && !$innerLeaveRlRaw->wasSkippedByParent())
-                        ? $innerLeaveRlRaw : null;
+                            ? $innerLeaveRlRaw : null;
 
-
-                        $innerActual   = $zoneActualSec[$innerLeg->id] ?? null;
-                        // Durée nulle si entrée ou sortie skippée
+                        $innerActual = $zoneActualSec[$innerLeg->id] ?? null;
                         if ($innerEnterRlRaw?->wasSkippedByParent() || $innerLeaveRlRaw?->wasSkippedByParent()) {
                             $innerActual = null;
                         }
-                        $innerRawT     = $legObjectives[$innerLeg->id] ?? $legObjectives[(string)$innerLeg->id] ?? null;
-                        $innerTarget   = ($innerRawT !== null && $innerRawT !== 'null') ? (int)$innerRawT : null;
-                        $innerEcart    = ($innerActual !== null && $innerTarget !== null)
-                                        ? $innerActual - $innerTarget : null;
+
+                        $innerRawT   = $legObjectives[$innerLeg->id] ?? $legObjectives[(string)$innerLeg->id] ?? null;
+                        $innerTarget = ($innerRawT !== null && $innerRawT !== 'null') ? (int)$innerRawT : null;
+                        $innerEcart  = ($innerActual !== null && $innerTarget !== null)
+                            ? $innerActual - $innerTarget : null;
 
                         $children[] = [
-                            'type'       => 'zone_block',
-                            'enter_leg'  => $innerLeg,
-                            'leave_leg'  => $innerLeaveLeg,
-                            'enter_rl'   => $innerEnterRl,
-                            'leave_rl'   => $innerLeaveRl,
-                            'actual_sec' => $innerActual,
-                            'target_sec' => $innerTarget,
-                            'ecart'      => $innerEcart,
-                            'children'   => [],
-                            'is_subzone' => true,
-                            'was_skipped'=> $innerEnterRlRaw?->wasSkippedByParent() ?? false,
-                    ];
+                            'type'        => 'zone_block',
+                            'enter_leg'   => $innerLeg,
+                            'leave_leg'   => $innerLeaveLeg,
+                            'enter_rl'    => $innerEnterRl,
+                            'leave_rl'    => $innerLeaveRl,
+                            'actual_sec'  => $innerActual,
+                            'target_sec'  => $innerTarget,
+                            'ecart'       => $innerEcart,
+                            'children'    => [],
+                            'is_subzone'  => true,
+                            'was_skipped' => $innerEnterRlRaw?->wasSkippedByParent() ?? false,
+                        ];
 
                         $skipIds[] = $innerLeg->id;
                         if ($innerLeaveId) $skipIds[] = $innerLeaveId;
@@ -268,39 +471,44 @@ class RotationController extends Controller
                 }
 
                 $blocks[] = [
-                    'type'       => 'zone_block',
-                    'enter_leg'  => $leg,
-                    'leave_leg'  => $leaveLeg,
-                    'enter_rl'   => $enterRl,
-                    'leave_rl'   => $leaveRl,
-                    'actual_sec' => $actualSec,
-                    'target_sec' => $targetSec,
-                    'ecart'      => $ecart,
-                    'children'   => $children,
-                    'is_subzone' => $isSubZone,
-                    'was_skipped'=> $enterRlRaw?->wasSkippedByParent() ?? false,
+                    'type'        => 'zone_block',
+                    'enter_leg'   => $activeLeg,
+                    'leave_leg'   => $leaveLeg,
+                    'enter_rl'    => $enterRl,
+                    'leave_rl'    => $leaveRl,
+                    'actual_sec'  => $actualSec,
+                    'target_sec'  => $targetSec,
+                    'ecart'       => $ecart,
+                    'children'    => $children,
+                    'is_subzone'  => $isSubZone,
+                    'was_skipped' => $enterRlRaw?->wasSkippedByParent() ?? false,
                 ];
 
-                $skipIds[] = $leg->id;
-                if ($leaveLegId) $skipIds[] = $leaveLegId;
+                // Marquer le leg actif si pas encore fait (slot simple)
+                if (!$leg->group_or) {
+                    $skipIds[] = $activeLeg->id;
+                    if ($leaveLegId) $skipIds[] = $leaveLegId;
+                }
+
                 continue;
             }
+            
 
-            // leave_zone non pairé → affiché seul
+            // ── leave_zone non pairée → affiché seul ─────────────────────────────
             if ($leg->event_type === 'leave_zone') {
                 $rl = $completedLegs->get($leg->id);
-                $blocks[]  = [
-                    'type'       => 'zone_block',
-                    'enter_leg'  => $leg,
-                    'leave_leg'  => null,
-                    'enter_rl'   => ($rl && !$rl->wasSkippedByParent()) ? $rl : null,
-                    'leave_rl'   => null,
-                    'actual_sec' => null,
-                    'target_sec' => null,
-                    'ecart'      => null,
-                    'children'   => [],
-                    'is_subzone' => false,
-                    'was_skipped'=> $rl?->wasSkippedByParent() ?? false,
+                $blocks[] = [
+                    'type'        => 'zone_block',
+                    'enter_leg'   => $leg,
+                    'leave_leg'   => null,
+                    'enter_rl'    => ($rl && !$rl->wasSkippedByParent()) ? $rl : null,
+                    'leave_rl'    => null,
+                    'actual_sec'  => null,
+                    'target_sec'  => null,
+                    'ecart'       => null,
+                    'children'    => [],
+                    'is_subzone'  => false,
+                    'was_skipped' => $rl?->wasSkippedByParent() ?? false,
                 ];
                 $skipIds[] = $leg->id;
             }
