@@ -7,6 +7,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RotationController;
 use App\Http\Controllers\RvehiculeController;
 use App\Http\Controllers\ZoneController;
+use App\Http\Controllers\SettingController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\WebhookController;
 
@@ -301,3 +302,5 @@ Route::prefix('reports')->name('reports.')->group(function () {
     Route::get('/export-excel', [ReportController::class, 'exportExcel'])->name('export_excel');
 });
 
+Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
+Route::post('/settings', [SettingController::class, 'update'])->name('settings.update');

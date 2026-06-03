@@ -7,6 +7,7 @@ use App\Models\CircuitLeg;
 use App\Models\Rotation;
 use App\Models\RotationLeg;
 use App\Models\Rvehicule;
+use App\Models\Setting;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -483,6 +484,7 @@ class RotationCalculatorService
 
         $slots      = $this->resolveLegsSequence($legs);
         $totalSlots = count($slots);
+        $delaySeconds = Setting::get('parent_zone_delay_hours', 24) * 3600;
 
         $i          = 0;
         $totalEvts  = count($events);
@@ -528,7 +530,7 @@ class RotationCalculatorService
                         $eventTime   = Carbon::parse($event['dt']);
                         $diffSeconds = $parentEnteredAt->diffInSeconds($eventTime, false);
 
-                        if ($diffSeconds > 86400) {
+                        if ($diffSeconds > $delaySeconds) {
                             $completedAt = $parentEnteredAt;
                             $duration    = (int) Carbon::parse($currentRotation->started_at)
                                                     ->diffInSeconds($completedAt);
@@ -684,7 +686,7 @@ class RotationCalculatorService
                             $futureEvent = $events[$j];
                             $futureTime  = Carbon::parse($futureEvent['dt']);
 
-                            if ($futureTime->diffInSeconds($eventTime, false) > 86400) break;
+                            if ($futureTime->diffInSeconds($eventTime, false) > $delaySeconds) break;
 
                             if ($this->slotMatchesEvent($lastSlot, $futureEvent) !== null) {
                                 $found = true;

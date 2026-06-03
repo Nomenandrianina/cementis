@@ -201,8 +201,12 @@
                                         $val = $obj->leg_objectives[$sid] ?? null;
                                         if ($val) break;
                                     }
+                                    // if (!$val) {
+                                    //     $val = $obj->leg_objectives[$input['leg_ids'][1]] ?? null;
+                                    // }
                                     if (!$val) {
-                                        $val = $obj->leg_objectives[$input['leg_ids'][1]] ?? null;
+                                        $legId = $input['leg_ids'][1] ?? null; 
+                                        $val = $legId ? ($obj->leg_objectives[$legId] ?? null) : null;
                                     }
                                 @endphp
 

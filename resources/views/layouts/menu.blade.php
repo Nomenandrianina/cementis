@@ -283,8 +283,9 @@
     $isZoneActive = Request::is('admin/zones*');
     $isVehiclesActive = Request::is('admin/vehicles*');
     $isRotatationeventActive = Request::is('admin/rotations/event*');
+    $isSettingsActive = Request::is('admin/settings*');
 @endphp
-<li class="nav-item has-treeview {{ $isCircuitsActive || $isCheckpointsActive || $isZoneActive || $isVehiclesActive || $isRotatationeventActive ? 'menu-open' : '' }}">
+<li class="nav-item has-treeview {{ $isCircuitsActive || $isCheckpointsActive || $isZoneActive || $isVehiclesActive || $isRotatationeventActive || $isSettingsActive ? 'menu-open' : '' }}">
     <a href="#" class="nav-link">
         <i class="nav-icon fas fa-database"></i>
         <p>
@@ -345,6 +346,15 @@
                 <a href="{{ route('rotations.event.index') }}" class="nav-link {{ request()->routeIs('rotations.event.index') ? 'active' : '' }}">
                     <i class="nav-icon fas fa-calendar"></i>
                     Events
+                </a>
+            </li>
+        @endcan
+
+        @can('settings.index') 
+            <li class="nav-item">
+                <a href="{{ route('settings.index') }}" class="nav-link {{ request()->routeIs('settings.index') ? 'active' : '' }}">
+                    <i class="nav-icon fas fa-cog"></i>
+                    Paramètres
                 </a>
             </li>
         @endcan
