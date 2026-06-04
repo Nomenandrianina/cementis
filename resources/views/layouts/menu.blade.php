@@ -303,7 +303,6 @@
                     Circuits
                 </a>
             </li>
-
         @endcan
         
         @can('checkpoints.index')    

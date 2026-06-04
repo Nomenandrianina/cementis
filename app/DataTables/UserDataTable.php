@@ -67,7 +67,7 @@ class UserDataTable extends DataTable
             'name',
             'email',
             'status_online'=>['data'=>'status_online','orderable' => false, 'searchable' => false],
-            'role_text' => ['orderable' => false, 'searchable' => false],
+            'role_title' => ['orderable' => false, 'searchable' => false],
         ];
     }
 

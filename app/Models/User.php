@@ -68,15 +68,13 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
-    // public function routeNotificationForDatabase()
-    // {
-    //     return $this->notifications();
-    // }
+  
     public function isSuperAdmin()
     {
         return $this->hasRole(Role::SUPPER_ADMIN);
     }
-    protected $appends = array('role_data', 'role_text', 'status_online', 'is_online');
+    protected $appends = array('role_data', 'role_text', 'role_title', 'status_online', 'is_online');
+
     public function getRoleDataAttribute()
     {
         return $this->roles->pluck('id', 'name');
@@ -84,6 +82,10 @@ class User extends Authenticatable
     public function getRoleTextAttribute()
     {
         return $this->roles->pluck('name')->implode(',');
+    }
+    public function getRoleTitleAttribute()
+    {
+        return $this->roles->pluck('title')->implode(',');
     }
     public function getStatusOnlineAttribute()
     {

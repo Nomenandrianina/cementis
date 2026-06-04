@@ -16,17 +16,6 @@
         </div>
     </a>
 
-    <!-- User Account -->
-    <div class="alpha-user-card">
-        <div class="alpha-user-avatar">
-            <span>{{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 1)) }}</span>
-        </div>
-        <div class="alpha-user-info">
-            <span class="alpha-user-name">{{ auth()->user()->name ?? 'Utilisateur' }}</span>
-            <span class="alpha-user-role">Mon compte</span>
-        </div>
-        {{-- <i class="fas fa-chevron-down alpha-user-chevron"></i> --}}
-    </div>
 
     <div class="alpha-divider"></div>
 
@@ -87,16 +76,43 @@
 
         display: flex;
         flex-direction: column;
-        width: 260px !important;
+
+        width: 260px ;
         overflow: hidden;
-        /* position: relative; */
+        transition: width 0.3s ease-in-out;
     }
+
+    .sidebar-collapse #alpha-sidebar {
+        width: 4.2rem !important; 
+    }
+
+    .sidebar-collapse #alpha-sidebar:hover {
+        width: 260px !important;
+    }
+
+    .sidebar-collapse .alpha-brand-text,
+    .sidebar-collapse .alpha-user-info,
+    .sidebar-collapse .alpha-sidebar-footer .alpha-footer-text,
+    .sidebar-collapse .alpha-nav .nav-link span:not(.nav-icon) {
+        display: none !important;
+    }
+
+    .sidebar-collapse #alpha-sidebar:hover .alpha-brand-text,
+    .sidebar-collapse #alpha-sidebar:hover .alpha-user-info,
+    .sidebar-collapse #alpha-sidebar:hover .alpha-sidebar-footer .alpha-footer-text,
+    .sidebar-collapse #alpha-sidebar:hover .alpha-nav .nav-link span:not(.nav-icon),
+    .sidebar-collapse #alpha-sidebar:hover .alpha-nav .nav-link .right {
+        display: flex !important;
+    }
+
+    
 
     /* Gradient riche derrière le glass — positionné DANS la sidebar uniquement */
     #alpha-sidebar .alpha-sidebar-bg {
         position: fixed;
         top: 0; left: 0;
-        width: 260px;
+        /* width: 260px; */
+        width: 100%;
         height: 100%;
         background: radial-gradient(ellipse 200px 250px at 15% 10%, rgb(51 71 101 / 75%) 0%, #0000003b 65%), 
                     radial-gradient(ellipse 180px 220px at 88% 85%, rgb(80 86 95 / 90%) 0%, #00000000 65%), 

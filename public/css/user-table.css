@@ -1,0 +1,86 @@
+ /* ===== LE CONTENEUR EFFET VERRE ===== */
+    .alpha-table-card {
+        background: rgba(255, 255, 255, 0.45) !important;
+        backdrop-filter: blur(20px) saturate(160%);
+        -webkit-backdrop-filter: blur(20px) saturate(160%);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 20px;
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.06);
+        margin-top: 15px;
+    }
+
+    /* ===== RE-STYLISATION DE LA TABLE GERÉE PAR YAJRA ===== */
+    .alpha-modern-table {
+        border-collapse: separate !important;
+        border-spacing: 0 10px !important; /* Espace entre les lignes flottantes */
+        background: transparent !important;
+        border: none !important;
+    }
+
+    /* En-tête */
+    .alpha-modern-table thead th {
+        font-family: 'Sora', sans-serif;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #64748b;
+        border: none !important;
+        padding: 12px 16px !important;
+    }
+
+    /* Lignes de données */
+    .alpha-modern-table tbody tr {
+        background: rgba(255, 255, 255, 0.65) !important;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.01) !important;
+        transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    /* Effet Hover au survol */
+    .alpha-modern-table tbody tr:hover {
+        transform: translateY(-2px);
+        background: rgba(255, 255, 255, 0.95) !important;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06) !important;
+    }
+
+    /* Arrondir les angles des lignes individuelles */
+    .alpha-modern-table tbody tr td {
+        padding: 14px 16px !important;
+        border: none !important;
+        vertical-align: middle !important;
+        font-size: 13.5px;
+        color: #334155;
+    }
+    .alpha-modern-table tbody tr td:first-child {
+        border-top-left-radius: 12px !important;
+        border-bottom-left-radius: 12px !important;
+    }
+    .alpha-modern-table tbody tr td:last-child {
+        border-top-right-radius: 12px !important;
+        border-bottom-right-radius: 12px !important;
+    }
+
+    /* ===== DESIGN DE LA RECHERCHE & PAGINATION (YAJRA INPUTS) ===== */
+    .dataTables_wrapper .dataTables_filter input {
+        border: 1px solid rgba(0, 0, 0, 0.08) !important;
+        background: rgba(255, 255, 255, 0.6) !important;
+        padding: 6px 12px !important;
+        border-radius: 10px !important;
+        font-size: 13px;
+        outline: none;
+        transition: all 0.2s;
+    }
+    .dataTables_wrapper .dataTables_filter input:focus {
+        border-color: #454e5f !important; /* S'accorde avec votre sidebar */
+        background: #ffffff !important;
+        box-shadow: 0 0 0 3px rgba(69, 78, 95, 0.1);
+    }
+
+    /* Pagination active */
+    .dataTables_wrapper .dataTables_paginate .paginate_button.current,
+    .dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
+        background: #454e5f !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 8px !important;
+        padding: 6px 12px !important;
+    }
