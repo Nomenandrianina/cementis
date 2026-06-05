@@ -17,15 +17,22 @@
         border: none !important;
     }
 
+    .alpha-modern-table thead tr {
+        border-radius: 12px !important;
+    }
+    
     /* En-tête */
     .alpha-modern-table thead th {
         font-family: 'Sora', sans-serif;
         font-size: 11px;
         text-transform: uppercase;
         letter-spacing: 0.08em;
-        color: #64748b;
+        color: #ffffff;
         border: none !important;
         padding: 12px 16px !important;
+        background: rgb(54 62 75) !important;
+        backdrop-filter: blur(40px) saturate(180%) brightness(1.05) !important;
+        -webkit-backdrop-filter: blur(40px) saturate(180%) brightness(1.05) !important;
     }
 
     /* Lignes de données */

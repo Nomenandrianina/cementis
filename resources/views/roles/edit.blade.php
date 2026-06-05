@@ -1,4 +1,4 @@
-@extends('layouts.app')
+{{-- @extends('layouts.app')
 
 @section('content')
     <section class="content-header">
@@ -34,4 +34,84 @@
 
         </div>
     </div>
+@endsection --}}
+@extends('layouts.app')
+
+@section('content')
+<div class="container-fluid py-5 px-md-5" style="background-color: #f8fafc; min-height: 100vh; font-family: 'Inter', system-ui, sans-serif; color: #09090b;">
+    
+    <div class="mb-5">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb bg-transparent p-0 mb-2">
+                <li class="breadcrumb-item"><a href="{{ route('roles.index') }}" class="text-muted text-decoration-none small">Rôles</a></li>
+                <li class="breadcrumb-item active small text-secondary" aria-current="page">Configuration</li>
+            </ol>
+        </nav>
+        <h1 class="h3 font-weight-bold mb-1" style="letter-spacing: -0.025em;">
+            Configuration des Accès
+        </h1>
+        <p class="text-muted small mb-0">Définissez l'identité du rôle et affectez des permissions granulaires par module.</p>
+    </div>
+
+    @if($errors->any())
+        <div class="alert border-0 shadow-sm rounded-lg mb-4 p-4 d-flex align-items-start" style="background-color: #fef2f2; color: #991b1b; border-left: 4px solid #ef4444 !important;">
+            <i class="fas fa-exclamation-circle mt-1 mr-3" style="font-size: 1.1rem;"></i>
+            <div>
+                <h5 class="font-weight-bold text-sm mb-1">Veuillez corriger les erreurs suivantes :</h5>
+                <ul class="mb-0 pl-3 small">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        </div>
+    @endif
+
+    {!! Form::model($role, ['route' => ['roles.update', $role->id], 'method' => 'patch']) !!}
+    
+    <div class="row style-react-grid">
+        @include('roles.fields')
+    </div>
+
+    <div class="card border-0 shadow-sm mt-4 overflow-hidden" style="border-radius: 8px; border: 1px solid #e4e4e7 !important;">
+        <div class="px-4 py-4 d-flex flex-row-reverse justify-content-start gap-3 bg-light" style="background-color: #fafafa !important; gap: 12px;">
+            {!! Form::submit('Enregistrer les accès', ['class' => 'btn btn-dark btn-modern shadow-sm font-weight-medium px-4 py-2']) !!}
+            <a href="{{ route('roles.index') }}" class="btn btn-white text-secondary border rounded-lg px-4 py-2 font-weight-medium transition-all">
+                Annuler
+            </a>
+        </div>
+    </div>
+
+    {!! Form::close() !!}
+</div>
+
+<style>
+    .transition-all { transition: all 0.15s ease-in-out; }
+    .style-react-grid { row-gap: 1.5rem; }
+    
+    /* Bouton principal Noir/Zinc */
+    .btn-dark.btn-modern {
+        background-color: #18181b !important;
+        border-color: #18181b !important;
+        color: #ffffff !important;
+        border-radius: 6px !important;
+        font-size: 0.875rem;
+    }
+    .btn-dark.btn-modern:hover {
+        background-color: #27272a !important;
+        border-color: #27272a !important;
+    }
+    
+    /* Bouton secondaire Blanc/Bordure */
+    .btn-white {
+        background: #ffffff !important;
+        font-size: 0.875rem;
+        border-color: #e4e4e7 !important;
+        border-radius: 6px !important;
+    }
+    .btn-white:hover {
+        background-color: #f4f4f5 !important;
+        color: #09090b !important;
+    }
+</style>
 @endsection

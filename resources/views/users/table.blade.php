@@ -4,7 +4,7 @@
 @endpush
 
     <div class="alpha-table-card">
-        <div class="table-responsive p-3">
+        <div class="table-responsive">
             {{-- {!! $dataTable->table(['width' => '100%', 'class' => 'table table-striped table-bordered']) !!} --}}
             {!! $dataTable->table(['width' => '100%', 'class' => 'table alpha-modern-table']) !!}
         </div>

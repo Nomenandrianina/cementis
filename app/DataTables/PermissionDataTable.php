@@ -49,23 +49,23 @@ class PermissionDataTable extends DataTable
                 'order'     => [[0, 'desc']],
                 'buttons'   => [
                     'excel', 'csv', 'pdf',
-                    [
-                        'text' => '<i class="fas fa-shield-alt"></i> ' . 'Load from router',
-                        'action' => "
-                        function (e, dt, button, config) {
-                            $.ajax({
-                                type:'POST',
-                                url:'" . route('permissions.load-router') . "',
-                                headers: {'X-CSRF-TOKEN': $('meta[name=\"csrf-token\"]').attr('content')},
-                                success:function(data){
-                                    dt.search('');
-                                    dt.columns().search('');
-                                    dt.draw();
-                                }
-                             });
-                        }",
-                        'className' => 'btn btn-default btn-sm no-corner'
-                    ],
+                    // [
+                    //     'text' => '<i class="fas fa-shield-alt"></i> ' . 'Load from router',
+                    //     'action' => "
+                    //     function (e, dt, button, config) {
+                    //         $.ajax({
+                    //             type:'POST',
+                    //             url:'" . route('permissions.load-router') . "',
+                    //             headers: {'X-CSRF-TOKEN': $('meta[name=\"csrf-token\"]').attr('content')},
+                    //             success:function(data){
+                    //                 dt.search('');
+                    //                 dt.columns().search('');
+                    //                 dt.draw();
+                    //             }
+                    //          });
+                    //     }",
+                    //     'className' => 'btn btn-default btn-sm no-corner'
+                    // ],
                 ],
                 'language' => __('datatables')
             ]);
