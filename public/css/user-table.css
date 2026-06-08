@@ -12,7 +12,7 @@
     /* ===== RE-STYLISATION DE LA TABLE GERÉE PAR YAJRA ===== */
     .alpha-modern-table {
         border-collapse: separate !important;
-        border-spacing: 0 10px !important; /* Espace entre les lignes flottantes */
+        /* border-spacing: 0 10px !important; */
         background: transparent !important;
         border: none !important;
     }
@@ -20,7 +20,20 @@
     .alpha-modern-table thead tr {
         border-radius: 12px !important;
     }
-    
+
+    /* Centre les textes, gère l'alignement vertical et force l'alignement pour DataTables */
+    .alpha-modern-table th, 
+    .alpha-modern-table td {
+        text-align: center !important;
+        vertical-align: middle !important;
+    }
+
+    .alpha-modern-table th.sorting,
+    .alpha-modern-table th.sorting_asc,
+    .alpha-modern-table th.sorting_desc {
+        padding-right: 24px !important; 
+    }
+
     /* En-tête */
     .alpha-modern-table thead th {
         font-family: 'Sora', sans-serif;
@@ -45,13 +58,14 @@
     /* Effet Hover au survol */
     .alpha-modern-table tbody tr:hover {
         transform: translateY(-2px);
-        background: rgba(255, 255, 255, 0.95) !important;
+        /* background: rgba(255, 255, 255, 0.95) !important; */
+        background: rgba(245, 242, 242, 0.95) !important;
         box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06) !important;
     }
 
     /* Arrondir les angles des lignes individuelles */
     .alpha-modern-table tbody tr td {
-        padding: 14px 16px !important;
+        /* padding: 14px 16px !important; */
         border: none !important;
         vertical-align: middle !important;
         font-size: 13.5px;
@@ -91,3 +105,4 @@
         border-radius: 8px !important;
         padding: 6px 12px !important;
     }
+

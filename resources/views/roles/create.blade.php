@@ -1,11 +1,26 @@
 @extends('layouts.app')
 
 @section('content')
-    <section class="content-header">
+    <section class="content-header bg-transparent py-3">
         <div class="container-fluid">
-            <div class="row mb-2">
-                <div class="col-sm-12">
-                    <h1>Create Role</h1>
+            <div class="card border-0 shadow-sm" style="border-radius: 12px !important; overflow: hidden;">
+                <div class="card-body d-flex flex-column flex-sm-row justify-content-sm-between align-items-sm-center p-4 bg-white w-100">
+                    
+                    <div class="mb-3 mb-sm-0">
+                        <h1 class="h3 font-weight-bold text-dark mb-0" style="letter-spacing: -0.5px;">
+                            Créer un rôle
+                        </h1>
+                        <p class="text-muted small mb-0 mt-1">Définissez un nouveau groupe de droits d'accès</p>
+                    </div>
+                    
+                    <div class="ml-sm-auto">
+                        <a class="btn btn-outline-secondary px-4 py-2 font-weight-medium"
+                        href="{{ route('roles.index') }}"
+                        style="border-radius: 8px; transition: all 0.2s ease;">
+                        <i class="fas fa-arrow-left mr-2 small"></i> Retour à la liste
+                        </a>
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -28,8 +43,8 @@
             </div>
 
             <div class="card-footer">
-                {!! Form::submit('Save', ['class' => 'btn btn-primary']) !!}
-                <a href="{{ route('roles.index') }}" class="btn btn-default">Cancel</a>
+                {!! Form::submit('Enregistrer', ['class' => 'btn btn-primary']) !!}
+                <a href="{{ route('roles.index') }}" class="btn btn-default">Annuler</a>
             </div>
 
             {!! Form::close() !!}

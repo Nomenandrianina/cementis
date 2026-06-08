@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-    <section class="content-header">
+    {{-- <section class="content-header">
         <div class="container-fluid">
             <div class="row align-items-center mb-3">
                 <div class="col-md-6">
@@ -23,6 +23,47 @@
                             @lang('crud.add_new')
                         </a>
                     @endcan
+                </div>
+            </div>
+        </div>
+    </section> --}}
+    <section class="content-header bg-transparent py-3">
+        <div class="container-fluid">
+            <div class="card border-0 shadow-sm" style="border-radius: 12px !important; overflow: hidden;">
+                <div class="card-body d-flex flex-column flex-sm-row justify-content-sm-between align-items-sm-center p-4 bg-white w-100">
+                    
+                    <div class="mb-3 mb-sm-0">
+                        <h1 class="h3 font-weight-bold text-dark mb-0" style="letter-spacing: -0.5px;">
+                            Gestion des chauffeurs
+                        </h1>
+                        <p class="text-muted small mb-0 mt-1">Consultez l'annuaire des conducteurs, leurs numéros de badge et leurs transporteurs d'appartenance</p>
+                    </div>
+                    
+                    <div class="d-flex flex-column flex-sm-row align-items-stretch align-items-sm-center gap-2 ml-sm-auto">
+                        
+                        <div class="mb-2 mb-sm-0 mr-sm-2">
+                            <select id="filter-planning" class="form-control shadow-sm" style="border-radius: 8px; min-width: 200px;">
+                                <option value="">Filtrer par planning</option>
+                                @foreach($plannings as $planning)
+                                    <option value="{{ $planning->id }}" {{ $selected_planning == $planning->id ? 'selected' : '' }}>
+                                        {{ $planning->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        @can('chauffeurs.create')
+                            <div>
+                                <a class="btn btn-primary px-4 py-2 font-weight-medium shadow-sm w-100"
+                                href="{{ route('chauffeurs.create') }}"
+                                style="border-radius: 8px; transition: all 0.2s ease; white-space: nowrap;">
+                                <i class="fas fa-plus mr-2 small"></i> @lang('crud.add_new')
+                                </a>
+                            </div>
+                        @endcan
+
+                    </div>
+
                 </div>
             </div>
         </div>

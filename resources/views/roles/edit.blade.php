@@ -38,9 +38,51 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container-fluid py-5 px-md-5" style="background-color: #f8fafc; min-height: 100vh; font-family: 'Inter', system-ui, sans-serif; color: #09090b;">
+<section class="content-header bg-transparent py-3">
+    <div class="container-fluid">
+        <!-- La Card Moderne de Modification -->
+        <div class="card border-0 shadow-sm" style="border-radius: 12px !important; overflow: hidden;">
+            <div class="card-body d-flex flex-column flex-sm-row justify-content-sm-between align-items-sm-center p-4 bg-white w-100">
+                
+                <!-- Bloc de gauche : Fil d'Ariane + Titre + Description -->
+                <div class="mb-3 mb-sm-0">
+                    <!-- Fil d'Ariane (Breadcrumb) -->
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb bg-transparent p-0 mb-2">
+                            <li class="breadcrumb-item">
+                                <a href="{{ route('roles.index') }}" class="text-muted text-decoration-none small">Rôles</a>
+                            </li>
+                            <li class="breadcrumb-item active small text-secondary" aria-current="page">Modification</li>
+                        </ol>
+                    </nav>
+                    
+                    <!-- Titre Principal (Affiche le nom du rôle s'il existe) -->
+                    <h1 class="h3 font-weight-bold text-dark mb-0" style="letter-spacing: -0.5px;">
+                        Modifier le rôle <span class="text-primary">{{ $role->title ?? '' }}</span>
+                    </h1>
+                    
+                    <!-- Sous-texte -->
+                    <p class="text-muted small mb-0 mt-1">
+                        Ajustez l'identité du rôle et mettez à jour ses permissions et accès aux modules.
+                    </p>
+                </div>
+                
+                <!-- Bloc de droite : Bouton d'action de retour -->
+                <div class="ml-sm-auto">
+                    <a class="btn btn-outline-secondary px-4 py-2 font-weight-medium"
+                       href="{{ route('roles.index') }}"
+                       style="border-radius: 8px; transition: all 0.2s ease;">
+                       <i class="fas fa-arrow-left mr-2 small"></i> Retour à la liste
+                    </a>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+<div class="container-fluid px-md-5" style="background-color: #f8fafc; min-height: 100vh; font-family: 'Inter', system-ui, sans-serif; color: #09090b;">
     
-    <div class="mb-5">
+    {{-- <div class="mb-5">
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb bg-transparent p-0 mb-2">
                 <li class="breadcrumb-item"><a href="{{ route('roles.index') }}" class="text-muted text-decoration-none small">Rôles</a></li>
@@ -52,6 +94,13 @@
         </h1>
         <p class="text-muted small mb-0">Définissez l'identité du rôle et affectez des permissions granulaires par module.</p>
     </div>
+    <div class="ml-sm-auto">
+        <a class="btn btn-outline-secondary px-4 py-2 font-weight-medium"
+        href="{{ route('roles.index') }}"
+        style="border-radius: 8px; transition: all 0.2s ease;">
+        <i class="fas fa-arrow-left mr-2 small"></i> Retour à la liste
+        </a>
+    </div> --}}
 
     @if($errors->any())
         <div class="alert border-0 shadow-sm rounded-lg mb-4 p-4 d-flex align-items-start" style="background-color: #fef2f2; color: #991b1b; border-left: 4px solid #ef4444 !important;">

@@ -415,11 +415,21 @@
     }
 
     /* ===== SCROLLBAR ===== */
-    .alpha-sidebar-body::-webkit-scrollbar { width: 3px; }
+    /* .alpha-sidebar-body::-webkit-scrollbar { width: 3px; }
     .alpha-sidebar-body::-webkit-scrollbar-track { background: transparent; }
     .alpha-sidebar-body::-webkit-scrollbar-thumb {
         background: rgba(255,255,255,0.15);
         border-radius: 10px;
+    } */
+   /* Masque la barre de défilement sur Chrome, Safari et Opera */
+    .sidebar::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* Masque la barre de défilement sur Firefox et IE/Edge */
+    .sidebar {
+        -ms-overflow-style: none;  /* IE et Edge */
+        scrollbar-width: none;  /* Firefox */
     }
 
     /* ===== LAYOUT ADMINLTE ===== */
@@ -432,5 +442,7 @@
     .sidebar-collapse .main-footer {
         margin-left: 0 !important;
     }
+
+
 </style>
 
