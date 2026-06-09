@@ -76,7 +76,7 @@ class TransporteurController extends AppBaseController
     public function show($id)
     {
         $transporteur = $this->transporteurRepository->find($id);
-        $chauffeur = Chauffeur::all();
+        $chauffeur = Chauffeur::where('transporteur_id', $transporteur->id)->get();
         $transporteur_all = Transporteur::all();
 
         if (empty($transporteur)) {

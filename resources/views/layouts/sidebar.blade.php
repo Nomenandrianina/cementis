@@ -428,8 +428,8 @@
 
     /* Masque la barre de défilement sur Firefox et IE/Edge */
     .sidebar {
-        -ms-overflow-style: none;  /* IE et Edge */
-        scrollbar-width: none;  /* Firefox */
+        -ms-overflow-style: none; 
+        scrollbar-width: none; 
     }
 
     /* ===== LAYOUT ADMINLTE ===== */
