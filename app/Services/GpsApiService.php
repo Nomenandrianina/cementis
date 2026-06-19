@@ -144,7 +144,6 @@ class GpsApiService
     {
         try {
             $params['key'] = $this->apiKey;
-
             $response = Http::timeout(30)
                 ->get($this->baseUrl, $params);
 

@@ -15,8 +15,8 @@ use Illuminate\Support\Facades\Log;
 
 class RotationCalculatorService
 {
-    public const TEST_MODE = 'Tsiadino'; // 'complete' | 'incomplete' | 'cancelled' | 'real_sample' | false
-    // public const TEST_MODE = 'API'; 
+    // public const TEST_MODE = 'Tsiadino'; // 'complete' | 'incomplete' | 'cancelled' | 'real_sample' | false
+    public const TEST_MODE = 'API'; 
 
     public function __construct(
         private readonly GpsApiService $gpsApi,

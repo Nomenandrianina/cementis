@@ -3,6 +3,58 @@
 @section('page-title', 'Rotations')
 
 <link rel="stylesheet" href="{{ asset('css/rotation_index.css') }}">
+<style>
+    /* ── Fix Select2 dans un input-group avec icône à gauche ── */
+
+    /* Le select2-container doit se comporter comme un form-control dans le flex de l'input-group */
+    #vehicle_id + .select2-container {
+        flex: 1 1 auto;
+        width: 1% !important; /* force le shrink/grow comme un form-control Bootstrap */
+    }
+
+    /* La boîte visible (celle qu'on voit et qu'on clique) */
+    #vehicle_id + .select2-container .select2-selection--single {
+        height: 45px !important;
+        min-height: 45px;
+        border: 1px solid #ced4da;
+        border-left: 0;                 /* pas de double bordure avec l'icône */
+        border-radius: 0 8px 8px 0 !important;
+        background-color: #fff;
+        display: flex;
+        align-items: center;
+        padding-left: 0.75rem;
+    }
+
+    /* Le texte sélectionné, centré verticalement, sans padding par défaut de Select2 */
+    #vehicle_id + .select2-container .select2-selection__rendered {
+        padding-left: 0;
+        line-height: normal;
+    }
+
+    /* La flèche */
+    #vehicle_id + .select2-container .select2-selection__arrow {
+        height: 45px !important;
+    }
+
+    /* Quand le select2 est focus, simuler le focus Bootstrap classique */
+    #vehicle_id + .select2-container--default.select2-container--focus .select2-selection--single,
+    #vehicle_id + .select2-container--default.select2-container--open .select2-selection--single {
+        border-color: #80bdff;
+        box-shadow: none; /* vous avez shadow-none sur le select d'origine */
+    }
+</style>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // ── Select2 sur le véhicule (recherche dans la liste) ──────────────────
+        $('#vehicle_id').select2({
+            placeholder: '— Sélectionner —',
+            allowClear: true,
+            width: '100%',
+            dropdownParent: $('#vehicle_id').closest('.input-group'),
+        });
+
+    });
+</script>
 @section('content')
 <div class="container-fluid pt-3">
     <div class="card shadow-sm rounded-lg overflow-hidden">
@@ -105,7 +157,7 @@
                                     <div class="input-group-prepend">
                                         <span class="input-group-text bg-white border-right-0" style="border-radius: 8px 0 0 8px;"><i class="fas fa-route text-primary"></i></span>
                                     </div>
-                                    <select name="circuit_id" class="form-control border-left-0 shadow-none" style="border-radius: 0 8px 8px 0; height: 45px;" required>
+                                    <select name="circuit_id"  class="form-control border-left-0 shadow-none" style="border-radius: 0 8px 8px 0; height: 45px;" required>
                                         <option value="">— Sélectionner —</option>
                                         @foreach($circuits as $c)
                                             <option value="{{ $c->id }}" {{ old('circuit_id') == $c->id ? 'selected' : '' }}>{{ $c->name }}</option>
@@ -120,7 +172,7 @@
                                     <div class="input-group-prepend">
                                         <span class="input-group-text bg-white border-right-0" style="border-radius: 8px 0 0 8px;"><i class="fas fa-truck text-primary"></i></span>
                                     </div>
-                                    <select name="vehicle_id" class="form-control border-left-0 shadow-none" style="border-radius: 0 8px 8px 0; height: 45px;">
+                                    <select name="vehicle_id" id="vehicle_id" class="form-control border-left-0 shadow-none" style="border-radius: 0 8px 8px 0; height: 45px;">
                                         <option value="">Tous les camions</option>
                                         @foreach($vehicles as $v)
                                             <option value="{{ $v->id }}" {{ old('vehicle_id') == $v->id ? 'selected' : '' }}>{{ $v->name }}</option>

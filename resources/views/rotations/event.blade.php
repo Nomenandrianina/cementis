@@ -3,7 +3,79 @@
 @section('title', 'Événements GPS')
 @section('page-title', 'Visualisation des événements GPS')
 <meta name="route-fetch-events" content="{{ route('rotations.event.fetch') }}">
+<style>
+    /* Aligner la hauteur avec les autres inputs */
+    .select2-container--default .select2-selection--single {
+        min-height: 38px;  /* ajustez cette valeur pour matcher vos inputs */
+        display: flex;
+        align-items: center;
+    }
 
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        width: 100%;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 100%;
+        top: 0;
+        right: 6px;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__clear {
+        margin-right: 16px;
+        color: var(--muted, #999);
+        font-size: 16px;
+        line-height: 1;
+        margin-top: 6px;
+    }
+
+    /* Dropdown */
+    .select2-dropdown {
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        font-size: 13px;
+    }
+
+    .select2-container--default .select2-search--dropdown .select2-search__field {
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 6px 10px;
+        font-size: 12px;
+        outline: none;
+    }
+
+    .select2-container--default .select2-results__option--highlighted[aria-selected] {
+        background-color: var(--bordeaux, #8B1A1A);
+        color: white;
+    }
+
+    .select2-results__option[aria-selected=true] {
+        background-color: rgba(139,26,26,0.08);
+        color: var(--bordeaux, #8B1A1A);
+    }
+
+    /* Placeholder */
+    .select2-container--default .select2-selection--single .select2-selection__placeholder {
+        color: var(--muted, #aaa);
+    }
+
+    /* Largeur cohérente avec le form-group parent */
+    .select2-container {
+        width: 100% !important;
+    }
+</style>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // ── Select2 sur le véhicule (recherche dans la liste) ──────────────────
+        $('#sel-vehicle').select2({
+            placeholder: '— Sélectionner —',
+            allowClear: true,
+            width: '100%',
+        });
+
+    });
+</script>
 @section('content')
     <script src="{{ asset('js/event.js') }}"></script>
     <div class="page">

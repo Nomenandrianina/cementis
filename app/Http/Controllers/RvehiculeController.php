@@ -10,10 +10,23 @@ class RvehiculeController extends Controller
 {
     public function __construct(private readonly GpsApiService $gpsApi) {}
 
-    public function index()
+    public function index(Request $request)
     {
-        $vehicles = Rvehicule::withCount('rotations')->orderBy('name')->get();
-        return view('r_vehicules.index', compact('vehicles'));
+        $search = $request->input('search');
+
+        // $vehicles = Rvehicule::withCount('rotations')->orderBy('name')->paginate(10);
+        $vehicles = Rvehicule::withCount('rotations')
+        ->when($search, function ($query, $search) {
+            return $query->where('name', 'LIKE', "%{$search}%")
+                         ->orWhere('plate_number', 'LIKE', "%{$search}%")
+                         ->orWhere('model', 'LIKE', "%{$search}%")
+                         ->orWhere('imei', 'LIKE', "%{$search}%");
+        })
+        ->orderBy('name')
+        ->paginate(10)
+        ->appends(['search' => $search]);
+
+        return view('r_vehicules.index', compact('vehicles', 'search'));
     }
 
     public function sync()

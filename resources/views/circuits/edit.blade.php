@@ -1,8 +1,9 @@
-@ -1,487 +0,0 @@
 @extends('layouts.app')
+
 
 @section('title', 'Circuit : ' . $circuit->name)
 @section('page-title', $circuit->name)
+
 
 @section('topbar-actions')
     <a href="{{ route('circuits.index') }}" class="btn btn-ghost btn-sm">← Circuits</a>
@@ -26,7 +27,69 @@
         justify-content: center;
         line-height: 1;
     }
+
+    /* Aligner la hauteur avec les autres inputs */
+    .select2-container--default .select2-selection--single {
+        min-height: 38px;  /* ajustez cette valeur pour matcher vos inputs */
+        display: flex;
+        align-items: center;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        width: 100%;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 100%;
+        top: 0;
+        right: 6px;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__clear {
+        margin-right: 16px;
+        color: var(--muted, #999);
+        font-size: 16px;
+        line-height: 1;
+        margin-top: 6px;
+    }
+
+    /* Dropdown */
+    .select2-dropdown {
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        font-size: 13px;
+    }
+
+    .select2-container--default .select2-search--dropdown .select2-search__field {
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 6px 10px;
+        font-size: 12px;
+        outline: none;
+    }
+
+    .select2-container--default .select2-results__option--highlighted[aria-selected] {
+        background-color: var(--bordeaux, #8B1A1A);
+        color: white;
+    }
+
+    .select2-results__option[aria-selected=true] {
+        background-color: rgba(139,26,26,0.08);
+        color: var(--bordeaux, #8B1A1A);
+    }
+
+    /* Placeholder */
+    .select2-container--default .select2-selection--single .select2-selection__placeholder {
+        color: var(--muted, #aaa);
+    }
+
+    /* Largeur cohérente avec le form-group parent */
+    .select2-container {
+        width: 100% !important;
+    }
 </style>
+
 <script>
     
     function toggleCard(headerElement) {
@@ -257,30 +320,83 @@
         if (!isOpen) el.style.display = 'block';
     }
 
-    document.addEventListener('change', function (event) {
-        if (event.target && event.target.id === 'label-select') {
-            const selected = event.target.options[event.target.selectedIndex];
+    document.addEventListener('DOMContentLoaded', function () {
+
+        // ── Select2 sur le label (déjà disponible dans votre layout) ──────────
+        $('#label-select').select2({
+            placeholder: 'Rechercher une zone ou un checkpoint…',
+            allowClear: true,
+            width: '100%',
+        });
+
+        // Sync des autres selects quand Select2 change
+        $('#label-select').on('change', function () {
+            const selected = this.options[this.selectedIndex];
             if (!selected.value) return;
 
             const refType = selected.dataset.refType;
             const refId   = selected.dataset.refId;
 
-            // Mettre à jour Type référence
+            // Sync type d'événement
+            const eventTypeSelect = document.getElementById('event-type-select');
+            if (refType === 'zone')            eventTypeSelect.value = 'enter_zone';
+            else if (refType === 'checkpoint') eventTypeSelect.value = 'pass_checkpoint';
+
+            // Sync type référence
             document.getElementById('reference-type-select').value = refType;
 
-            // Mettre à jour Référence GPS — querySelector au lieu de la boucle
+            // Sync référence GPS
             const refIdSelect = document.getElementById('reference-id-select');
             const target = refIdSelect.querySelector(`option[value="${refId}"][data-type="${refType}"]`);
-            
-            console.log('target trouvé:', target);
-            
-            if (target) {
-                refIdSelect.value = target.value;
-                // Si ça ne suffit pas, forcer :
-                target.selected = true;
-            }
-        }
+            if (target) target.selected = true;
+        });
     });
+
+    // document.addEventListener('change', function (event) {
+    //     if (event.target && event.target.id === 'label-select') {
+    //         const selected = event.target.options[event.target.selectedIndex];
+    //         if (!selected.value) return;
+
+    //         const refType = selected.dataset.refType;
+    //         const refId   = selected.dataset.refId;
+
+    //         // Mettre à jour Type référence
+    //         document.getElementById('reference-type-select').value = refType;
+
+    //         // Mettre à jour Référence GPS — querySelector au lieu de la boucle
+    //         const refIdSelect = document.getElementById('reference-id-select');
+    //         const target = refIdSelect.querySelector(`option[value="${refId}"][data-type="${refType}"]`);
+        
+            
+    //         if (target) {
+    //             refIdSelect.value = target.value;
+    //             // Si ça ne suffit pas, forcer :
+    //             target.selected = true;
+    //         }
+    //     }
+    // });
+
+    
+
+    // document.addEventListener('DOMContentLoaded', function () {
+    //     const labelSelect = document.getElementById('label-select');
+    //     const eventTypeSelect = document.getElementById('event-type-select');
+
+    //     labelSelect.addEventListener('change', function () {
+    //         // Récupérer l'option actuellement sélectionnée
+    //         const selectedOption = this.options[this.selectedIndex];
+    //         // Extraire le type (zone ou checkpoint) stocké dans le data-ref-type
+    //         const refType = selectedOption.getAttribute('data-ref-type');
+
+    //         if (refType === 'zone') {
+    //             // Si c'est une zone, on force la valeur sur "Entrée zone"
+    //             eventTypeSelect.value = 'enter_zone';
+    //         } else if (refType === 'checkpoint') {
+    //             // Si c't un checkpoint, on force la valeur sur "Passage checkpoint"
+    //             eventTypeSelect.value = 'pass_checkpoint';
+    //         }
+    //     });
+    // });
 </script>
 
 @section('content')
@@ -354,7 +470,7 @@
 
                             <div class="form-group" style="margin:0;">
                                 <label>Type d'événement</label>
-                                <select name="event_type" required>
+                                <select name="event_type" id="event-type-select" required>
                                     <option value="enter_zone">Entrée zone</option>
                                     <option value="leave_zone">Sortie zone</option>
                                     <option value="pass_checkpoint">Passage checkpoint</option>
@@ -610,181 +726,4 @@
         </div>
 @endsection
 
-@push('scripts')
 
-@endpush
-
-
-{{-- @forelse($circuit->legs as $leg)
-    <div class="leg-item"
-        draggable="true"
-        data-id="{{ $leg->id }}"
-        ondragstart="handleDragStart(event)"
-        ondragover="handleDragOver(event)"
-        ondragleave="handleDragLeave(event)"
-        ondrop="handleDropOnItem(event)"
-        ondragend="handleDragEnd(event)"
-        style="background:var(--panel);border:1px solid var(--border);border-radius:6px;
-                padding:8px 12px;min-width:180px;flex:0 1 auto;position:relative;
-                cursor:grab;transition:all 0.2s ease;user-select:none;">
-
-        
-        <div style="position:absolute;top:4px;left:6px;color:var(--muted);font-size:11px;opacity:0.5;cursor:grab;">⠿</div>
-
-        <div style="display:flex;flex-direction:column;gap:4px;margin-left:12px;">
-
-            
-            <div style="display:flex;justify-content:space-between;align-items:center;">
-                <span style="font-size:9px;font-weight:800;text-transform:uppercase;
-                            padding:2px 5px;border-radius:3px;
-                            background:{{ str_contains($leg->event_type,'pass') ? 'rgba(139,26,26,0.12)' : 'var(--cream-d)' }};
-                            color:{{ str_contains($leg->event_type,'pass') ? 'var(--bordeaux)' : 'var(--ink-light)' }};">
-                    {{ str_replace(['pass_','_zone'], ['',''], $leg->event_type) }}
-                </span>
-                <div style="display:flex;gap:5px;">
-                    <button onclick="toggleEditLeg({{ $leg->id }})"
-                            style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:13px;padding:0 3px;"
-                            title="Modifier">✎</button>
-                    <form action="{{ route('circuits.legs.destroy', [$circuit, $leg]) }}" method="POST"
-                        onsubmit="return confirm('Supprimer cette étape ?')" style="margin:0;">
-                        @csrf @method('DELETE')
-                        <button type="submit"
-                                style="background:none;border:none;cursor:pointer;color:var(--danger);font-size:13px;padding:0 3px;"
-                                title="Supprimer">✕</button>
-                    </form>
-                </div>
-            </div>
-
-            
-            <div style="font-weight:600;font-size:12px;white-space:nowrap;overflow:hidden;
-                        text-overflow:ellipsis;max-width:150px;color:var(--ink);"
-                title="{{ $leg->label }}">
-                {{ $leg->label }}
-            </div>
-
-            
-            <div style="font-size:10px;color:var(--muted);">
-                @if($leg->reference_type === 'zone')
-                    {{ \App\Models\Zone::find($leg->reference_id)?->name ?? '?' }}
-                @else
-                    {{ \App\Models\Checkpoint::find($leg->reference_id)?->name ?? '?' }}
-                @endif
-            </div>
-
-            
-            <div style="font-size:9px;color:var(--bordeaux);font-family:var(--mono);font-weight:600;opacity:0.7;">
-                @if ($leg->optional == 0)
-                    Obligatoire
-                @else
-                    Optionnel
-                @endif
-            </div>
-        </div>
-
-        
-        @if(!$loop->last)
-            @php $next = $circuit->legs[$loop->index + 1]; @endphp
-            @if($leg->group_or && $leg->group_or === $next->group_or)
-                <div class="leg-arrow" style="position:absolute;right:-14px;top:50%;transform:translateY(-50%);
-                    color:var(--bordeaux);font-size:14px;z-index:2;opacity:0.5;pointer-events:none;">
-                    Ou
-                </div>
-            @else
-            <div class="leg-arrow"
-                style="position:absolute;right:-14px;top:50%;transform:translateY(-50%);
-                    color:var(--bordeaux);font-size:14px;z-index:2;opacity:0.5;pointer-events:none;">→</div>
-            @endif
-        @endif
-        
-
-        
-        
-        <div id="edit-leg-{{ $leg->id }}" class="leg-edit-modal-container" style="display:none;">
-            <div class="modal-backdrop" onclick="toggleEditLeg({{ $leg->id }})"></div>
-            
-            <div class="modal-content">
-                <div style="margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
-                    <h3 style="margin:0; font-size: 16px; color: var(--ink);">Modifier le trajet</h3>
-                    <button type="button" onclick="toggleEditLeg({{ $leg->id }})" style="background:none; border:none; font-size:20px; cursor:pointer; color:var(--muted);">&times;</button>
-                </div>
-
-                <form action="{{ route('circuits.legs.update', [$circuit, $leg]) }}" method="POST">
-                    @csrf @method('PUT')
-                    
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
-                        <div class="form-group" style="margin:0; grid-column: 1/-1;">
-                            <label style="display:block; margin-bottom:4px; font-size:12px; font-weight:600;">Label</label>
-                            <input type="text" name="label" value="{{ $leg->label }}" required style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">
-                        </div>
-
-                        <div class="form-group" style="margin:0;">
-                            <label style="display:block; margin-bottom:4px; font-size:12px; font-weight:600;">Type d'événement</label>
-                            <select name="event_type" required style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">
-                                <option value="enter_zone" {{ $leg->event_type==='enter_zone' ? 'selected' : '' }}>Entrée zone</option>
-                                <option value="leave_zone" {{ $leg->event_type==='leave_zone' ? 'selected' : '' }}>Sortie zone</option>
-                                <option value="pass_checkpoint" {{ $leg->event_type==='pass_checkpoint' ? 'selected' : '' }}>Passage checkpoint</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group" style="margin:0;">
-                            <label style="display:block; margin-bottom:4px; font-size:12px; font-weight:600;">Type référence</label>
-                            <select name="reference_type" required style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">
-                                <option value="zone" {{ $leg->reference_type==='zone' ? 'selected' : '' }}>Zone</option>
-                                <option value="checkpoint" {{ $leg->reference_type==='checkpoint' ? 'selected' : '' }}>Checkpoint</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group" style="margin:0; grid-column: 1/-1;">
-                            <label style="display:block; margin-bottom:4px; font-size:12px; font-weight:600;">Référence</label>
-                            <select name="reference_id" required style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px;">
-                                <optgroup label="Zones">
-                                    @foreach($zones as $z)
-                                        <option value="{{ $z->id }}" {{ $leg->reference_type==='zone' && $leg->reference_id==$z->id ? 'selected' : '' }}>{{ $z->name }}</option>
-                                    @endforeach
-                                </optgroup>
-                                <optgroup label="Checkpoints">
-                                    @foreach($checkpoints as $cp)
-                                        <option value="{{ $cp->id }}" {{ $leg->reference_type==='checkpoint' && $leg->reference_id==$cp->id ? 'selected' : '' }}>{{ $cp->name }}</option>
-                                    @endforeach
-                                </optgroup>
-                            </select>
-                        </div>
-
-                        <div class="form-group" style="margin:0; grid-column: 1/-1;">
-                            <label style="display:block; margin-bottom:4px; font-size:12px; font-weight:600;">Optionnel</label>
-                            <select name="optional">
-                                <option value="0" {{ $leg->optional == 0 ? 'selected' : '' }}>Obligatoire</option>
-                                <option value="1" {{ $leg->optional == 1 ? 'selected' : '' }}>Optionnel</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group" style="margin:0; grid-column: 1/-1;">
-                            <label style="display:block; margin-bottom:4px; font-size:12px; font-weight:600;">
-                                Condition OU 
-                                <span style="color:var(--muted);font-weight:400;">(optionnel)</span>
-                            </label>
-                            <input type="text" name="group_or" 
-                                value="{{ $leg->group_or }}"
-                                placeholder="Ex: start, end"
-                                style="width:100%; padding:8px; border:1px solid #ddd; border-radius:6px; font-size:12px;"
-                                title="Les étapes avec le même code forment un groupe OU">
-                            <div style="font-size:10px;color:var(--muted);margin-top:3px;">
-                                Même code = alternatives acceptées · Ex: <code>start</code> sur Dépôt et Usine Andoharanofotsy
-                            </div>
-                        </div>
-                    </div>
-
-                    <div style="margin-top:20px; display:flex; gap:10px; justify-content: flex-end;">
-                        <button type="button" onclick="toggleEditLeg({{ $leg->id }})" class="btn btn-ghost btn-sm" style="padding: 8px 16px;">Annuler</button>
-                        <button type="submit" class="btn btn-primary btn-sm" style="padding: 8px 16px; background: var(--bordeaux); color: white; border: none; border-radius: 6px;">Enregistrer les modifications</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-@empty
-    <div style="color:var(--muted);font-size:12px;padding:20px;border:2px dashed var(--cream-dd);
-                border-radius:6px;width:100%;text-align:center;">
-        Aucune étape définie. Ajoutez-en une ci-dessous.
-    </div>
-@endforelse --}}
