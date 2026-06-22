@@ -823,6 +823,28 @@ class RotationCalculatorService
 
                 // ── Cas 2 : déviation hors circuit ───────────────────────────────
                 if ($this->eventInvalidatesRotation($event, $circuit, $legs)) {
+                    // Chercher en avant si le slot attendu matche avant la fin des événements
+                    // (les zones/checkpoints hors-circuit entre les deux sont ignorés comme bruit)
+                    $found = false;
+                    for ($j = $i + 1; $j < $totalEvts; $j++) {
+                        if ($this->slotMatchesEvent($expectedSlot, $events[$j]) !== null) {
+                            $found = true;
+                            break;
+                        }
+                    }
+
+                    if ($found) {
+                        Log::info('Déviation tolérée — étape attendue trouvée plus loin dans le trajet.', [
+                            'rotation_id' => $currentRotation->id,
+                            'zone'        => $event['reference_name'] ?? '?',
+                            'dt'          => $event['dt'] ?? '?',
+                        ]);
+
+                        $replayOnce = false;
+                        $i++;
+                        continue;
+                    }
+
                     $currentRotation->update([
                         'status'              => 'cancelled',
                         'is_valid'            => false,
