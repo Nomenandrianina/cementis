@@ -27,7 +27,6 @@ class ReportService
             ->latest('effective_from')
             ->first();
 
-        // $vehicles = $circuit->vehicles;
         $vehicles = Rvehicule::all();
 
         $vehicleReports = $vehicles->map(function (Rvehicule $vehicle) use ($circuit, $countedMonth, $objective) {
@@ -59,14 +58,6 @@ class ReportService
         string $countedMonth,
         ?RotationObjective $objective
     ): array {
-        // $rotations = Rotation::with('rotationLegs.circuitLeg')
-        //     ->where('rvehicule_id', $vehicle->id)
-        //     ->where('circuit_id', $circuit->id)
-        //     ->where('counted_month', $countedMonth)
-        //     ->where('status', 'completed')
-        //     ->where('is_valid', true)
-        //     ->orderBy('started_at')
-        //     ->get();
         $rotations = Rotation::with('rotationLegs.circuitLeg')
             ->where('rvehicule_id', $vehicle->id)
             ->where('circuit_id', $circuit->id)
@@ -76,7 +67,7 @@ class ReportService
                       ->orWhere('status', 'acceptable');
             })
             ->where('is_valid', true)
-            ->orderBy('started_at')
+            ->orderBy('duration_seconds', 'desc')
             ->get();
 
         $rotationDetails = $rotations->map(fn($r) => $this->rotationDetail($r, $objective));
@@ -142,7 +133,6 @@ class ReportService
 
         foreach ($allLegs as $leg) {
             if (in_array($leg->id, $skipIds)) continue;
-
             if ($leg->event_type === 'pass_checkpoint') {
                 $rl = $completedLegs->get($leg->id);
                 $blocks[] = [
@@ -176,18 +166,18 @@ class ReportService
             if ($leg->event_type === 'leave_zone') {
                 $rl = $completedLegs->get($leg->id);
                 $blocks[] = [
-                    'type'        => 'zone',
-                    'leg_id'      => $leg->id,          // ← ajouté
-                    'enter_leg_id'=> $leg->id,          // ← ajouté
-                    'leave_leg_id'=> null,              // ← ajouté
-                    'label'       => $leg->label,
-                    'enter_at'    => $rl?->occurred_at?->timezone('GMT+3')->format('d/m H:i'),
-                    'leave_at'    => null,
-                    'actual_sec'  => null,
-                    'target_sec'  => null,
-                    'ecart'       => null,
-                    'is_done'     => $rl !== null,
-                    'children'    => [],
+                    'type'         => 'zone',
+                    'leg_id'       => $leg->id,
+                    'enter_leg_id' => null,
+                    'leave_leg_id' => $leg->id,
+                    'label'        => $leg->label,
+                    'enter_at'     => null,                                                          // ← null, pas de date d'arrivée
+                    'leave_at'     => $rl?->occurred_at?->timezone('GMT+3')->format('d/m H:i:s'),  // ← ajoute :s pour les secondes
+                    'actual_sec'   => null,
+                    'target_sec'   => null,
+                    'ecart'        => null,
+                    'is_done'      => $rl !== null,
+                    'children'     => [],
                 ];
                 $skipIds[] = $leg->id;
             }

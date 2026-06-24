@@ -178,11 +178,16 @@ class ReportController extends Controller
         $circuit
     ): void {
         $rgb = fn(string $hex) => ['rgb' => ltrim($hex, '#')];
+        // $fmt = fn(?int $s) => $s === null
+        //         ? ''
+        //         : intdiv($s, 3600) . 'h '
+        //             . str_pad(intdiv($s % 3600, 60), 2, '0', STR_PAD_LEFT) . 'm '
+        //             . str_pad($s % 60, 2, '0', STR_PAD_LEFT) . 's';
         $fmt = fn(?int $s) => $s === null
-                ? ''
-                : intdiv($s, 3600) . 'h '
-                    . str_pad(intdiv($s % 3600, 60), 2, '0', STR_PAD_LEFT) . 'm '
-                    . str_pad($s % 60, 2, '0', STR_PAD_LEFT) . 's';
+        ? ''
+        : str_pad(intdiv($s, 3600), 2, '0', STR_PAD_LEFT) . ':'
+            . str_pad(intdiv($s % 3600, 60), 2, '0', STR_PAD_LEFT) . ':'
+            . str_pad($s % 60, 2, '0', STR_PAD_LEFT);
 
         $BORDEAUX  = '8B1A1A';
         $BORDEAUX2 = 'A52020';
@@ -214,7 +219,6 @@ class ReportController extends Controller
         $nombreDeColonnes = ceil($longueurTexte / $caracteresParColonne);
         $nombreDeColonnes = max(1, $nombreDeColonnes);
         $derniereColonne = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($nombreDeColonnes);
-        // $sheet->mergeCells("A1:{$lastLetter}1");
         $sheet->mergeCells("A1:{$derniereColonne}1");
         $sheet->getStyle('A1')->applyFromArray([
             'font'      => ['bold' => true, 'size' => 14, 'color' => $rgb($WHITE)],
@@ -476,7 +480,7 @@ class ReportController extends Controller
 
                 // Timestamp arrivée dans la zone principale
                 $steps[] = ['type' => 'zone_enter', 'leg_id' => $leg->id, 'leave_id' => $leaveId,
-                            'short_label' => $this->shortLabel($leg->label) . ' - Arrivée', 'width' => 14];
+                            'short_label' => $this->shortLabel($leg->label) . ' - Date d\'arrivée', 'width' => 14];
 
                 // Sous-zones entre enter et leave
                 if ($leaveLeg) {
@@ -495,12 +499,12 @@ class ReportController extends Controller
                         $lbl       = $this->shortLabel($il->label);
 
                         $steps[] = ['type' => 'sub_enter',    'leg_id' => $il->id, 'leave_id' => $ilLeaveId,
-                                    'short_label' => $lbl . ' - Arrivée', 'width' => 14];
+                                    'short_label' => $lbl . ' - Date d\'arrivée', 'width' => 14];
                         $steps[] = ['type' => 'sub_duration', 'leg_id' => $il->id, 'leave_id' => $ilLeaveId,
                                     'short_label' => $lbl . ' - Durée', 'width' => 10];
                         if ($ilLeaveId) {
                             $steps[] = ['type' => 'sub_leave', 'leg_id' => $il->id, 'leave_id' => $ilLeaveId,
-                                        'short_label' => $lbl . ' - Départ', 'width' => 14];
+                                        'short_label' => $lbl . ' - Date de départ', 'width' => 14];
                         }
 
                         $skipIds[] = $il->id;
@@ -517,7 +521,26 @@ class ReportController extends Controller
                 // Timestamp départ zone principale
                 if ($leaveLeg) {
                     $steps[] = ['type' => 'zone_leave', 'leg_id' => $leg->id, 'leave_id' => $leaveId,
-                                'short_label' => $this->shortLabel($leaveLeg->label) . ' - Départ', 'width' => 14];
+                                'short_label' => $this->shortLabel($leaveLeg->label) . ' - Date de départ', 'width' => 14];
+                }
+
+                if ($leaveLeg) {
+                    $nextEnter = $allLegs->first(fn($l) =>
+                        $l->order > $leaveLeg->order &&
+                        $l->event_type === 'enter_zone' &&
+                        !in_array($l->id, $skipIds) &&
+                        $l->id !== $leg->id
+                    );
+                    if ($nextEnter) {
+                        $steps[] = [
+                            'type'         => 'inter_duration',
+                            'leg_id'       => $leaveId,        // leave_leg_id (départ)
+                            'enter_leg_id' => $nextEnter->id,  // enter_leg_id (arrivée)
+                            'leave_id'     => null,
+                            'short_label'  => $this->shortLabel($leaveLeg->label) . ' → ' . $this->shortLabel($nextEnter->label),
+                            'width'        => 12,
+                        ];
+                    }
                 }
 
                 $skipIds[] = $leg->id;
@@ -527,8 +550,25 @@ class ReportController extends Controller
 
             if ($leg->event_type === 'leave_zone') {
                 $steps[]   = ['type' => 'zone_leave_unpaired', 'leg_id' => $leg->id, 'leave_id' => null,
-                              'short_label' => $this->shortLabel($leg->label) . ' - Départ', 'width' => 14];
+                              'short_label' => $this->shortLabel($leg->label) . ' - Date de départ', 'width' => 14];
                 $skipIds[] = $leg->id;
+
+                $nextEnter = $allLegs->first(fn($l) =>
+                    $l->order > $leg->order &&
+                    $l->event_type === 'enter_zone' &&
+                    !in_array($l->id, $skipIds)
+                );
+                if ($nextEnter) {
+                    $steps[] = [
+                        'type'        => 'inter_duration',
+                        'leg_id'      => $leg->id,        
+                        'enter_leg_id'=> $nextEnter->id,  
+                        'leave_id'    => null,
+                        'short_label' => $this->shortLabel($leg->label) . ' → ' . $this->shortLabel($nextEnter->label),
+                        'width'       => 12,
+                    ];
+                }
+
             }
         }
 
@@ -559,12 +599,22 @@ class ReportController extends Controller
         $child = null;
 
         foreach ($rot['blocks'] as $b) {
-            if (in_array($step['type'], ['zone_enter','zone_leave','zone_duration','zone_leave_unpaired'])) {
+            // ,'zone_leave_unpaired'
+            if (in_array($step['type'], ['zone_enter','zone_leave','zone_duration'])) {
                 if ($b['type'] === 'zone' && ($b['enter_leg_id'] ?? null) === $step['leg_id']) {
                     $block = $b;
                     break;
                 }
             }
+
+            if ($step['type'] === 'zone_leave_unpaired') {
+                if ($b['type'] === 'zone' && ($b['leave_leg_id'] ?? null) === $step['leg_id'] && $b['leave_at'] !== null) {
+                    $block = $b;
+                    break;
+                }
+            }
+
+
             if (in_array($step['type'], ['sub_enter','sub_leave','sub_duration'])) {
                 foreach ($b['children'] ?? [] as $c) {
                     if (($c['enter_leg_id'] ?? null) === $step['leg_id']) {
@@ -579,6 +629,10 @@ class ReportController extends Controller
                     break;
                 }
             }
+
+            if ($step['type'] === 'inter_duration') {
+                break;
+            }
         }
         
         $convertToTz = function($dateString) {
@@ -590,6 +644,7 @@ class ReportController extends Controller
 
         return match($step['type']) {
             'cp'               => [$convertToTz($block['occurred_at'] ?? '—'), $block && $block['is_done'] ? null : $MUTED, false],
+            'zone_enter_virtual'  => ['—', $MUTED, false], 
             'zone_enter'       => [$convertToTz($block['enter_at']   ?? '—'), $block && $block['is_done'] ? null : $MUTED, false],
             'zone_leave',
             'zone_leave_unpaired' => [$convertToTz($block['leave_at'] ?? '—'), $block && $block['is_done'] ? null : $MUTED, false],
@@ -598,6 +653,40 @@ class ReportController extends Controller
                 $block && $block['ecart'] !== null ? ($block['ecart'] > 0 ? $DANGER : $SUCCESS) : null,
                 $block && $block['actual_sec'] !== null,
             ],
+            'inter_duration' => (function() use ($step, $rot, $fmt, $MUTED) {  // ← AJOUTE ICI
+                $leaveBlock = null;
+                $enterBlock = null;
+
+                foreach ($rot['blocks'] as $b) {
+                    if ($b['type'] !== 'zone') continue;
+                    if (($b['leave_leg_id'] ?? null) === $step['leg_id'] && $b['leave_at'] !== null) {
+                        $leaveBlock = $b;
+                    }
+                    if (($b['enter_leg_id'] ?? null) === $step['enter_leg_id'] && $b['enter_at'] !== null) {
+                        $enterBlock = $b;
+                    }
+                }
+
+                if (!$leaveBlock || !$enterBlock) {
+                    return ['—', $MUTED, false];
+                }
+
+                try {
+                    $leave = \Carbon\Carbon::createFromFormat('d/m H:i:s', $leaveBlock['leave_at'])
+                                ->setYear(now()->year);
+                    $enter = \Carbon\Carbon::createFromFormat('d/m H:i:s', $enterBlock['enter_at'])
+                                ->setYear(now()->year);
+
+                    if ($enter->lt($leave)) {
+                        $enter->addDay();
+                    }
+
+                    $diffSec = (int) $leave->diffInSeconds($enter);
+                    return [$fmt($diffSec), null, false];
+                } catch (\Exception $e) {
+                    return ['—', $MUTED, false];
+                }
+            })(),
             'sub_enter'        => [$convertToTz($child['enter_at']   ?? '—'), $child && $child['is_done'] ? null : $MUTED, false],
             'sub_leave'        => [$convertToTz($child['leave_at']   ?? '—'), $child && $child['is_done'] ? null : $MUTED, false],
             'sub_duration'     => [

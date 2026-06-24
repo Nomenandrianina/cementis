@@ -52,57 +52,7 @@ class RunStepScoringCommandJob implements ShouldQueue
         $this->stepId = (int)$stepId;
     }
 
-    /**
-     * Execute the job.
-     *
-     * @return void
-     */
-    // public function handle()
-    // {
-    //     $currentMonth = Carbon::now()->format('Y-m');
-    //     $runJob = RunJob::firstOrCreate([], ['is_running' => false]);
 
-    //     if ($runJob->is_running) {
-    //         Log::warning("Job déjà en cours, annulation de l'étape {$this->stepId}.");
-    //         return;
-    //     }
-
-    //     try {
-    //         $runJob->update(['is_running' => true]);
-
-    //         // Exécuter la commande en fonction de l'étape
-    //         if (array_key_exists($this->stepId, $this->commands)) {
-    //             $command = $this->commands[$this->stepId];
-    //             Log::info("Lancement de la commande {$command}");
-    //             \Artisan::call($command);
-    //         } else {
-    //             Log::info("Job libéré : run_jobs.is_running remis à false.");
-    //             throw new \Exception("Aucune commande définie pour l'étape {$this->stepId}");
-    //         }
-
-    //         // Si aucune exception n'a été lancée, la progression est terminée
-    //         Progression::where('step_id', $this->stepId)
-    //             ->where('month', $currentMonth)
-    //             ->update(['status' => 'completed']);
-    //         $process = Process::findOrFail($this->stepId);
-    //         broadcast(new JobCompleted($process, 'completed'));
-    //         Log::info("Étape {$this->stepId} marquée comme terminée pour $currentMonth.");
-    //         Log::info('Événement JobCompleted diffusé', ['stepId' => $this->stepId]);
-            
-    //     } catch (\Exception $e) {
-    //         // Si une erreur survient, marquer la progression comme error
-    //         Progression::where('step_id', $this->stepId)
-    //             ->where('month', $currentMonth)
-    //             ->update(['status' => 'error']);
-    //         $process = Process::findOrFail($this->stepId);
-    //         broadcast(new JobCompleted($process, 'error'));
-    //         Log::error("Erreur lors de l'exécution de l'étape {$this->stepId} pour $currentMonth : " . $e->getMessage());
-    //         Log::info('Événement JobCompleted diffusé', ['stepId' => $this->stepId]);
-    //     }finally {
-    //         $runJob->update(['is_running' => false]);
-    //         Log::info("Job libéré : run_jobs.is_running remis à false.");
-    //     }
-    // }
     // use Carbon, Log, Artisan, etc. (comme dans ton code)
    public function handle()
     {

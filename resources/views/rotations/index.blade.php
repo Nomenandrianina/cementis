@@ -91,12 +91,19 @@
         </div>
     </div>
     {{-- Statistiques rapides --}}
-    @php
+    {{-- @php
         $total      = $rotations->total();
         $completed  = $rotations->getCollection()->where('status','completed')->count();
         $inProgress = $rotations->getCollection()->where('status','in_progress')->count();
         $cancelled  = $rotations->getCollection()->where('status','cancelled')->count();
+    @endphp --}}
+    @php
+        $total      = $stats['total'];
+        $completed  = $stats['completed']; 
+        $inProgress = $stats['in_progress']; 
+        $cancelled  = $stats['cancelled'];
     @endphp
+
 
     <div class="rot-stats mb-18">
         <div class="rot-stat">
@@ -341,7 +348,6 @@
                     @forelse($rotations as $rotation)
                         @php
                             $objSeconds = $rotation->circuit->currentObjective()->target_duration_seconds ?? null;
-                            // $objSeconds = $objMinutes ? $objMinutes * 60 : null;
                             $dur        = $rotation->duration_seconds;
 
                             $pct      = ($objSeconds && $dur) ? min(round($dur / $objSeconds * 100), 140) : 0;
@@ -378,26 +384,6 @@
                             </td>
 
                             <td>
-                                {{-- @if($obj)
-                                    <div class="rot-dur-cell">
-                                        <span class="rot-dur-text">
-                                            @if($dur)
-                                                {{ intdiv($dur, 60) }}h{{ str_pad($dur % 60, 2, '0', STR_PAD_LEFT) }}m
-                                            @else
-                                                —
-                                            @endif
-                                            <span class="rot-dur-obj">
-                                                / {{ intdiv($obj, 60) }}h{{ str_pad($obj % 60, 2, '0', STR_PAD_LEFT) }}m
-                                            </span>
-                                        </span>
-                                        <div class="rot-bar-track">
-                                            <div class="rot-bar-fill {{ $barClass }}"
-                                                style="width:{{ $pct }}%"></div>
-                                        </div>
-                                    </div>
-                                @else
-                                    <span class="mono">—</span>
-                                @endif --}}
                                 @if($objSeconds)
                                     <div class="rot-dur-cell">
                                         <span class="rot-dur-text">
