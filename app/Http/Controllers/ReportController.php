@@ -145,26 +145,61 @@ class ReportController extends Controller
     }
 
 
+    // public function exportExcel(Request $request)
+    // {
+    //     $data = $request->validate([
+    //         'circuit_id' => 'required|exists:circuits,id',
+    //         'year'       => 'required|integer',
+    //         'month'      => 'required|integer',
+    //     ]);
+
+    //     $circuit = Circuit::with(['legs', 'vehicles'])->findOrFail($data['circuit_id']);
+    //     $report  = $this->report->monthlyReport($circuit, $data['year'], $data['month']);
+    //     $filename = "rotations_{$circuit->code}_{$data['year']}{$data['month']}.xlsx";
+
+    //     $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+    //     $sheet       = $spreadsheet->getActiveSheet();
+    //     $sheet->setTitle('Rotations');
+
+    //     $this->buildHorizontalSheet($sheet, $report, $circuit);
+
+    //     $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+    //     $temp   = tempnam(sys_get_temp_dir(), 'rotation_');
+    //     $writer->save($temp);
+
+    //     return response()->download($temp, $filename, [
+    //         'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    //     ])->deleteFileAfterSend(true);
+    // }
     public function exportExcel(Request $request)
     {
         $data = $request->validate([
-            'circuit_id' => 'required|exists:circuits,id',
-            'year'       => 'required|integer',
-            'month'      => 'required|integer',
+            'year'  => 'required|integer',
+            'month' => 'required|integer',
         ]);
 
-        $circuit = Circuit::with(['legs', 'vehicles'])->findOrFail($data['circuit_id']);
-        $report  = $this->report->monthlyReport($circuit, $data['year'], $data['month']);
-        $filename = "rotations_{$circuit->code}_{$data['year']}{$data['month']}.xlsx";
+        $circuits = Circuit::with(['legs', 'vehicles'])
+            ->where('active', true)
+            ->orderBy('name')
+            ->get();
 
         $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
-        $sheet       = $spreadsheet->getActiveSheet();
-        $sheet->setTitle('Rotations');
+        $spreadsheet->removeSheetByIndex(0); // supprimer la feuille vide par défaut
 
-        $this->buildHorizontalSheet($sheet, $report, $circuit);
+        foreach ($circuits as $index => $circuit) {
+            $report = $this->report->monthlyReport($circuit, $data['year'], $data['month']);
 
-        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
-        $temp   = tempnam(sys_get_temp_dir(), 'rotation_');
+            $sheet = $spreadsheet->createSheet($index);
+            $sheet->setTitle(substr($circuit->code ?? $circuit->name, 0, 31)); // Excel limite à 31 chars
+
+            $this->buildHorizontalSheet($sheet, $report, $circuit);
+        }
+
+        $spreadsheet->setActiveSheetIndex(0);
+
+        $filename = "rotations_{$data['year']}{$data['month']}.xlsx";
+        $writer   = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $temp     = tempnam(sys_get_temp_dir(), 'rotation_');
         $writer->save($temp);
 
         return response()->download($temp, $filename, [
@@ -178,16 +213,12 @@ class ReportController extends Controller
         $circuit
     ): void {
         $rgb = fn(string $hex) => ['rgb' => ltrim($hex, '#')];
-        // $fmt = fn(?int $s) => $s === null
-        //         ? ''
-        //         : intdiv($s, 3600) . 'h '
-        //             . str_pad(intdiv($s % 3600, 60), 2, '0', STR_PAD_LEFT) . 'm '
-        //             . str_pad($s % 60, 2, '0', STR_PAD_LEFT) . 's';
         $fmt = fn(?int $s) => $s === null
-        ? ''
+        ? '—'
         : str_pad(intdiv($s, 3600), 2, '0', STR_PAD_LEFT) . ':'
             . str_pad(intdiv($s % 3600, 60), 2, '0', STR_PAD_LEFT) . ':'
             . str_pad($s % 60, 2, '0', STR_PAD_LEFT);
+        
 
         $BORDEAUX  = '8B1A1A';
         $BORDEAUX2 = 'A52020';
@@ -330,90 +361,151 @@ class ReportController extends Controller
         ]);
         $sheet->getRowDimension(4)->setRowHeight(36);
 
+        $allRotations = $report['vehicle_reports']
+        ->flatMap(fn($vr) => collect($vr['rotations'])->map(fn($rot) => [
+            'vehicle' => $vr['vehicle'],
+            'rotation_count' => $vr['rotation_count'],
+            'rot' => $rot,
+        ]))
+        ->sortByDesc(fn($item) => $item['rot']['duration_seconds'] ?? 0)
+        ->values();
+
         // ── Lignes données : 1 ligne par rotation ─────────────────────────────────
         $row       = 5;
         $prevImmat = null; // Pour fusionner les cellules immat/vehicule/nb quand même véhicule
 
-        foreach ($report['vehicle_reports'] as $vi => $vr) {
-            $rotCount    = count($vr['rotations']);
-            $vehicleStart = $row; // ligne de départ pour ce véhicule (fusion possible)
+        // foreach ($report['vehicle_reports'] as $vi => $vr) {
+        //     $rotCount    = count($vr['rotations']);
+        //     $vehicleStart = $row; // ligne de départ pour ce véhicule (fusion possible)
 
-            // Couleur alternée par véhicule
-            $bg0 = $vi % 2 === 0 ? 'FFFFFF' : 'FBF7F3';
-            $bg1 = $vi % 2 === 0 ? 'FDF5F5' : 'FAF0EF'; // légèrement teinté pour 2e rotation+
+        //     // Couleur alternée par véhicule
+        //     $bg0 = $vi % 2 === 0 ? 'FFFFFF' : 'FBF7F3';
+        //     $bg1 = $vi % 2 === 0 ? 'FDF5F5' : 'FAF0EF'; // légèrement teinté pour 2e rotation+
 
-            foreach ($vr['rotations'] as $ri => $rot) {
-                $isFirstRot = $ri === 0;
-                $rowBg      = $isFirstRot ? $bg0 : $bg1;
+        //     foreach ($vr['rotations'] as $ri => $rot) {
+        //         $isFirstRot = $ri === 0;
+        //         $rowBg      = $isFirstRot ? $bg0 : $bg1;
 
-                // ── Colonnes fixes ───────────────────────────────────────────────
+        //         // ── Colonnes fixes ───────────────────────────────────────────────
 
-                // Immatriculation — seulement sur la 1ère ligne du véhicule
-                $sheet->setCellValue("A{$row}", $vr['vehicle']->plate_number ?? '—');
-                // Nom véhicule — seulement sur la 1ère ligne
-                $sheet->setCellValue("B{$row}", $vr['vehicle']->name ?? '—');
-                // Nb rotations total — seulement sur la 1ère ligne
-                $sheet->setCellValue("C{$row}", $rot['status'] === 'completed' ? 1 : 0);
-                // Durée de CETTE rotation
-                $sheet->setCellValue("D{$row}", $rot['duration_label'] ?? '—');
+        //         // Immatriculation — seulement sur la 1ère ligne du véhicule
+        //         $sheet->setCellValue("A{$row}", $vr['vehicle']->plate_number ?? '—');
+        //         // Nom véhicule — seulement sur la 1ère ligne
+        //         $sheet->setCellValue("B{$row}", $vr['vehicle']->name ?? '—');
+        //         // Nb rotations total — seulement sur la 1ère ligne
+        //         $sheet->setCellValue("C{$row}", $rot['status'] === 'completed' ? 1 : 0);
+        //         // Durée de CETTE rotation
+        //         $sheet->setCellValue("D{$row}", $rot['duration_label'] ?? '—');
 
-                // Style colonnes fixes
-                $sheet->getStyle("A{$row}:D{$row}")->applyFromArray([
+        //         // Style colonnes fixes
+        //         $sheet->getStyle("A{$row}:C{$row}")->applyFromArray([
+        //             'fill'      => ['fillType' => 'solid', 'startColor' => $rgb($rowBg)],
+        //             'font'      => ['size' => 8],
+        //             'alignment' => ['vertical' => 'center'],
+        //             'borders'   => ['allBorders' => ['borderStyle' => 'thin', 'color' => $rgb('E0E0E0')]],
+        //         ]);
+        //         $sheet->getStyle("D{$row}")->applyFromArray([
+        //             'fill'      => ['fillType' => 'solid', 'startColor' => $rgb($rowBg)],
+        //             'font' => ['bold' => true, 'size' => 8],
+        //             'alignment' => ['vertical' => 'center'],
+        //             'borders'   => ['allBorders' => ['borderStyle' => 'thin', 'color' => $rgb('E0E0E0')]],
+        //         ]);
+        //         $sheet->getStyle("A{$row}:C{$row}")->getAlignment()
+        //         ->setHorizontal('center')
+        //         ->setVertical('center');
+        //         $sheet->getStyle("D{$row}")->getAlignment()
+        //         ->setHorizontal('center')
+        //         ->setVertical('center');
+
+        //         // Colonne C : colorée selon objectif (seulement 1ère ligne)
+        //         if ($isFirstRot && $vr['target_rotations']) {
+        //         }
+
+        //         // Bordure gauche marquant le début d'un véhicule (1ère rotation seulement)
+        //         if ($isFirstRot) {
+        //             $sheet->getStyle("A{$row}:D{$row}")->applyFromArray([
+        //                 'borders' => [
+        //                     'top' => ['borderStyle' => 'medium', 'color' => $rgb($BORDEAUX2)],
+        //                 ],
+        //             ]);
+        //         }
+
+        //         // ── Colonnes étapes ──────────────────────────────────────────────
+        //         foreach ($stepDefs as $sIdx => $step) {
+        //             $colL = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($NB_FIXED + $sIdx + 1);
+
+        //             [$val, $color, $bold] = $this->getCellValue($step, $rot, $fmt);
+
+        //             $sheet->setCellValue("{$colL}{$row}", $val);
+        //             $sheet->getStyle("{$colL}{$row}")->applyFromArray([
+        //                 'font'      => [
+        //                     'bold'  => $bold,
+        //                     'size'  => 8,
+        //                     'color' => $color ? $rgb($color) : $rgb('1A1208'),
+        //                 ],
+        //                 'fill'      => ['fillType' => 'solid', 'startColor' => $rgb($rowBg)],
+        //                 'alignment' => ['horizontal' => 'center', 'vertical' => 'center'],
+        //                 'borders'   => ['allBorders' => ['borderStyle' => 'thin', 'color' => $rgb('E8E8E8')]],
+        //             ]);
+
+        //             // Bordure top sur 1ère rotation du véhicule
+        //             if ($isFirstRot) {
+        //                 $sheet->getStyle("{$colL}{$row}")->applyFromArray([
+        //                     'borders' => ['top' => ['borderStyle' => 'medium', 'color' => $rgb($BORDEAUX2)]],
+        //                 ]);
+        //             }
+        //         }
+
+        //         $sheet->getRowDimension($row)->setRowHeight(14);
+        //         $row++;
+        //     }
+
+        // }
+
+        foreach ($allRotations as $ri => $item) {
+            $rot     = $item['rot'];
+            $vehicle = $item['vehicle'];
+            $rowBg   = $ri % 2 === 0 ? 'FFFFFF' : 'FBF7F3';
+
+            $sheet->setCellValue("A{$row}", $vehicle->plate_number ?? '—');
+            $sheet->setCellValue("B{$row}", $vehicle->name ?? '—');
+            $sheet->setCellValue("C{$row}", $rot['status'] === 'completed' ? 1 : 0);
+            $sheet->setCellValue("D{$row}", $rot['duration_label'] ?? '—');
+
+            $sheet->getStyle("A{$row}:C{$row}")->applyFromArray([
+                'fill'      => ['fillType' => 'solid', 'startColor' => $rgb($rowBg)],
+                'font'      => ['size' => 8],
+                'alignment' => ['horizontal' => 'center', 'vertical' => 'center'],
+                'borders'   => ['allBorders' => ['borderStyle' => 'thin', 'color' => $rgb('E0E0E0')]],
+            ]);
+            $sheet->getStyle("D{$row}")->applyFromArray([
+                'fill'      => ['fillType' => 'solid', 'startColor' => $rgb($rowBg)],
+                'font'      => ['bold' => true, 'size' => 8],
+                'alignment' => ['horizontal' => 'center', 'vertical' => 'center'],
+                'borders'   => ['allBorders' => ['borderStyle' => 'thin', 'color' => $rgb('E0E0E0')]],
+            ]);
+
+            // ── Colonnes étapes ──────────────────────────────────────────────
+            foreach ($stepDefs as $sIdx => $step) {
+                $colL = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($NB_FIXED + $sIdx + 1);
+
+                [$val, $color, $bold] = $this->getCellValue($step, $rot, $fmt);
+
+                $sheet->setCellValue("{$colL}{$row}", $val);
+                $sheet->getStyle("{$colL}{$row}")->applyFromArray([
+                    'font'      => [
+                        'bold'  => $bold,
+                        'size'  => 8,
+                        'color' => $color ? $rgb($color) : $rgb('1A1208'),
+                    ],
                     'fill'      => ['fillType' => 'solid', 'startColor' => $rgb($rowBg)],
-                    'font'      => ['size' => 8],
-                    'alignment' => ['vertical' => 'center'],
-                    'borders'   => ['allBorders' => ['borderStyle' => 'thin', 'color' => $rgb('E0E0E0')]],
+                    'alignment' => ['horizontal' => 'center', 'vertical' => 'center'],
+                    'borders'   => ['allBorders' => ['borderStyle' => 'thin', 'color' => $rgb('E8E8E8')]],
                 ]);
-                $sheet->getStyle("A{$row}:C{$row}")->getAlignment()
-                ->setHorizontal('center')
-                ->setVertical('center');
-                $sheet->getStyle("D{$row}")->getAlignment()
-                ->setHorizontal('center')
-                ->setVertical('center');
-
-                // Colonne C : colorée selon objectif (seulement 1ère ligne)
-                if ($isFirstRot && $vr['target_rotations']) {
-                }
-
-                // Bordure gauche marquant le début d'un véhicule (1ère rotation seulement)
-                if ($isFirstRot) {
-                    $sheet->getStyle("A{$row}:D{$row}")->applyFromArray([
-                        'borders' => [
-                            'top' => ['borderStyle' => 'medium', 'color' => $rgb($BORDEAUX2)],
-                        ],
-                    ]);
-                }
-
-                // ── Colonnes étapes ──────────────────────────────────────────────
-                foreach ($stepDefs as $sIdx => $step) {
-                    $colL = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($NB_FIXED + $sIdx + 1);
-
-                    [$val, $color, $bold] = $this->getCellValue($step, $rot, $fmt);
-
-                    $sheet->setCellValue("{$colL}{$row}", $val);
-                    $sheet->getStyle("{$colL}{$row}")->applyFromArray([
-                        'font'      => [
-                            'bold'  => $bold,
-                            'size'  => 8,
-                            'color' => $color ? $rgb($color) : $rgb('1A1208'),
-                        ],
-                        'fill'      => ['fillType' => 'solid', 'startColor' => $rgb($rowBg)],
-                        'alignment' => ['horizontal' => 'center', 'vertical' => 'center'],
-                        'borders'   => ['allBorders' => ['borderStyle' => 'thin', 'color' => $rgb('E8E8E8')]],
-                    ]);
-
-                    // Bordure top sur 1ère rotation du véhicule
-                    if ($isFirstRot) {
-                        $sheet->getStyle("{$colL}{$row}")->applyFromArray([
-                            'borders' => ['top' => ['borderStyle' => 'medium', 'color' => $rgb($BORDEAUX2)]],
-                        ]);
-                    }
-                }
-
-                $sheet->getRowDimension($row)->setRowHeight(14);
-                $row++;
             }
 
+            $sheet->getRowDimension($row)->setRowHeight(14);
+            $row++;
         }
 
         // ── Largeurs colonnes ─────────────────────────────────────────────────────
@@ -682,7 +774,7 @@ class ReportController extends Controller
                     }
 
                     $diffSec = (int) $leave->diffInSeconds($enter);
-                    return [$fmt($diffSec), null, false];
+                    return [$fmt($diffSec), null, true];
                 } catch (\Exception $e) {
                     return ['—', $MUTED, false];
                 }
@@ -690,9 +782,9 @@ class ReportController extends Controller
             'sub_enter'        => [$convertToTz($child['enter_at']   ?? '—'), $child && $child['is_done'] ? null : $MUTED, false],
             'sub_leave'        => [$convertToTz($child['leave_at']   ?? '—'), $child && $child['is_done'] ? null : $MUTED, false],
             'sub_duration'     => [
-                $fmt($child['actual_sec'] ?? 0),
+                $fmt($child['actual_sec'] ?? null),
                 $child && $child['ecart'] !== null ? ($child['ecart'] > 0 ? $DANGER : $SUCCESS) : null,
-                false,
+                true,
             ],
             default            => ['—', $MUTED, false],
         };

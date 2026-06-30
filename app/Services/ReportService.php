@@ -87,6 +87,7 @@ class ReportService
                                     ->where('counted_month', $countedMonth)
                                     ->where('status', 'cancelled')
                                     ->count(),
+            'max_duration'       => $rotations->max('duration_seconds'),
         ];
     }
 
@@ -319,8 +320,8 @@ class ReportService
         $minutes = intdiv($seconds % 3600, 60);
         $remainingSeconds = $seconds % 60;
 
-        return $hours . 'h ' . 
-            str_pad($minutes, 2, '0', STR_PAD_LEFT) . 'm ' . 
-            str_pad($remainingSeconds, 2, '0', STR_PAD_LEFT) . 's';
+        return $hours . ':' . 
+            str_pad($minutes, 2, '0', STR_PAD_LEFT) . ':' . 
+            str_pad($remainingSeconds, 2, '0', STR_PAD_LEFT);
     }
 }

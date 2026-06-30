@@ -4,6 +4,111 @@
 
 <link rel="stylesheet" href="{{ asset('css/rotation_index.css') }}">
 <style>
+    .ac-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+    .ac-field {
+        margin-bottom: 1.25rem;
+    }
+
+    .ac-label {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #666;
+        margin-bottom: 11px;
+    }
+
+    .ac-select,
+    .ac-input {
+        width: 100%;
+        height: 44px;
+        padding: 0 14px;
+        border: 0.5px solid #ccc;
+        border-radius: 8px;
+        background: #f8f8f8;
+        color: #1a1a1a;
+        font-size: 15px;
+        font-family: 'Barlow', sans-serif;
+        font-weight: 400;
+        transition: border-color 0.15s, box-shadow 0.15s;
+        box-sizing: border-box;
+        outline: none;
+        appearance: none;
+        -webkit-appearance: none;
+    }
+
+    .ac-select-wrap {
+        position: relative;
+    }
+
+    .ac-select-wrap::after {
+        content: '';
+        position: absolute;
+        right: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 0;
+        height: 0;
+        border-left: 5px solid transparent;
+        border-right: 5px solid transparent;
+        border-top: 6px solid #999;
+        pointer-events: none;
+    }
+
+    .ac-select:focus,
+    .ac-input:focus {
+        border-color: #7c1d1d;
+        box-shadow: 0 0 0 3px rgba(124, 29, 29, 0.12);
+        background: #ffffff;
+    }
+
+    .ac-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    .ac-divider {
+        height: 0.5px;
+        background: #e8e8e8;
+        margin: 1.25rem 0;
+    }
+
+    .ac-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 9px;
+        width: 100%;
+        height: 50px;
+        background: #7c1d1d;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 16px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: background 0.15s, transform 0.1s;
+        text-decoration: none;
+    }
+
+    .ac-btn:hover {
+        background: #A32D2D;
+    }
+
+    .ac-btn:active {
+        transform: scale(0.99);
+    }
     /* ── Fix Select2 dans un input-group avec icône à gauche ── */
 
     /* Le select2-container doit se comporter comme un form-control dans le flex de l'input-group */
@@ -73,13 +178,21 @@
                     <i class="fas fa-filter mr-1"></i> Filtrer
                 </button>
 
-                <a href="{{ route('reports.index') }}" class="rot-btn mr-2">
+                {{-- <a href="{{ route('reports.index') }}" class="rot-btn mr-2">
                     <svg class="rot-icon" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10"/>
                     </svg>
                     Rapports
-                </a>
+                </a> --}}
+
+                <button type="button" class="rot-btn rot-btn-success" data-toggle="modal" data-target="#exportExcelModal">
+                    <svg class="rot-icon" xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 48 48">
+                        <path fill="#169154" d="M29,6H15.744C14.781,6,14,6.781,14,7.744v7.259h15V6z"></path><path fill="#18482a" d="M14,33.054v7.202C14,41.219,14.781,42,15.743,42H29v-8.946H14z"></path><path fill="#0c8045" d="M14 15.003H29V24.005000000000003H14z"></path><path fill="#17472a" d="M14 24.005H29V33.055H14z"></path><g><path fill="#29c27f" d="M42.256,6H29v9.003h15V7.744C44,6.781,43.219,6,42.256,6z"></path><path fill="#27663f" d="M29,33.054V42h13.257C43.219,42,44,41.219,44,40.257v-7.202H29z"></path><path fill="#19ac65" d="M29 15.003H44V24.005000000000003H29z"></path><path fill="#129652" d="M29 24.005H44V33.055H29z"></path></g><path fill="#0c7238" d="M22.319,34H5.681C4.753,34,4,33.247,4,32.319V15.681C4,14.753,4.753,14,5.681,14h16.638 C23.247,14,24,14.753,24,15.681v16.638C24,33.247,23.247,34,22.319,34z"></path><path fill="#fff" d="M9.807 19L12.193 19 14.129 22.754 16.175 19 18.404 19 15.333 24 18.474 29 16.123 29 14.013 25.07 11.912 29 9.526 29 12.719 23.982z"></path>
+                    </svg>
+                    Excel
+                </button>
+
                 <button type="button" class="rot-btn rot-btn-primary" data-toggle="modal" data-target="#modalCalcul" style="margin-left: 1rem;">
                     <svg class="rot-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
@@ -91,12 +204,6 @@
         </div>
     </div>
     {{-- Statistiques rapides --}}
-    {{-- @php
-        $total      = $rotations->total();
-        $completed  = $rotations->getCollection()->where('status','completed')->count();
-        $inProgress = $rotations->getCollection()->where('status','in_progress')->count();
-        $cancelled  = $rotations->getCollection()->where('status','cancelled')->count();
-    @endphp --}}
     @php
         $total      = $stats['total'];
         $completed  = $stats['completed']; 
@@ -220,6 +327,7 @@
         </div>
     </div>
 
+    {{-- Filtres --}}
     <div class="modal fade" id="modalFilter" tabindex="-1" role="dialog" aria-labelledby="modalFilterLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
             <div class="modal-content border-0 shadow-lg" style="border-radius: 15px; overflow: hidden;">
@@ -321,7 +429,102 @@
         </div>
     </div>
 
-    {{-- Filtres --}}
+    {{-- Modal Export Excel --}}
+    <div class="modal fade" id="exportExcelModal" tabindex="-1" role="dialog" aria-labelledby="exportExcelModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 15px; overflow: hidden;">
+                
+                <div class="modal-header text-white" style="background: linear-gradient(135deg, #0c7238 0%, #98b9a1 100%); border: none; padding: 1.5rem;">
+                    <h5 class="modal-title d-flex align-items-center" id="exportExcelModalLabel" style="font-weight: 600; letter-spacing: 0.5px;">
+                        <div class="bg-white rounded-circle p-2 mr-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                            <svg class="text-primary" style="width:24px;" xmlns="http://www.w3.org/2000/svg" fill="none"  viewBox="0 0 48 48">
+                                <path fill="#169154" d="M29,6H15.744C14.781,6,14,6.781,14,7.744v7.259h15V6z"></path><path fill="#18482a" d="M14,33.054v7.202C14,41.219,14.781,42,15.743,42H29v-8.946H14z"></path><path fill="#0c8045" d="M14 15.003H29V24.005000000000003H14z"></path><path fill="#17472a" d="M14 24.005H29V33.055H14z"></path><g><path fill="#29c27f" d="M42.256,6H29v9.003h15V7.744C44,6.781,43.219,6,42.256,6z"></path><path fill="#27663f" d="M29,33.054V42h13.257C43.219,42,44,41.219,44,40.257v-7.202H29z"></path><path fill="#19ac65" d="M29 15.003H44V24.005000000000003H29z"></path><path fill="#129652" d="M29 24.005H44V33.055H29z"></path></g><path fill="#0c7238" d="M22.319,34H5.681C4.753,34,4,33.247,4,32.319V15.681C4,14.753,4.753,14,5.681,14h16.638 C23.247,14,24,14.753,24,15.681v16.638C24,33.247,23.247,34,22.319,34z"></path><path fill="#fff" d="M9.807 19L12.193 19 14.129 22.754 16.175 19 18.404 19 15.333 24 18.474 29 16.123 29 14.013 25.07 11.912 29 9.526 29 12.719 23.982z"></path>
+                            </svg>
+                        </div>
+                        Extraction des rotations vers Excel
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close" style="opacity: 0.8;">
+                        <span aria-hidden="true" style="font-size: 1.5rem;">&times;</span>
+                    </button>
+                </div>
+                
+                <form method="GET" action="{{ route('reports.export_excel') }}">
+                    <div class="modal-body p-4" style="background-color: #f8f9fa;">
+                        <div class="row">
+                            <div class="col-md-6 mb-6">
+                                <label class="text-muted small font-weight-bold text-uppercase mb-2 d-block">Par Circuit</label>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text bg-white border-right-0" style="border-radius: 8px 0 0 8px;"><i class="fas fa-route text-success"></i></span>
+                                    </div>
+                                    <select name="circuit_id" class="form-control border-left-0 shadow-none" style="border-radius: 0 8px 8px 0; height: 45px;">
+                                        <option value="">Tous les circuits</option>
+                                        @foreach($circuits as $c)
+                                            <option value="{{ $c->id }}" {{ request('circuit_id') == $c->id ? 'selected' : '' }}>{{ $c->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="ac-row">
+                                <div class="ac-field">
+                                    <label class="ac-label" for="year">
+                                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                                            <rect x="1.5" y="2.5" width="9" height="8" rx="1" stroke="currentColor" stroke-width="1.2"/>
+                                            <path d="M1.5 5.5h9M4 1.5v2M8 1.5v2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                                        </svg>
+                                        Année
+                                    </label>
+                                    <input
+                                        type="number"
+                                        name="year"
+                                        id="year"
+                                        class="ac-input"
+                                        value="{{ old('year', date('Y')) }}"
+                                        min="2020"
+                                        max="2099"
+                                        required
+                                    >
+                                </div>
+
+                                <div class="ac-field">
+                                    <label class="ac-label" for="month">
+                                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                                            <circle cx="6" cy="6.5" r="4.5" stroke="currentColor" stroke-width="1.2"/>
+                                            <path d="M6 4.5v2.5l1.5 1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                        Mois
+                                    </label>
+                                    <div class="ac-select-wrap">
+                                        <select name="month" id="month" class="ac-select" required>
+                                            @foreach(range(1, 12) as $m)
+                                                <option value="{{ $m }}" {{ $m == old('month', date('n')) ? 'selected' : '' }}>
+                                                    {{ \Carbon\Carbon::createFromDate(null, $m, 1)->translatedFormat('F') }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer border-0 p-4 bg-white d-flex justify-content-between">
+                        <div style="display: contents">
+                            <button type="button" class="btn btn-link text-muted font-weight-bold mr-3" data-dismiss="modal" style="text-decoration: none;">Annuler</button>
+                            <button type="submit" class="btn btn-primary px-5 shadow-sm" style="border-radius: 8px; height: 48px; font-weight: 600; background: #0c7238;">
+                                <i class="fas fa-check-circle mr-2"></i> Exporter
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    
+
+    
 
     {{-- Table des rotations --}}
     <div class="rot-card">

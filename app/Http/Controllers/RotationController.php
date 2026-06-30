@@ -334,46 +334,6 @@ class RotationController extends Controller
 
         return $blocks;
     }
- 
-    /**
-     * Lance le calcul des rotations pour un circuit/véhicule/mois donné.
-     */
-    // public function calculate(Request $request)
-    // {
-    //     $data = $request->validate([
-    //         'circuit_id' => 'required|exists:circuits,id',
-    //         'vehicle_id' => 'nullable|exists:r_vehicules,id',
-    //         'year'       => 'required|integer|min:2020|max:2099',
-    //         'month'      => 'required|integer|min:1|max:12',
-    //     ]);
- 
-    //     $circuit  = Circuit::findOrFail($data['circuit_id']);
-    //     $vehicles = $data['vehicle_id']
-    //         ? [Rvehicule::findOrFail($data['vehicle_id'])]
-    //         : Rvehicule::all();
-    //     dd($vehicles);
- 
-    //     if (empty($vehicles)) {
-    //         return back()->with('error', 'Aucun véhicule affecté à ce circuit.');
-    //     }
- 
-    //     $totalCount = 0;
-    //     $errors     = [];
- 
-    //     foreach ($vehicles as $vehicle) {
-    //         $result      = $this->calculator->calculateForMonth($vehicle, $circuit, $data['year'], $data['month']);
-    //         $totalCount += $result['count'];
-    //         $errors      = array_merge($errors, $result['errors']);
-    //     }
- 
-    //     $msg = "{$totalCount} rotation(s) calculée(s) pour " . count($vehicles) . " véhicule(s).";
-    //     if (!empty($errors)) {
-    //         $msg .= ' Avertissements : ' . implode(' | ', $errors);
-    //     }
- 
-    //     return back()->with('success', $msg);
-    // }
-
 
     public function calculate(Request $request)
     {
