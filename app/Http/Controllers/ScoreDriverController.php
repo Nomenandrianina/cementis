@@ -88,7 +88,7 @@ class ScoreDriverController extends AppBaseController
         $import_calendar = Importcalendar::all();
         $alphaciment_driver = $request->query('alphaciment_driver', null);
         $scoring = Scoring::where('badge_calendar', $badge)
-        ->where('id_planning', $selectedPlanning)->orderBy('point', 'desc')->paginate(10);
+        ->where('id_planning', $selectedPlanning)->orderBy('point', 'desc')->paginate(100);
         
         return view('events.scoring', compact('import_calendar', 'selectedPlanning', 'scoring','alphaciment_driver'));
     }

@@ -11,6 +11,8 @@ use Flash;
 use App\Http\Controllers\AppBaseController;
 use App\Imports\InstallationImport;
 use App\Models\ImportNameInstallation;
+use App\Models\Chauffeur;
+use App\Models\ImportCalendar;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use RealRashid\SweetAlert\Facades\Alert;
@@ -174,6 +176,38 @@ class ImportInstallationController extends AppBaseController
      */
     public function affichageImportation(){
         return view('import_installations.importation_excel');
+    }
+
+    public function duplicateDriversFromLastPlanning()
+    {
+        $new_planning = ImportCalendar::latest('id')->first();
+
+        if (!$new_planning) {
+            return redirect()->back()->with('error', 'Aucun planning trouvé.');
+        }
+
+        $hasDrivers = Chauffeur::where('id_planning', $new_planning->id)->exists();
+
+        if ($hasDrivers) {
+            return redirect()->back()->with('info', 'Des chauffeurs existent déjà pour ce planning.');
+        }
+
+        $lastPlanningWithDrivers = Chauffeur::where('id_planning', '!=', $new_planning->id)
+            ->max('id_planning');
+
+        if (!$lastPlanningWithDrivers) {
+            return redirect()->back()->with('error', 'Aucun planning précédent avec chauffeurs trouvé.');
+        }
+
+        $lastDrivers = Chauffeur::where('id_planning', $lastPlanningWithDrivers)->get();
+
+        foreach ($lastDrivers as $driver) {
+            $newDriver = $driver->replicate();
+            $newDriver->id_planning = $new_planning->id;
+            $newDriver->save();
+        }
+
+        return redirect()->back()->with('success', count($lastDrivers) . ' chauffeur(s) dupliqué(s) avec succès pour le nouveau planning.');
     }
 
     

@@ -242,7 +242,7 @@
     {{-- Calcul de rotations --}}
     <div class="modal fade" id="modalCalcul" tabindex="-1" role="dialog" aria-labelledby="modalCalculLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg" role="document"> <div class="modal-content border-0 shadow-lg" style="border-radius: 15px; overflow: hidden;">
-                <div class="modal-header text-white" style="background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%); border: none; padding: 1.5rem;">
+                <div class="modal-header text-white" style="background: radial-gradient(ellipse 200px 250px at 15% 10%, rgb(51 71 101 / 75%) 0%, #0000003b 65%), radial-gradient(ellipse 180px 220px at 88% 85%, rgb(80 86 95 / 90%) 0%, #00000000 65%), radial-gradient(ellipse 130px 150px at 50% 50%, rgb(0 0 0 / 24%) 0%, transparent 70%), #454e5f; border: none; padding: 1.5rem;">
                     <h5 class="modal-title d-flex align-items-center" id="modalCalculLabel" style="font-weight: 600; letter-spacing: 0.5px;">
                         <div class="bg-white rounded-circle p-2 mr-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
                             <svg class="text-primary" style="width:24px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -318,7 +318,7 @@
 
                     <div class="modal-footer border-0 p-4 bg-white">
                         <button type="button" class="btn btn-link text-muted font-weight-bold" data-dismiss="modal" style="text-decoration: none;">Annuler</button>
-                        <button type="submit" class="btn btn-primary px-5 shadow-sm" style="border-radius: 8px; height: 48px; font-weight: 600; background: #1a73e8;">
+                        <button type="submit" class="btn btn-primary px-5 shadow-sm" style="border-radius: 8px; height: 48px; font-weight: 600; background: radial-gradient(ellipse 200px 250px at 15% 10%, rgb(51 71 101 / 75%) 0%, #0000003b 65%), radial-gradient(ellipse 180px 220px at 88% 85%, rgb(80 86 95 / 90%) 0%, #00000000 65%), radial-gradient(ellipse 130px 150px at 50% 50%, rgb(0 0 0 / 24%) 0%, transparent 70%), #454e5f">
                             <i class="fas fa-play-circle mr-2"></i> Lancer le calcul
                         </button>
                     </div>
@@ -331,11 +331,10 @@
     <div class="modal fade" id="modalFilter" tabindex="-1" role="dialog" aria-labelledby="modalFilterLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
             <div class="modal-content border-0 shadow-lg" style="border-radius: 15px; overflow: hidden;">
-                
-                <div class="modal-header text-white" style="background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%); border: none; padding: 1.5rem;">
+                <div class="modal-header text-white" style="background: radial-gradient(ellipse 200px 250px at 15% 10%, rgb(51 71 101 / 75%) 0%, #0000003b 65%), radial-gradient(ellipse 180px 220px at 88% 85%, rgb(80 86 95 / 90%) 0%, #00000000 65%), radial-gradient(ellipse 130px 150px at 50% 50%, rgb(0 0 0 / 24%) 0%, transparent 70%), #454e5f; border: none; padding: 1.5rem;">
                     <h5 class="modal-title d-flex align-items-center" id="modalFilterLabel" style="font-weight: 600; letter-spacing: 0.5px;">
                         <div class="bg-white rounded-circle p-2 mr-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                            <svg class="text-primary" style="width:24px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="text-dark" style="width:24px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
                             </svg>
                         </div>
@@ -358,7 +357,7 @@
                                 <label class="text-muted small font-weight-bold text-uppercase mb-2 d-block">Par Circuit</label>
                                 <div class="input-group">
                                     <div class="input-group-prepend">
-                                        <span class="input-group-text bg-white border-right-0" style="border-radius: 8px 0 0 8px;"><i class="fas fa-route text-primary"></i></span>
+                                        <span class="input-group-text bg-white border-right-0" style="border-radius: 8px 0 0 8px;"><i class="fas fa-route text-dark"></i></span>
                                     </div>
                                     <select name="circuit_id" class="form-control border-left-0 shadow-none" style="border-radius: 0 8px 8px 0; height: 45px;">
                                         <option value="">Tous les circuits</option>
@@ -373,7 +372,7 @@
                                 <label class="text-muted small font-weight-bold text-uppercase mb-2 d-block">Par Camion</label>
                                 <div class="input-group">
                                     <div class="input-group-prepend">
-                                        <span class="input-group-text bg-white border-right-0" style="border-radius: 8px 0 0 8px;"><i class="fas fa-truck text-primary"></i></span>
+                                        <span class="input-group-text bg-white border-right-0" style="border-radius: 8px 0 0 8px;"><i class="fas fa-truck text-dark"></i></span>
                                     </div>
                                     <select name="vehicle_id" class="form-control border-left-0 shadow-none" style="border-radius: 0 8px 8px 0; height: 45px;">
                                         <option value="">Tous les camions</option>
@@ -388,7 +387,7 @@
                                 <label class="text-muted small font-weight-bold text-uppercase mb-2 d-block">Période (Mois)</label>
                                 <div class="input-group">
                                     <div class="input-group-prepend">
-                                        <span class="input-group-text bg-white border-right-0" style="border-radius: 8px 0 0 8px;"><i class="fas fa-calendar-alt text-primary"></i></span>
+                                        <span class="input-group-text bg-white border-right-0" style="border-radius: 8px 0 0 8px;"><i class="fas fa-calendar-alt text-dark"></i></span>
                                     </div>
                                     <input type="month" name="month" class="form-control border-left-0 shadow-none" 
                                         style="border-radius: 0 8px 8px 0; height: 45px;"
@@ -400,7 +399,7 @@
                                 <label class="text-muted small font-weight-bold text-uppercase mb-2 d-block">Statut du voyage</label>
                                 <div class="input-group">
                                     <div class="input-group-prepend">
-                                        <span class="input-group-text bg-white border-right-0" style="border-radius: 8px 0 0 8px;"><i class="fas fa-info-circle text-primary"></i></span>
+                                        <span class="input-group-text bg-white border-right-0" style="border-radius: 8px 0 0 8px;"><i class="fas fa-info-circle text-dark"></i></span>
                                     </div>
                                     <select name="status" class="form-control border-left-0 shadow-none" style="border-radius: 0 8px 8px 0; height: 45px;">
                                         <option value="">Tous les statuts</option>
@@ -419,7 +418,7 @@
                         </a>
                         <div>
                             <button type="button" class="btn btn-link text-muted font-weight-bold mr-3" data-dismiss="modal" style="text-decoration: none;">Annuler</button>
-                            <button type="submit" class="btn btn-primary px-5 shadow-sm" style="border-radius: 8px; height: 48px; font-weight: 600; background: #1a73e8;">
+                            <button type="submit" class="btn btn-primary px-5 shadow-sm" style="border-radius: 8px; height: 48px; font-weight: 600; background: radial-gradient(ellipse 200px 250px at 15% 10%, rgb(51 71 101 / 75%) 0%, #0000003b 65%), radial-gradient(ellipse 180px 220px at 88% 85%, rgb(80 86 95 / 90%) 0%, #00000000 65%), radial-gradient(ellipse 130px 150px at 50% 50%, rgb(0 0 0 / 24%) 0%, transparent 70%), #454e5f">
                                 <i class="fas fa-check-circle mr-2"></i> Appliquer les filtres
                             </button>
                         </div>

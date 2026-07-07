@@ -82,6 +82,8 @@ Route::resource('importcalendars', App\Http\Controllers\ImportcalendarController
 
 Route::get('/import-installation-affichage', 'App\Http\Controllers\ImportInstallationController@affichageImportation')->name('import.installation.affichage');
 
+Route::get('/import-installation-dernier', 'App\Http\Controllers\ImportInstallationController@duplicateDriversFromLastPlanning')->name('import.installation.last');
+
 Route::post('/import-installation', 'App\Http\Controllers\ImportInstallationController@import_data_installation')->name('import.installation.store');
 
 Route::get('import-excels/installation/{id}', 'App\Http\Controllers\ImportInstallationController@liste_importation')->name('import_excels.installation');

@@ -24,9 +24,10 @@ class RotationController extends Controller
     {
         $circuits = Circuit::where('active', true)->orderBy('name')->get();
         $vehicles = Rvehicule::orderBy('name')->get();
- 
-        // $query = Rotation::with(['rvehicule', 'circuit'])->latest('started_at');
-        $query = Rotation::with(['rvehicule', 'circuit'])->orderBy('duration_seconds', 'desc');
+
+        $query = Rotation::with(['rvehicule', 'circuit'])
+                    ->orderBy('circuit_id')
+                    ->orderBy('duration_seconds', 'desc');
  
         if ($request->circuit_id) {
             $query->where('circuit_id', $request->circuit_id);
