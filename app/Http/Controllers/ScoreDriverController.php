@@ -121,7 +121,7 @@ class ScoreDriverController extends AppBaseController
             ->havingRaw('COUNT(id) >= 3')
             ->pluck('badge_chauffeur');
 
-        // 2️⃣ Filtrer le scoring
+        // 2 Filtrer le scoring
         $scoring = ScoreDriver::with('driver') // charge la relation chauffeur
         ->where('score', 0)
         ->where('id_planning', $selectedPlanning)

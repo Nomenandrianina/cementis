@@ -231,11 +231,6 @@ class ScoringController extends AppBaseController
 
         // Créer un tableau avec les badges des chauffeurs
         $badges_scoring = $scoringBadge->map(function($scoring) {
-            // if ($scoring->driver->latest_update) {
-            //     // Retourner le badge de la mise à jour, si elle existe
-            //     return $scoring->driver->latest_update->numero_badge;
-            // }
-            
             // return $scoring->driver->numero_badge;
             return $scoring->badge_calendar;
         })->unique()->toArray();
@@ -344,7 +339,6 @@ class ScoringController extends AppBaseController
         try {
             // $scoring = tabScoringCard_new($chauffeur, $id_planning);
             $scoring = driver_detail_scoring_card($imei, $badge, $id_planning);
-            // $distance_total = getDistanceTotalDriverInCalendar($chauffeur, $id_planning);
             return Excel::download(new ScoringExport($scoring, $id_planning), 'scoring.xlsx');
         } catch (\Throwable $th) {
             throw $th;
