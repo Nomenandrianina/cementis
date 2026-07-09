@@ -144,33 +144,6 @@ class ReportController extends Controller
         return response()->stream($callback, 200, $headers);
     }
 
-
-    // public function exportExcel(Request $request)
-    // {
-    //     $data = $request->validate([
-    //         'circuit_id' => 'required|exists:circuits,id',
-    //         'year'       => 'required|integer',
-    //         'month'      => 'required|integer',
-    //     ]);
-
-    //     $circuit = Circuit::with(['legs', 'vehicles'])->findOrFail($data['circuit_id']);
-    //     $report  = $this->report->monthlyReport($circuit, $data['year'], $data['month']);
-    //     $filename = "rotations_{$circuit->code}_{$data['year']}{$data['month']}.xlsx";
-
-    //     $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
-    //     $sheet       = $spreadsheet->getActiveSheet();
-    //     $sheet->setTitle('Rotations');
-
-    //     $this->buildHorizontalSheet($sheet, $report, $circuit);
-
-    //     $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
-    //     $temp   = tempnam(sys_get_temp_dir(), 'rotation_');
-    //     $writer->save($temp);
-
-    //     return response()->download($temp, $filename, [
-    //         'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    //     ])->deleteFileAfterSend(true);
-    // }
     public function exportExcel(Request $request)
     {
         $data = $request->validate([

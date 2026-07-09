@@ -14,7 +14,6 @@ class RvehiculeController extends Controller
     {
         $search = $request->input('search');
 
-        // $vehicles = Rvehicule::withCount('rotations')->orderBy('name')->paginate(10);
         $vehicles = Rvehicule::withCount('rotations')
         ->when($search, function ($query, $search) {
             return $query->where('name', 'LIKE', "%{$search}%")
