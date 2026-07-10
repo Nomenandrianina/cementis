@@ -14,29 +14,6 @@ class ZoneController extends Controller
 {
     public function __construct(private readonly GpsApiService $gpsApi) {}
 
-    // public function index()
-    // {
-    //     $zones = Zone::withTrashed()->orderBy('name')->get();
-    //     return view('zones.index', compact('zones'));
-    // }
-    // public function index()
-    // {
-    //     // Zones racines avec leurs enfants directs
-    //     $rootZones   = Zone::withTrashed()
-    //                        ->with(['children' => fn($q) => $q->withTrashed()->orderBy('name')])
-    //                        ->whereNull('parent_id')
-    //                        ->orderBy('name')
-    //                        ->get();
-
-    //     // Pour le sélecteur "zone parente" du formulaire
-    //     $parentZones = Zone::where('active', true)
-    //                        ->orderBy('name')
-    //                        ->get(['id', 'name', 'parent_id']);
-        
-    //     $totalCount = Zone::count();
-
-    //     return view('zones.index', compact('rootZones', 'parentZones', 'totalCount'));
-    // }
 
     public function index(Request $request)
     {
