@@ -577,6 +577,23 @@ class ReportController extends Controller
                     }
                 }
 
+                $nextEnter = $allLegs->first(fn($l) =>
+                    $l->order > $leg->order &&
+                    $l->event_type === 'enter_zone' &&
+                    !in_array($l->id, $skipIds) &&
+                    $l->id !== $leg->id
+                );
+                if ($nextEnter && !$leaveId) { // seulement si la zone n'a pas de leave pairé
+                    $steps[] = [
+                        'type'         => 'inter_enter_duration',
+                        'leg_id'       => $leg->id,        // enter TAV
+                        'enter_leg_id' => $nextEnter->id,  // enter Usine/Dépôt
+                        'leave_id'     => null,
+                        'short_label'  => $this->shortLabel($leg->label) . ' → ' . $this->shortLabel($nextEnter->label),
+                        'width'        => 12,
+                    ];
+                }
+
                 // Durée zone principale
                 if ($leaveId) {
                     $steps[] = ['type' => 'zone_duration', 'leg_id' => $leg->id, 'leave_id' => $leaveId,
@@ -679,6 +696,10 @@ class ReportController extends Controller
                 }
             }
 
+            if ($step['type'] === 'inter_enter_duration') {
+                break;
+            }
+
 
             if (in_array($step['type'], ['sub_enter','sub_leave','sub_duration'])) {
                 foreach ($b['children'] ?? [] as $c) {
@@ -747,6 +768,38 @@ class ReportController extends Controller
                     }
 
                     $diffSec = (int) $leave->diffInSeconds($enter);
+                    return [$fmt($diffSec), null, true];
+                } catch (\Exception $e) {
+                    return ['—', $MUTED, false];
+                }
+            })(),
+            'inter_enter_duration' => (function() use ($step, $rot, $fmt, $MUTED) {
+                $enterBlock1 = null; // enter TAV
+                $enterBlock2 = null; // enter Usine/Dépôt
+
+                foreach ($rot['blocks'] as $b) {
+                    if ($b['type'] !== 'zone') continue;
+                    if (($b['enter_leg_id'] ?? null) === $step['leg_id'] && $b['enter_at'] !== null) {
+                        $enterBlock1 = $b;
+                    }
+                    if (($b['enter_leg_id'] ?? null) === $step['enter_leg_id'] && $b['enter_at'] !== null) {
+                        $enterBlock2 = $b;
+                    }
+                }
+
+                if (!$enterBlock1 || !$enterBlock2) {
+                    return ['—', $MUTED, false]; // vide si pas de données
+                }
+
+                try {
+                    $t1 = \Carbon\Carbon::createFromFormat('d/m H:i:s', $enterBlock1['enter_at'])->setYear(now()->year);
+                    $t2 = \Carbon\Carbon::createFromFormat('d/m H:i:s', $enterBlock2['enter_at'])->setYear(now()->year);
+
+                    if ($t2->lt($t1)) {
+                        $t2->addDay();
+                    }
+
+                    $diffSec = (int) $t1->diffInSeconds($t2);
                     return [$fmt($diffSec), null, true];
                 } catch (\Exception $e) {
                     return ['—', $MUTED, false];
