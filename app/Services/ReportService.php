@@ -91,11 +91,140 @@ class ReportService
         ];
     }
 
+    // Old function rotationDetail (commented out)
+    // public function rotationDetail(Rotation $rotation, ?RotationObjective $objective): array
+    // {
+    //     $allLegs       = $rotation->circuit->legs()->orderBy('order')->get();
+    //     // $completedLegs = $rotation->rotationLegs->keyBy('circuit_leg_id');
+    //     $completedLegs = $rotation->rotationLegs->groupBy('circuit_leg_id');
+    //     $legObjectives = $objective?->leg_objectives ?? [];
+
+    //     $zonePairs      = [];
+    //     $pairedEnterIds = [];
+    //     $pairedExitIds  = [];
+
+    //     foreach ($allLegs as $leg) {
+    //         if ($leg->event_type !== 'enter_zone') continue;
+    //         if (in_array($leg->id, $pairedEnterIds)) continue;
+
+    //         $leave = $allLegs->first(fn($l) =>
+    //             $l->event_type === 'leave_zone' &&
+    //             $l->reference_id == $leg->reference_id &&
+    //             $l->order > $leg->order &&
+    //             !in_array($l->id, $pairedExitIds)
+    //         );
+
+    //         if ($leave) {
+    //             $zonePairs[$leg->id] = $leave->id;
+    //             $pairedEnterIds[]    = $leg->id;
+    //             $pairedExitIds[]     = $leave->id;
+    //         }
+    //     }
+
+    //     $zoneActualSec = [];
+    //     foreach ($zonePairs as $enterId => $exitId) {
+    //         $enterRl = $completedLegs->get($enterId);
+    //         $exitRl  = $completedLegs->get($exitId);
+    //         if ($enterRl && $exitRl) {
+    //             $zoneActualSec[$enterId] = (int) $enterRl->occurred_at
+    //                 ->diffInSeconds($exitRl->occurred_at);
+    //         }
+    //     }
+
+    //     $blocks  = [];
+    //     $skipIds = [];
+
+    //     foreach ($allLegs as $leg) {
+    //         if (in_array($leg->id, $skipIds)) continue;
+    //         if ($leg->event_type === 'pass_checkpoint') {
+    //             $rl = $completedLegs->get($leg->id);
+    //             $blocks[] = [
+    //                 'type'        => 'checkpoint',
+    //                 'leg_id'      => $leg->id,          // ← ajouté
+    //                 'label'       => $leg->label,
+    //                 'occurred_at' => $rl?->occurred_at?->timezone('GMT+3')->format('d/m H:i:s'),
+    //                 'is_done'     => $rl !== null,
+    //             ];
+    //             $skipIds[] = $leg->id;
+    //             continue;
+    //         }
+
+    //         if ($leg->event_type === 'leave_zone' && in_array($leg->id, $pairedExitIds)) {
+    //             $skipIds[] = $leg->id;
+    //             continue;
+    //         }
+
+    //         if ($leg->event_type === 'enter_zone') {
+    //             [$block, $absorbed] = $this->buildZoneBlock(
+    //                 $leg, $allLegs, $completedLegs,
+    //                 $zonePairs, $pairedExitIds,
+    //                 $zoneActualSec, $legObjectives,
+    //                 $skipIds
+    //             );
+    //             $blocks[]  = $block;
+    //             $skipIds   = array_merge($skipIds, $absorbed);
+    //             continue;
+    //         }
+
+    //         if ($leg->event_type === 'leave_zone') {
+    //             $rl = $completedLegs->get($leg->id);
+    //             $blocks[] = [
+    //                 'type'         => 'zone',
+    //                 'leg_id'       => $leg->id,
+    //                 'enter_leg_id' => null,
+    //                 'leave_leg_id' => $leg->id,
+    //                 'label'        => $leg->label,
+    //                 'enter_at'     => null,                                                          // ← null, pas de date d'arrivée
+    //                 'leave_at'     => $rl?->occurred_at?->timezone('GMT+3')->format('d/m H:i:s'),  // ← ajoute :s pour les secondes
+    //                 'actual_sec'   => null,
+    //                 'target_sec'   => null,
+    //                 'ecart'        => null,
+    //                 'is_done'      => $rl !== null,
+    //                 'children'     => [],
+    //             ];
+    //             $skipIds[] = $leg->id;
+    //         }
+    //     }
+
+    //     $targetDuration = $objective?->target_duration_seconds;
+    //     $actualDuration = $rotation->duration_seconds;
+
+    //     return [
+    //         'id'              => $rotation->id,
+    //         'status'          => $rotation->status,
+    //         'started_at'      => \Carbon\Carbon::parse($rotation->started_at_local)->format('d/m/Y H:i:s'),
+    //         'completed_at'    => $rotation->completed_at_local
+    //                                 ? \Carbon\Carbon::parse($rotation->completed_at_local)->format('d/m/Y H:i:s')
+    //                                 : '—',
+    //         'duration_seconds'=> $actualDuration,
+    //         'duration_label'  => $this->formatSeconde($actualDuration),
+    //         'target_duration' => $targetDuration,
+    //         'target_label'    => $this->formatSeconde($targetDuration),
+    //         'vs_target'       => ($targetDuration && $actualDuration)
+    //                                 ? $actualDuration - $targetDuration : null,
+    //         'blocks'          => $blocks,
+    //     ];
+    // }
+
+    // New function to get rotation details with children and skipped_by_parent check
     public function rotationDetail(Rotation $rotation, ?RotationObjective $objective): array
     {
         $allLegs       = $rotation->circuit->legs()->orderBy('order')->get();
-        $completedLegs = $rotation->rotationLegs->keyBy('circuit_leg_id');
+        // $completedLegs = $rotation->rotationLegs->keyBy('circuit_leg_id');
+        $completedLegs = $rotation->rotationLegs->groupBy('circuit_leg_id');
         $legObjectives = $objective?->leg_objectives ?? [];
+
+        \Log::debug('RAW ROTATION LEGS', 
+            $rotation->rotationLegs
+                ->where('circuit_leg_id', 46)
+                ->map(fn($rl) => [
+                    'id'             => $rl->id,
+                    'circuit_leg_id' => $rl->circuit_leg_id,
+                    'occurred_at'    => $rl->occurred_at->format('d/m H:i:s'),
+                    'skipped'        => $rl->wasSkippedByParent(),
+                ])
+                ->toArray()
+        );
 
         $zonePairs      = [];
         $pairedEnterIds = [];
@@ -121,11 +250,16 @@ class ReportService
 
         $zoneActualSec = [];
         foreach ($zonePairs as $enterId => $exitId) {
-            $enterRl = $completedLegs->get($enterId);
-            $exitRl  = $completedLegs->get($exitId);
-            if ($enterRl && $exitRl) {
-                $zoneActualSec[$enterId] = (int) $enterRl->occurred_at
-                    ->diffInSeconds($exitRl->occurred_at);
+            $enterRls = $completedLegs->get($enterId); // maintenant une Collection
+            $exitRls  = $completedLegs->get($exitId);
+            
+            // Première entrée non skippée
+            $firstEnter = $enterRls?->first(fn($rl) => !$rl->wasSkippedByParent());
+            // Dernière sortie non skippée
+            $lastExit   = $exitRls?->last(fn($rl) => !$rl->wasSkippedByParent());
+            
+            if ($firstEnter && $lastExit) {
+                $zoneActualSec[$enterId] = (int) $firstEnter->occurred_at->diffInSeconds($lastExit->occurred_at);
             }
         }
 
@@ -135,7 +269,7 @@ class ReportService
         foreach ($allLegs as $leg) {
             if (in_array($leg->id, $skipIds)) continue;
             if ($leg->event_type === 'pass_checkpoint') {
-                $rl = $completedLegs->get($leg->id);
+                $rl = $completedLegs->get($leg->id)?->first();
                 $blocks[] = [
                     'type'        => 'checkpoint',
                     'leg_id'      => $leg->id,          // ← ajouté
@@ -165,7 +299,7 @@ class ReportService
             }
 
             if ($leg->event_type === 'leave_zone') {
-                $rl = $completedLegs->get($leg->id);
+                $rl = $completedLegs->get($leg->id)?->first();
                 $blocks[] = [
                     'type'         => 'zone',
                     'leg_id'       => $leg->id,
@@ -203,7 +337,110 @@ class ReportService
             'blocks'          => $blocks,
         ];
     }
+    // Old Function buildZoneBlock (commented out)
+    // private function buildZoneBlock(
+    //     $leg, $allLegs, $completedLegs,
+    //     $zonePairs, $pairedExitIds,
+    //     $zoneActualSec, $legObjectives,
+    //     $currentSkipIds
+    // ): array {
+    //     $leaveLegId = $zonePairs[$leg->id] ?? null;
+    //     $leaveLeg   = $leaveLegId ? $allLegs->firstWhere('id', $leaveLegId) : null;
 
+    //     $enterRlRaw = $completedLegs->get($leg->id);
+    //     $leaveRlRaw = $leaveLegId ? $completedLegs->get($leaveLegId) : null;
+
+    //     // Si skipped_by_parent → traiter comme non visité
+    //     $enterRl = ($enterRlRaw && !$enterRlRaw->wasSkippedByParent()) ? $enterRlRaw : null;
+    //     $leaveRl = ($leaveRlRaw && !$leaveRlRaw->wasSkippedByParent()) ? $leaveRlRaw : null;
+
+    //     $actualSec  = $zoneActualSec[$leg->id] ?? null;
+
+    //     if ($enterRlRaw?->wasSkippedByParent() || $leaveRlRaw?->wasSkippedByParent()) {
+    //         $actualSec = null;
+    //     }
+    //     $rawTarget  = $legObjectives[$leg->id] ?? $legObjectives[(string)$leg->id] ?? null;
+    //     $targetSec  = ($rawTarget !== null && $rawTarget !== 'null') ? (int)$rawTarget : null;
+    //     $ecart      = ($actualSec !== null && $targetSec !== null)
+    //                     ? $actualSec - $targetSec : null;
+
+    //     $absorbedIds = [$leg->id];
+    //     if ($leaveLegId) $absorbedIds[] = $leaveLegId;
+
+    //     $children = [];
+
+    //     if ($leaveLeg) {
+    //         $innerLegs = $allLegs->filter(fn($l) =>
+    //             $l->order > $leg->order &&
+    //             $l->order < $leaveLeg->order &&
+    //             $l->event_type === 'enter_zone' &&
+    //             !in_array($l->id, $currentSkipIds) &&
+    //             !in_array($l->id, $absorbedIds)
+    //         );
+
+    //         foreach ($innerLegs as $innerLeg) {
+    //             $innerZone = \App\Models\Zone::find($innerLeg->reference_id);
+    //             if (!$innerZone || $innerZone->parent_id === null) continue;
+
+    //             $innerLeaveId  = $zonePairs[$innerLeg->id] ?? null;
+
+    //             $innerEnterRlRaw = $completedLegs->get($innerLeg->id);
+    //             $innerLeaveRlRaw = $innerLeaveId ? $completedLegs->get($innerLeaveId) : null;
+
+    //             // ── CLE DU FIX : si skipped_by_parent → null pour l'affichage ──
+    //             $innerEnterRl = ($innerEnterRlRaw && !$innerEnterRlRaw->wasSkippedByParent())
+    //             ? $innerEnterRlRaw : null;
+    //             $innerLeaveRl = ($innerLeaveRlRaw && !$innerLeaveRlRaw->wasSkippedByParent())
+    //             ? $innerLeaveRlRaw : null;
+
+    //             $innerActual   = $zoneActualSec[$innerLeg->id] ?? null;
+    //             // Durée nulle si entrée ou sortie skippée
+    //             if ($innerEnterRlRaw?->wasSkippedByParent() || $innerLeaveRlRaw?->wasSkippedByParent()) {
+    //                 $innerActual = null;
+    //             }
+    //             $innerRawT     = $legObjectives[$innerLeg->id] ?? $legObjectives[(string)$innerLeg->id] ?? null;
+    //             $innerTarget   = ($innerRawT !== null && $innerRawT !== 'null') ? (int)$innerRawT : null;
+    //             $innerEcart    = ($innerActual !== null && $innerTarget !== null)
+    //                                ? $innerActual - $innerTarget : null;
+
+    //             $children[] = [
+    //                 'enter_leg_id' => $innerLeg->id,        // ← ajouté
+    //                 'leave_leg_id' => $innerLeaveId,        // ← ajouté
+    //                 'label'        => $innerLeg->label,
+    //                 'enter_at'     => $innerEnterRl?->occurred_at?->timezone('GMT+3')->format('d/m H:i:s'),
+    //                 'leave_at'     => $innerLeaveRl?->occurred_at?->timezone('GMT+3')->format('d/m H:i:s'),
+    //                 'actual_sec'   => $innerActual,
+    //                 'target_sec'   => $innerTarget,
+    //                 'ecart'        => $innerEcart,
+    //                 'is_done'      => $innerEnterRl !== null,
+    //                 'was_skipped'=> $innerEnterRlRaw?->wasSkippedByParent() ?? false,
+    //             ];
+
+    //             $absorbedIds[] = $innerLeg->id;
+    //             if ($innerLeaveId) $absorbedIds[] = $innerLeaveId;
+    //         }
+    //     }
+
+    //     $block = [
+    //         'type'         => 'zone',
+    //         'leg_id'       => $leg->id,          // ← ajouté
+    //         'enter_leg_id' => $leg->id,          // ← ajouté
+    //         'leave_leg_id' => $leaveLegId,       // ← ajouté
+    //         'label'        => $leg->label,
+    //         'enter_at'     => $enterRl?->occurred_at?->timezone('GMT+3')->format('d/m H:i:s'),
+    //         'leave_at'     => $leaveRl?->occurred_at?->timezone('GMT+3')->format('d/m H:i:s'),
+    //         'actual_sec'   => $actualSec,
+    //         'target_sec'   => $targetSec,
+    //         'ecart'        => $ecart,
+    //         'is_done'      => $enterRl !== null,
+    //         'children'     => $children,
+    //         'was_skipped'=> $enterRlRaw?->wasSkippedByParent() ?? false,
+    //     ];
+
+    //     return [$block, $absorbedIds];
+    // }
+
+    // New fonction buildZoneBlock 
     private function buildZoneBlock(
         $leg, $allLegs, $completedLegs,
         $zonePairs, $pairedExitIds,
@@ -213,22 +450,24 @@ class ReportService
         $leaveLegId = $zonePairs[$leg->id] ?? null;
         $leaveLeg   = $leaveLegId ? $allLegs->firstWhere('id', $leaveLegId) : null;
 
-        $enterRlRaw = $completedLegs->get($leg->id);
-        $leaveRlRaw = $leaveLegId ? $completedLegs->get($leaveLegId) : null;
+        $enterRlFirst = $completedLegs->get($leg->id)?->first();
+        $leaveRlFirst = $leaveLegId ? $completedLegs->get($leaveLegId)?->first() : null;
 
-        // Si skipped_by_parent → traiter comme non visité
-        $enterRl = ($enterRlRaw && !$enterRlRaw->wasSkippedByParent()) ? $enterRlRaw : null;
-        $leaveRl = ($leaveRlRaw && !$leaveRlRaw->wasSkippedByParent()) ? $leaveRlRaw : null;
+        $enterRl = ($enterRlFirst && !$enterRlFirst->wasSkippedByParent()) ? $enterRlFirst : null;
+        $leaveRl = $leaveLegId
+            ? $completedLegs->get($leaveLegId)?->last(fn($rl) => !$rl->wasSkippedByParent())
+            : null;
 
-        $actualSec  = $zoneActualSec[$leg->id] ?? null;
+        // ← $actualSec initialisé ici
+        $actualSec = $zoneActualSec[$leg->id] ?? null;
 
-        if ($enterRlRaw?->wasSkippedByParent() || $leaveRlRaw?->wasSkippedByParent()) {
+        if ($enterRlFirst?->wasSkippedByParent() || $leaveRlFirst?->wasSkippedByParent()) {
             $actualSec = null;
         }
-        $rawTarget  = $legObjectives[$leg->id] ?? $legObjectives[(string)$leg->id] ?? null;
-        $targetSec  = ($rawTarget !== null && $rawTarget !== 'null') ? (int)$rawTarget : null;
-        $ecart      = ($actualSec !== null && $targetSec !== null)
-                        ? $actualSec - $targetSec : null;
+
+        $rawTarget = $legObjectives[$leg->id] ?? $legObjectives[(string)$leg->id] ?? null;
+        $targetSec = ($rawTarget !== null && $rawTarget !== 'null') ? (int)$rawTarget : null;
+        $ecart     = ($actualSec !== null && $targetSec !== null) ? $actualSec - $targetSec : null;
 
         $absorbedIds = [$leg->id];
         if ($leaveLegId) $absorbedIds[] = $leaveLegId;
@@ -248,39 +487,52 @@ class ReportService
                 $innerZone = \App\Models\Zone::find($innerLeg->reference_id);
                 if (!$innerZone || $innerZone->parent_id === null) continue;
 
-                $innerLeaveId  = $zonePairs[$innerLeg->id] ?? null;
+                $innerLeaveId = $zonePairs[$innerLeg->id] ?? null;
 
-                $innerEnterRlRaw = $completedLegs->get($innerLeg->id);
-                $innerLeaveRlRaw = $innerLeaveId ? $completedLegs->get($innerLeaveId) : null;
+                $innerEnterRlRaw = $completedLegs->get($innerLeg->id)?->first();
+                $innerFirstEnter = $completedLegs->get($innerLeg->id)
+                    ?->first(fn($rl) => !$rl->wasSkippedByParent());
+                $innerLastLeave  = $innerLeaveId
+                    ? $completedLegs->get($innerLeaveId)?->last(fn($rl) => !$rl->wasSkippedByParent())
+                    : null;
 
-                // ── CLE DU FIX : si skipped_by_parent → null pour l'affichage ──
                 $innerEnterRl = ($innerEnterRlRaw && !$innerEnterRlRaw->wasSkippedByParent())
-                ? $innerEnterRlRaw : null;
-                $innerLeaveRl = ($innerLeaveRlRaw && !$innerLeaveRlRaw->wasSkippedByParent())
-                ? $innerLeaveRlRaw : null;
+                    ? $innerEnterRlRaw : null;
 
-                $innerActual   = $zoneActualSec[$innerLeg->id] ?? null;
-                // Durée nulle si entrée ou sortie skippée
-                if ($innerEnterRlRaw?->wasSkippedByParent() || $innerLeaveRlRaw?->wasSkippedByParent()) {
+                $innerActual = ($innerFirstEnter && $innerLastLeave)
+                    ? (int) $innerFirstEnter->occurred_at->diffInSeconds($innerLastLeave->occurred_at)
+                    : null;
+
+                if ($innerEnterRlRaw?->wasSkippedByParent()) {
                     $innerActual = null;
                 }
-                $innerRawT     = $legObjectives[$innerLeg->id] ?? $legObjectives[(string)$innerLeg->id] ?? null;
-                $innerTarget   = ($innerRawT !== null && $innerRawT !== 'null') ? (int)$innerRawT : null;
-                $innerEcart    = ($innerActual !== null && $innerTarget !== null)
-                                   ? $innerActual - $innerTarget : null;
+
+                $innerRawT   = $legObjectives[$innerLeg->id] ?? $legObjectives[(string)$innerLeg->id] ?? null;
+                $innerTarget = ($innerRawT !== null && $innerRawT !== 'null') ? (int)$innerRawT : null;
+                $innerEcart  = ($innerActual !== null && $innerTarget !== null)
+                    ? $innerActual - $innerTarget : null;
 
                 $children[] = [
-                    'enter_leg_id' => $innerLeg->id,        // ← ajouté
-                    'leave_leg_id' => $innerLeaveId,        // ← ajouté
+                    'enter_leg_id' => $innerLeg->id,
+                    'leave_leg_id' => $innerLeaveId,
                     'label'        => $innerLeg->label,
-                    'enter_at'     => $innerEnterRl?->occurred_at?->timezone('GMT+3')->format('d/m H:i:s'),
-                    'leave_at'     => $innerLeaveRl?->occurred_at?->timezone('GMT+3')->format('d/m H:i:s'),
+                    'enter_at'     => $innerFirstEnter?->occurred_at?->timezone('GMT+3')->format('d/m H:i:s'),
+                    'leave_at'     => $innerLastLeave?->occurred_at?->timezone('GMT+3')->format('d/m H:i:s'),
                     'actual_sec'   => $innerActual,
                     'target_sec'   => $innerTarget,
                     'ecart'        => $innerEcart,
                     'is_done'      => $innerEnterRl !== null,
-                    'was_skipped'=> $innerEnterRlRaw?->wasSkippedByParent() ?? false,
+                    'was_skipped'  => $innerEnterRlRaw?->wasSkippedByParent() ?? false,
                 ];
+
+                \Log::debug('INNER LEG CHECK', [
+                    'label'           => $innerLeg->label,
+                    'innerLeaveId'    => $innerLeaveId,
+                    'enter_group_count' => $completedLegs->get($innerLeg->id)?->count(),
+                    'leave_group_count' => $innerLeaveId ? $completedLegs->get($innerLeaveId)?->count() : 0,
+                    'innerFirstEnter' => $innerFirstEnter?->occurred_at?->format('d/m H:i:s'),
+                    'innerLastLeave'  => $innerLastLeave?->occurred_at?->format('d/m H:i:s'),
+                ]);
 
                 $absorbedIds[] = $innerLeg->id;
                 if ($innerLeaveId) $absorbedIds[] = $innerLeaveId;
@@ -289,9 +541,9 @@ class ReportService
 
         $block = [
             'type'         => 'zone',
-            'leg_id'       => $leg->id,          // ← ajouté
-            'enter_leg_id' => $leg->id,          // ← ajouté
-            'leave_leg_id' => $leaveLegId,       // ← ajouté
+            'leg_id'       => $leg->id,
+            'enter_leg_id' => $leg->id,
+            'leave_leg_id' => $leaveLegId,
             'label'        => $leg->label,
             'enter_at'     => $enterRl?->occurred_at?->timezone('GMT+3')->format('d/m H:i:s'),
             'leave_at'     => $leaveRl?->occurred_at?->timezone('GMT+3')->format('d/m H:i:s'),
@@ -300,7 +552,7 @@ class ReportService
             'ecart'        => $ecart,
             'is_done'      => $enterRl !== null,
             'children'     => $children,
-            'was_skipped'=> $enterRlRaw?->wasSkippedByParent() ?? false,
+            'was_skipped'  => $enterRlFirst?->wasSkippedByParent() ?? false,
         ];
 
         return [$block, $absorbedIds];
