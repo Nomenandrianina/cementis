@@ -214,18 +214,6 @@ class ReportService
         $completedLegs = $rotation->rotationLegs->groupBy('circuit_leg_id');
         $legObjectives = $objective?->leg_objectives ?? [];
 
-        \Log::debug('RAW ROTATION LEGS', 
-            $rotation->rotationLegs
-                ->where('circuit_leg_id', 46)
-                ->map(fn($rl) => [
-                    'id'             => $rl->id,
-                    'circuit_leg_id' => $rl->circuit_leg_id,
-                    'occurred_at'    => $rl->occurred_at->format('d/m H:i:s'),
-                    'skipped'        => $rl->wasSkippedByParent(),
-                ])
-                ->toArray()
-        );
-
         $zonePairs      = [];
         $pairedEnterIds = [];
         $pairedExitIds  = [];
@@ -512,6 +500,18 @@ class ReportService
                 $innerEcart  = ($innerActual !== null && $innerTarget !== null)
                     ? $innerActual - $innerTarget : null;
 
+                    \Log::debug('INNER LEG VISITS', [
+                        'label'        => $innerLeg->label,
+                        'all_occurred' => $completedLegs->get($innerLeg->id)
+                            ?->map(fn($rl) => $rl->occurred_at->format('d/m H:i:s'))
+                            ->toArray(),
+                        'leave_visits' => $innerLeaveId 
+                            ? $completedLegs->get($innerLeaveId)
+                                ?->map(fn($rl) => $rl->occurred_at->format('d/m H:i:s'))
+                                ->toArray()
+                            : [],
+                    ]);
+
                 $children[] = [
                     'enter_leg_id' => $innerLeg->id,
                     'leave_leg_id' => $innerLeaveId,
@@ -524,15 +524,6 @@ class ReportService
                     'is_done'      => $innerEnterRl !== null,
                     'was_skipped'  => $innerEnterRlRaw?->wasSkippedByParent() ?? false,
                 ];
-
-                \Log::debug('INNER LEG CHECK', [
-                    'label'           => $innerLeg->label,
-                    'innerLeaveId'    => $innerLeaveId,
-                    'enter_group_count' => $completedLegs->get($innerLeg->id)?->count(),
-                    'leave_group_count' => $innerLeaveId ? $completedLegs->get($innerLeaveId)?->count() : 0,
-                    'innerFirstEnter' => $innerFirstEnter?->occurred_at?->format('d/m H:i:s'),
-                    'innerLastLeave'  => $innerLastLeave?->occurred_at?->format('d/m H:i:s'),
-                ]);
 
                 $absorbedIds[] = $innerLeg->id;
                 if ($innerLeaveId) $absorbedIds[] = $innerLeaveId;

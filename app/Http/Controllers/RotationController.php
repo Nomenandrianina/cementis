@@ -19,6 +19,89 @@ class RotationController extends Controller
         private readonly RotationCalculatorService $calculator,
         private readonly GpsApiService $gpsApi
     ) {}
+
+    public function dashboard(Request $request)
+    {
+        $circuits = Circuit::where('active', true)->orderBy('name')->get();
+
+        // Période par défaut : mois courant
+        $filterType  = $request->get('filter_type', 'month'); // month | week | range
+        $circuitId   = $request->get('circuit_id');
+        $year        = (int) $request->get('year', now()->year);
+        $month       = (int) $request->get('month', now()->month);
+        $dateFrom    = $request->get('date_from', now()->startOfMonth()->toDateString());
+        $dateTo      = $request->get('date_to', now()->endOfMonth()->toDateString());
+
+        // Construire la plage de dates selon le filtre
+        [$periodStart, $periodEnd] = match($filterType) {
+            'month' => [
+                Carbon::createFromDate($year, $month, 1)->startOfMonth(),
+                Carbon::createFromDate($year, $month, 1)->endOfMonth(),
+            ],
+            'range' => [
+                Carbon::parse($dateFrom)->startOfDay(),
+                Carbon::parse($dateTo)->endOfDay(),
+            ],
+            default => [now()->startOfMonth(), now()->endOfMonth()],
+        };
+
+        // Query de base
+        // $query = Rotation::with(['rvehicule', 'circuit'])
+        //     ->whereBetween('counted_month', [$periodStart, $periodEnd]);
+        $query = Rotation::with(['rvehicule', 'circuit'])
+        ->whereBetween('counted_month', [
+            $periodStart->format('Y-m'),
+            $periodEnd->format('Y-m'),
+        ]);
+
+        if ($circuitId) {
+            $query->where('circuit_id', $circuitId);
+        }
+
+        $rotations = $query->get();
+
+        // Compteurs globaux
+        $stats = [
+            'total'       => $rotations->count(),
+            'completed'   => $rotations->whereIn('status', ['completed', 'acceptable'])->count(),
+            'cancelled'   => $rotations->where('status', 'cancelled')->count(),
+            'in_progress' => $rotations->where('status', 'in_progress')->count(),
+            'acceptable'  => $rotations->where('status', 'acceptable')->count(),
+        ];
+
+        // Évolution par jour
+        $byDay = $rotations
+            ->whereIn('status', ['completed', 'acceptable'])
+            ->groupBy(fn($r) => Carbon::parse($r->started_at)->toDateString())
+            ->map(fn($group) => $group->count())
+            ->sortKeys();
+
+        // Évolution par semaine
+        $byWeek = $rotations
+            ->whereIn('status', ['completed', 'acceptable'])
+            ->groupBy(fn($r) => Carbon::parse($r->started_at)->weekOfYear)
+            ->map(fn($group, $week) => [
+                'week'  => 'S' . $week,
+                'count' => $group->count(),
+            ])
+            ->values();
+
+        // Par circuit (si vue globale)
+        $byCircuit = $rotations
+            ->whereIn('status', ['completed', 'acceptable'])
+            ->groupBy('circuit_id')
+            ->map(fn($group) => [
+                'name'  => $group->first()->circuit->name ?? '?',
+                'count' => $group->count(),
+            ])
+            ->values();
+
+        return view('rotations.dashboard', compact(
+            'circuits', 'stats', 'byDay', 'byWeek', 'byCircuit',
+            'filterType', 'circuitId', 'year', 'month', 'dateFrom', 'dateTo',
+            'periodStart', 'periodEnd'
+        ));
+    }
  
     public function index(Request $request)
     {
@@ -70,7 +153,7 @@ class RotationController extends Controller
         $legObjectives = $objective?->leg_objectives ?? [];
 
         $allLegs       = $rotation->circuit->legs()->orderBy('order')->get();
-        $completedLegs = $rotation->rotationLegs->keyBy('circuit_leg_id');
+        $completedLegs = $rotation->rotationLegs->groupBy('circuit_leg_id');
 
         // ── Construction des paires enter/leave par zone ──────────────────────────
         // Pour chaque enter_zone, on cherche le leave_zone correspondant
@@ -98,13 +181,26 @@ class RotationController extends Controller
         }
 
         // ── Calcul durée réelle par zone (enter → leave) ──────────────────────────
+        // $zoneActualSec = [];
+        // foreach ($zonePairs as $enterId => $exitId) {
+        //     $enterRl = $completedLegs->get($enterId);
+        //     $exitRl  = $completedLegs->get($exitId);
+        //     if ($enterRl && $exitRl) {
+        //         $zoneActualSec[$enterId] = (int) $enterRl->occurred_at
+        //             ->diffInSeconds($exitRl->occurred_at);
+        //     }
+        // }
+
         $zoneActualSec = [];
         foreach ($zonePairs as $enterId => $exitId) {
-            $enterRl = $completedLegs->get($enterId);
-            $exitRl  = $completedLegs->get($exitId);
-            if ($enterRl && $exitRl) {
-                $zoneActualSec[$enterId] = (int) $enterRl->occurred_at
-                    ->diffInSeconds($exitRl->occurred_at);
+            $enterGroup = $completedLegs->get($enterId);
+            $exitGroup  = $completedLegs->get($exitId);
+            
+            $firstEnter = $enterGroup?->first(fn($rl) => !$rl->wasSkippedByParent());
+            $lastExit   = $exitGroup?->last(fn($rl) => !$rl->wasSkippedByParent());
+            
+            if ($firstEnter && $lastExit) {
+                $zoneActualSec[$enterId] = (int) $firstEnter->occurred_at->diffInSeconds($lastExit->occurred_at);
             }
         }
 
@@ -140,7 +236,8 @@ class RotationController extends Controller
 
             // ── Checkpoint ───────────────────────────────────────────────────────
             if ($leg->event_type === 'pass_checkpoint') {
-                $rl = $completedLegs->get($leg->id);
+                // $rl = $completedLegs->get($leg->id);
+                $rl = $completedLegs->get($leg->id)?->first();
                 $blocks[] = [
                     'type'    => 'checkpoint',
                     'leg'     => $leg,
@@ -175,7 +272,8 @@ class RotationController extends Controller
 
                     // Chercher le leg du slot qui a un RotationLeg réel (non skippé)
                     foreach ($slotLegs as $slotLeg) {
-                        $rl = $completedLegs->get($slotLeg->id);
+                        // $rl = $completedLegs->get($slotLeg->id);
+                        $rl = $completedLegs->get($slotLeg->id)?->first();
                         if ($rl && !$rl->wasSkippedByParent()) {
                             $activeLeg = $slotLeg;
                             break;
@@ -197,11 +295,19 @@ class RotationController extends Controller
                 $leaveLegId = $zonePairs[$activeLeg->id] ?? null;
                 $leaveLeg   = $leaveLegId ? $allLegs->firstWhere('id', $leaveLegId) : null;
 
-                $enterRlRaw = $completedLegs->get($activeLeg->id);
-                $leaveRlRaw = $leaveLegId ? $completedLegs->get($leaveLegId) : null;
+                // $enterRlRaw = $completedLegs->get($activeLeg->id);
+                // $leaveRlRaw = $leaveLegId ? $completedLegs->get($leaveLegId) : null;
 
-                $enterRl = ($enterRlRaw && !$enterRlRaw->wasSkippedByParent()) ? $enterRlRaw : null;
-                $leaveRl = ($leaveRlRaw && !$leaveRlRaw->wasSkippedByParent()) ? $leaveRlRaw : null;
+                // $enterRl = ($enterRlRaw && !$enterRlRaw->wasSkippedByParent()) ? $enterRlRaw : null;
+                // $leaveRl = ($leaveRlRaw && !$leaveRlRaw->wasSkippedByParent()) ? $leaveRlRaw : null;
+                $enterGroup  = $completedLegs->get($activeLeg->id);
+                $leaveGroup  = $leaveLegId ? $completedLegs->get($leaveLegId) : null;
+
+                $enterRlRaw  = $enterGroup?->first();
+                $leaveRlRaw  = $leaveGroup?->first();
+
+                $enterRl     = $enterGroup?->first(fn($rl) => !$rl->wasSkippedByParent());
+                $leaveRl     = $leaveGroup?->last(fn($rl) => !$rl->wasSkippedByParent());
 
                 $actualSec = $zoneActualSec[$activeLeg->id] ?? null;
                 if ($enterRlRaw?->wasSkippedByParent() || $leaveRlRaw?->wasSkippedByParent()) {
@@ -252,18 +358,29 @@ class RotationController extends Controller
                         $innerLeaveId  = $zonePairs[$innerLeg->id] ?? null;
                         $innerLeaveLeg = $innerLeaveId ? $allLegs->firstWhere('id', $innerLeaveId) : null;
 
-                        $innerEnterRlRaw = $completedLegs->get($innerLeg->id);
-                        $innerLeaveRlRaw = $innerLeaveId ? $completedLegs->get($innerLeaveId) : null;
+                        // $innerEnterRlRaw = $completedLegs->get($innerLeg->id);
+                        // $innerLeaveRlRaw = $innerLeaveId ? $completedLegs->get($innerLeaveId) : null;
 
-                        $innerEnterRl = ($innerEnterRlRaw && !$innerEnterRlRaw->wasSkippedByParent())
-                            ? $innerEnterRlRaw : null;
-                        $innerLeaveRl = ($innerLeaveRlRaw && !$innerLeaveRlRaw->wasSkippedByParent())
-                            ? $innerLeaveRlRaw : null;
+                        // $innerEnterRl = ($innerEnterRlRaw && !$innerEnterRlRaw->wasSkippedByParent()) ? $innerEnterRlRaw : null;
+                        // $innerLeaveRl = ($innerLeaveRlRaw && !$innerLeaveRlRaw->wasSkippedByParent()) ? $innerLeaveRlRaw : null;
+                        // $innerActual = $zoneActualSec[$innerLeg->id] ?? null;
 
-                        $innerActual = $zoneActualSec[$innerLeg->id] ?? null;
-                        if ($innerEnterRlRaw?->wasSkippedByParent() || $innerLeaveRlRaw?->wasSkippedByParent()) {
-                            $innerActual = null;
-                        }
+                        $innerEnterGroup = $completedLegs->get($innerLeg->id);
+                        $innerLeaveGroup = $innerLeaveId ? $completedLegs->get($innerLeaveId) : null;
+
+                        $innerEnterRlRaw = $innerEnterGroup?->first();
+                        $innerEnterRl    = $innerEnterGroup?->first(fn($rl) => !$rl->wasSkippedByParent());
+                        $innerLeaveRl    = $innerLeaveGroup?->last(fn($rl) => !$rl->wasSkippedByParent());
+
+                        // Durée : première entrée → dernière sortie
+                        $innerActual = ($innerEnterRl && $innerLeaveRl)
+                            ? (int) $innerEnterRl->occurred_at->diffInSeconds($innerLeaveRl->occurred_at)
+                            : null;
+                        if ($innerEnterRlRaw?->wasSkippedByParent()) $innerActual = null;
+
+                        // if ($innerEnterRlRaw?->wasSkippedByParent() || $innerLeaveRlRaw?->wasSkippedByParent()) {
+                        //     $innerActual = null;
+                        // }
 
                         $innerRawT   = $legObjectives[$innerLeg->id] ?? $legObjectives[(string)$innerLeg->id] ?? null;
                         $innerTarget = ($innerRawT !== null && $innerRawT !== 'null') ? (int)$innerRawT : null;
@@ -315,7 +432,8 @@ class RotationController extends Controller
 
             // ── leave_zone non pairée → affiché seul ─────────────────────────────
             if ($leg->event_type === 'leave_zone') {
-                $rl = $completedLegs->get($leg->id);
+                // $rl = $completedLegs->get($leg->id);
+                $rl = $completedLegs->get($leg->id)?->first();
                 $blocks[] = [
                     'type'        => 'zone_block',
                     'enter_leg'   => $leg,

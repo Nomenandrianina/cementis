@@ -244,6 +244,7 @@ class RotationCalculatorService
                 continue;
             }
 
+
             // ── MATCH ────────────────────────────────────────────────────────────
             $matchedLeg = $this->slotMatchesEvent($expectedSlot, $event);
 
@@ -474,6 +475,42 @@ class RotationCalculatorService
                         $i++;
                         continue;
                     }
+                }
+
+                $revisitHandled = false;
+                for ($prevIdx = 0; $prevIdx < $currentSlotIdx; $prevIdx++) {
+                    $prevSlot = $slots[$prevIdx] ?? null;
+                    if ($prevSlot === null) continue;
+                    if (!$this->slotIsOptional($prevSlot)) continue;
+
+                    $revisitedLeg = $this->slotMatchesEvent($prevSlot, $event);
+                    if ($revisitedLeg !== null) {
+                        $occurredAt = Carbon::parse($event['dt']);
+                        RotationLeg::create([
+                            'rotation_id'                     => $currentRotation->id,
+                            'circuit_leg_id'                  => $revisitedLeg->id,
+                            'occurred_at'                     => $occurredAt,
+                            'lat'                             => $event['lat'] ?? null,
+                            'lng'                             => $event['lng'] ?? null,
+                            'duration_since_previous_seconds' => null,
+                            'raw_event'                       => $event['raw'] ?? $event,
+                        ]);
+
+                        Log::info('Revisit slot optionnel enregistré.', [
+                            'rotation_id' => $currentRotation->id,
+                            'leg'         => $revisitedLeg->label,
+                            'dt'          => $event['dt'],
+                        ]);
+
+                        $revisitHandled = true;
+                        break;
+                    }
+                }
+
+                if ($revisitHandled) {
+                    $replayOnce = false;
+                    $i++;
+                    continue; // ← continue le while
                 }
 
                 // ── Cas 1 : saut d'étape (slot) ──────────────────────────────────

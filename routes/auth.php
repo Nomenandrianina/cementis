@@ -58,7 +58,7 @@ Route::resource('fileUploads', App\Http\Controllers\FileUploadController::class)
 
 Route::resource('messages', App\Http\Controllers\MessageController::class);
 
-Route::resource('rotations', App\Http\Controllers\RotationController::class);
+// Route::resource('rotations', App\Http\Controllers\RotationController::class);
 
 Route::resource('parametres', App\Http\Controllers\ParametreController::class);
 
@@ -289,6 +289,7 @@ Route::prefix('circuits')->name('circuits.')->group(function () {
 // ── Rotations ──────────────────────────────────────────────────────────────
 Route::prefix('rotations')->name('rotations.')->group(function () {
     Route::get('/',                   [RotationController::class, 'index'])->name('index');
+    Route::get('/dashboard', [RotationController::class, 'dashboard'])->name('dashboard');
     Route::get('/{rotation}',         [RotationController::class, 'show'])->name('show');
     Route::post('/calculate',         [RotationController::class, 'calculate'])->name('calculate');
     Route::delete('/{rotation}',      [RotationController::class, 'destroy'])->name('destroy');
